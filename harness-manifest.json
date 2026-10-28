@@ -1,0 +1,406 @@
+{
+  "harness": {
+    "name": "fs-universal-agent-harness",
+    "version": "4.2.2"
+  },
+  "schema_version": 1,
+  "capabilities": {
+    "structured_picker": {
+      "description": "Ask the user to choose from 1 to 4 labelled options, with a free-text 'Other'. Used by setup and reconfigure for persona and industry selection."
+    },
+    "file_read": {
+      "description": "Read files from the harness folder."
+    },
+    "file_write": {
+      "description": "Create or overwrite files in the harness folder (workspace configuration, semantic-layer lookup files, reports)."
+    },
+    "shell": {
+      "description": "Run a command or a short Python script. Needed only by the components that say so."
+    },
+    "mcp:fullstory": {
+      "description": "Call the Fullstory analytics MCP server (metrics, segments, funnels, session review). Without it the analysis components cannot read the org."
+    }
+  },
+  "adapters": {
+    "claude-code": {
+      "verified": "untested",
+      "basis": "in daily use; picker, read and write tool names are cited from shipped files: AskUserQuestion and the Write tool in .claude/commands/setup.md, the Read tool in .claude/commands/hypothesis-swarm.md, and discover_org_context as the MCP connection check in .claude/commands/setup.md (Step 3); the shell tool name is attested by Lane Greer, not established by a shipped file; flips to tested when the SC-10 transcript is in the wave folder",
+      "invocation": {
+        "style": "slash",
+        "prefix": "/"
+      },
+      "capabilities": {
+        "structured_picker": "AskUserQuestion",
+        "file_read": "Read",
+        "file_write": "Write",
+        "shell": "Bash",
+        "mcp:fullstory": "discover_org_context"
+      },
+      "attested_by": {
+        "shell": {
+          "by": "Lane Greer",
+          "on": "2026-10-22",
+          "statement": "In Claude Code, the tool that runs shell commands is named Bash."
+        }
+      },
+      "target": true,
+      "status": {
+        "structured_picker": "established",
+        "file_read": "established",
+        "file_write": "established",
+        "shell": "established",
+        "mcp:fullstory": "established"
+      }
+    },
+    "cowork": {
+      "verified": "untested",
+      "basis": "Cowork's runtime named AskUserQuestion in Lane's 2026-10-21 session and Lane watched it use three tools to read the instructions; no shipped file establishes any Cowork tool name, so every capability is unknown rather than absent; flips to tested when the SC-9 transcript is in the wave folder. mcp:fullstory is established by vendor documentation (Lane, 2026-10-22: documentation counts as evidence). Source: Claude Help Center, Get started with Claude Cowork: connectors are controlled via the Customize > Connectors page. The value is the documented way to connect an MCP server, not a tool this harness calls, and the documentation does not say the Fullstory server connects here. Detail and grades in runtime-research-20261022.md",
+      "invocation": {
+        "style": "read-file"
+      },
+      "capabilities": {
+        "structured_picker": "unknown",
+        "file_read": "read from and write to local files (connected folders)",
+        "file_write": "read from and write to local files (connected folders)",
+        "shell": "shell (runs on Anthropic servers, not the user machine)",
+        "mcp:fullstory": "Customize > Connectors"
+      },
+      "basis_by_capability": {
+        "file_read": "https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork (fetched 2026-10-22): \"On desktop, Claude can read from and write to your local files without manual uploads or downloads.\"",
+        "file_write": "https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork (fetched 2026-10-22): \"On desktop, Claude can read from and write to your local files without manual uploads or downloads.\"",
+        "shell": "https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork (fetched 2026-10-22): \"Runs code and shell commands in an isolated environment on Anthropic's servers.\" Server-side: a command that reads or writes a path on the user's machine behaves differently here."
+      },
+      "target": true,
+      "status": {
+        "structured_picker": "unknown",
+        "file_read": "established",
+        "file_write": "established",
+        "shell": "established",
+        "mcp:fullstory": "established"
+      },
+      "searched": {
+        "structured_picker": true
+      },
+      "degrade": {
+        "structured_picker": {
+          "file": ".claude/commands/setup.md",
+          "anchor": "Principles (non-negotiable)"
+        }
+      }
+    },
+    "codex": {
+      "verified": "untested",
+      "basis": ".claude/commands/setup.md names request_user_input as the Codex picker; no shipped file establishes any other Codex tool, so its other capabilities are unknown rather than absent. mcp:fullstory is established by vendor documentation (Lane, 2026-10-22: documentation counts as evidence). Source: OpenAI Codex CLI page: Codex can add local or remote MCP servers through codex mcp. The value is the documented way to connect an MCP server, not a tool this harness calls, and the documentation does not say the Fullstory server connects here. Detail and grades in runtime-research-20261022.md",
+      "invocation": {
+        "style": "read-file"
+      },
+      "capabilities": {
+        "structured_picker": "request_user_input",
+        "file_read": "inspect files",
+        "file_write": "make edits",
+        "shell": "run commands",
+        "mcp:fullstory": "codex mcp"
+      },
+      "basis_by_capability": {
+        "file_read": "https://learn.chatgpt.com/docs/codex/cli (fetched 2026-10-22): \"Let Codex inspect files, make edits, and run the tools already installed on your machine.\"",
+        "file_write": "https://learn.chatgpt.com/docs/codex/cli (fetched 2026-10-22): \"Let Codex inspect files, make edits, and run the tools already installed on your machine.\"",
+        "shell": "https://learn.chatgpt.com/docs/codex/cli (fetched 2026-10-22): \"Inspect code, make changes, run commands, and automate repeatable work without leaving your terminal.\"",
+        "structured_picker": ".claude/commands/setup.md names request_user_input as the Codex picker (shipped-file evidence, 2026-10-22). Codex's own documentation did not corroborate that tool name when read on 2026-10-22: whether the tool exists in Codex is not known."
+      },
+      "target": true,
+      "status": {
+        "structured_picker": "established",
+        "file_read": "established",
+        "file_write": "established",
+        "shell": "established",
+        "mcp:fullstory": "established"
+      }
+    },
+    "grok": {
+      "verified": "untested",
+      "basis": "no shipped file names any tool for this runtime and nobody has established what it has, so every capability is unknown rather than absent. mcp:fullstory is established by vendor documentation (Lane, 2026-10-22: documentation counts as evidence). Source: xAI Grok Build repository page: further tools are added through MCP servers registered with grok mcp add or config.toml. The value is the documented way to connect an MCP server, not a tool this harness calls, and the documentation does not say the Fullstory server connects here. Detail and grades in runtime-research-20261022.md",
+      "invocation": {
+        "style": "read-file"
+      },
+      "capabilities": {
+        "structured_picker": "unknown",
+        "file_read": "read_file",
+        "file_write": "file edit",
+        "shell": "terminal",
+        "mcp:fullstory": "grok mcp add"
+      },
+      "basis_by_capability": {
+        "file_write": "https://github.com/xai-org/grok-build/blob/main/README.md (fetched 2026-10-22): \"It runs as a full-screen TUI that understands your codebase, edits files, executes shell commands\"",
+        "shell": "https://github.com/xai-org/grok-build/blob/main/README.md (fetched 2026-10-22): \"It runs as a full-screen TUI that understands your codebase, edits files, executes shell commands\"",
+        "file_read": "Attested by Lane Greer on 2026-10-22 from a screenshot of Grok's own answer: the tool is read_file (file_path, optional offset and limit). This is Grok's self-report relayed by a person, not vendor documentation. The product page https://github.com/xai-org/grok-build (fetched 2026-10-22) says Grok 'understands your codebase, edits files' and does not state a read tool, so it neither supports nor contradicts the name."
+      },
+      "searched": {
+        "structured_picker": "Searched 2026-10-22, not stated."
+      },
+      "target": true,
+      "status": {
+        "structured_picker": "unknown",
+        "file_read": "established",
+        "file_write": "established",
+        "shell": "established",
+        "mcp:fullstory": "established"
+      },
+      "attested_by": {
+        "file_read": {
+          "by": "Lane Greer",
+          "on": "2026-10-22",
+          "statement": "Asked 'does grok have a file_read tool and what's it called?', Grok answered that it does: read_file, taking file_path (required) and optional offset and limit, supporting text and images. Lane supplied a screenshot of that answer."
+        }
+      },
+      "degrade": {
+        "structured_picker": {
+          "file": ".claude/commands/setup.md",
+          "anchor": "Principles (non-negotiable)"
+        }
+      }
+    },
+    "copilot-cli": {
+      "verified": "untested",
+      "basis": "no shipped file names any tool for this runtime and nobody has established what it has, so every capability is unknown rather than absent. mcp:fullstory is established by vendor documentation (Lane, 2026-10-22: documentation counts as evidence). Source: GitHub Docs, Copilot CLI command reference: copilot mcp manages MCP server configurations. The value is the documented way to connect an MCP server, not a tool this harness calls, and the documentation does not say the Fullstory server connects here. Detail and grades in runtime-research-20261022.md",
+      "invocation": {
+        "style": "read-file"
+      },
+      "capabilities": {
+        "structured_picker": "ask_user",
+        "file_read": "view",
+        "file_write": "edit, create",
+        "shell": "bash / powershell",
+        "mcp:fullstory": "copilot mcp"
+      },
+      "basis_by_capability": {
+        "file_read": "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference (fetched 2026-10-22): \"view | Read files or directories\" (tool table row)",
+        "file_write": "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference (fetched 2026-10-22): \"edit | Edit files via string replacement; create | Create new files\" (tool table rows)",
+        "shell": "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference (fetched 2026-10-22): \"bash / powershell | Execute commands\" (tool table row)",
+        "structured_picker": "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference (fetched 2026-10-22): \"ask_user | Ask the user a question\" (tool table row; choices shape from GitHub issues #2067 and #3323, not documentation; option shape and a free-text Other are unverified)"
+      },
+      "target": true,
+      "status": {
+        "structured_picker": "established",
+        "file_read": "established",
+        "file_write": "established",
+        "shell": "established",
+        "mcp:fullstory": "established"
+      }
+    },
+    "copilot-cloud": {
+      "verified": "untested",
+      "basis": "Non-target: the Copilot cloud agent officially reads AGENTS.md and CLAUDE.md, so a user may run the harness there, but no run has been recorded and the validator skips it. mcp:fullstory is established by vendor documentation (Lane, 2026-10-22). https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent (fetched 2026-10-22): \"Model Context Protocol (MCP) servers connect agents to additional tools and data.\" The value is the documented way to connect an MCP server, not a tool this harness calls, and the documentation does not say the Fullstory server connects here.",
+      "invocation": {
+        "style": "read-file"
+      },
+      "capabilities": {
+        "structured_picker": "unknown",
+        "file_read": "reading files",
+        "file_write": "editing code",
+        "shell": "unknown",
+        "mcp:fullstory": "MCP servers (repository settings)"
+      },
+      "target": false,
+      "basis_by_capability": {
+        "file_read": "https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent (fetched 2026-10-22): \"by reading files, editing code, and running tests in a cloud development environment\" (Agentic experiences description)",
+        "file_write": "https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent (fetched 2026-10-22): \"It can edit files and run tests and linters in an ephemeral cloud development environment, rather than your local IDE.\""
+      },
+      "status": {
+        "structured_picker": "unknown",
+        "file_read": "established",
+        "file_write": "established",
+        "shell": "unknown",
+        "mcp:fullstory": "established"
+      },
+      "searched": {
+        "structured_picker": true,
+        "shell": true
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "setup",
+      "job": "First-time workspace setup: ask the user's analyst role and industry, copy the matching pre-built rail cells into the workspace, and write the workspace configuration. Must run before any analysis.",
+      "file": ".claude/commands/setup.md",
+      "requires": [
+        "structured_picker",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "reconfigure",
+      "job": "Change the saved role or industry later, without losing session memory or prior decisions.",
+      "file": ".claude/commands/reconfigure.md",
+      "requires": [
+        "structured_picker",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "create-org-foundation",
+      "job": "Record what is known about the org in a short, dated file. No foundation and no layer: run this.",
+      "file": ".claude/commands/create-org-foundation.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "update-org-foundation",
+      "job": "Re-check due foundation rows and add what an analysis found. Foundation exists: use it; run this when a row is over 30 days old or something returns nothing. Only a layer exists: keep using it as a lead, run this to carry it across.",
+      "file": ".claude/commands/update-org-foundation.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "build-semantic-layer",
+      "job": "Deprecated, use create-org-foundation; not for a new org. Map the org into lookup files.",
+      "file": ".claude/commands/build-semantic-layer.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "refresh-semantic-layer",
+      "job": "Deprecated, use update-org-foundation; only for a layer not yet migrated. Rebuild its lookup files.",
+      "file": ".claude/commands/refresh-semantic-layer.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "fullstory-mcp-expert-guide",
+      "job": "Always-active discipline for calling the Fullstory MCP: check the org foundation first, then build, confirm and compute metrics and segments rather than guessing.",
+      "file": ".claude/commands/fullstory-mcp-expert-guide.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read"
+      ]
+    },
+    {
+      "id": "fs-mcp-prompt-builder",
+      "job": "Write a prompt for a Fullstory MCP agent that works on its own or with you.",
+      "file": ".claude/commands/fs-mcp-prompt-builder.md",
+      "requires": [
+        "structured_picker"
+      ]
+    },
+    {
+      "id": "fullstory-mcp-feedback",
+      "job": "Collect structured feedback when an MCP workflow ends unexpectedly or works well, extracting what is already in the conversation, and produce a report to send to the Fullstory team.",
+      "file": ".claude/commands/fullstory-mcp-feedback.md",
+      "requires": [
+        "file_read",
+        "file_write",
+        "shell"
+      ]
+    },
+    {
+      "id": "harness-feedback",
+      "job": "Collect structured feedback on how well the analysis was calibrated to the user's role and industry, producing a block to share with the Fullstory analyst.",
+      "file": ".claude/commands/harness-feedback.md",
+      "requires": [
+        "file_read"
+      ]
+    },
+    {
+      "id": "session-validation",
+      "job": "Before presenting any finding, review a minimum of five representative user sessions and inspect page state, console and network errors, so counts are backed by observed behaviour.",
+      "file": ".claude/commands/session-validation.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read"
+      ]
+    },
+    {
+      "id": "audit-bot-traffic",
+      "job": "Quantify synthetic and automated traffic on the org, separate it from real user behaviour, and show whether it distorts the experience metrics.",
+      "file": ".claude/commands/audit-bot-traffic.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "build-cohort-comparison",
+      "job": "Compare how two or more user groups experience the property differently and produce a self-contained HTML report with a companion field guide.",
+      "file": ".claude/commands/build-cohort-comparison.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "build-funnel-report",
+      "job": "Analyse where users drop out of a critical flow and why, and produce a self-contained HTML report with a companion field guide.",
+      "file": ".claude/commands/build-funnel-report.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "generate-dx-hotspot-snapshot",
+      "job": "Find the top areas of user struggle across the property and produce a monthly one-page or slide-deck snapshot.",
+      "file": ".claude/commands/generate-dx-hotspot-snapshot.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "generate-behavior-proof-clip",
+      "job": "Prove a behaviour insight (dead click, spinner, rage burst) with a short animated clip or screenshot sequence of the session.",
+      "file": ".claude/commands/generate-behavior-proof-clip.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "hypothesis-swarm",
+      "job": "Investigate a data discrepancy or conflicting metrics by deploying independent agents on distinct hypotheses, rotating assignments and peer-reviewing, then reconciling.",
+      "file": ".claude/commands/hypothesis-swarm.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read"
+      ]
+    },
+    {
+      "id": "build-playbook",
+      "job": "Build a competitive playbook, integration value story or microsite from intake through content reasoning to a final deliverable.",
+      "file": ".claude/commands/build-playbook.md",
+      "requires": [
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "build-org-context",
+      "job": "Build a context bundle for the org: five structured markdown files, a job log and a multi-tab HTML report, from live Fullstory MCP data.",
+      "file": ".claude/commands/build-org-context.md",
+      "requires": [
+        "mcp:fullstory",
+        "file_read",
+        "file_write",
+        "shell"
+      ]
+    }
+  ]
+}

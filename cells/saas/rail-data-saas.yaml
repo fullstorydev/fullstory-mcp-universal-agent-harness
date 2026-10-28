@@ -1,0 +1,420 @@
+# GENERATED — do not edit manually
+# rail-format-version: 1.0
+# Generated: 2026-10-28
+audience: data
+industry: saas
+entry_altitude: arc
+tempo: slow
+truncation: 6
+currency_mix:
+- UTL
+- KNW
+exec_rollup: false
+signals:
+- signal: conversion_drop_significant
+  currency: KNW
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: confirm a conversion drop is statistically significant
+- signal: dead_click
+  currency: UTL
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 1.0965
+  intent: complete a form or structured task
+- signal: rage_click
+  currency: UTL
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 1.0443
+  intent: complete a form or structured task
+- signal: error_click
+  currency: UTL
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 1.0193
+  intent: complete a form or structured task
+- signal: form_abandonment
+  currency: UTL
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: complete a form or structured task
+- signal: repeat_task_attempt
+  currency: UTL
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: same task reattempted across sessions
+generation_meta:
+  pattern_signals_excluded: 0
+  missing_benchmark_count: 18
+  derive_version: '1.0'
+
+# ── Jobs (appended by compose_cells_for_oss) ──
+jobs:
+- id: warehouse_validation
+  description: 'Data analyst has a number from their warehouse and wants to know whether
+    Fullstory confirms, contradicts, or partially overlaps it. The goal is a defensible
+    Fullstory measurement alongside a plain statement of the known divergence sources
+    — not parity.
+
+    '
+  currency_code: KNW
+  currency: defensible measurement against the warehouse — getting the Fullstory number,
+    naming the divergence sources, and giving the analyst a starting point they can
+    defend
+  currency_breadth: multi
+  spans:
+  - UTL
+  triggers:
+  - our numbers don't match
+  - BigQuery shows X but Fullstory shows Y
+  - validate this metric
+  - cross-check
+  - Fullstory is different from our SQL
+  - verify this segment
+  - does this match our data?
+  - our warehouse says
+  - our analytics says
+  - what does Fullstory say about X?
+  - can you confirm this number?
+  investigation_priors:
+    opening_move: 'Check the methodology file first — if a prior segment or metric
+      covers the same question, use those IDs directly rather than rebuilding. Get
+      the Fullstory measurement at p50/p75/p95. Then state the known divergence sources
+      before presenting the gap. Do not wait for the analyst to ask why the numbers
+      differ.
+
+      '
+    mcp_sequence:
+    - check methodology.yaml — prefer existing segment/metric IDs if the question
+      matches a prior run
+    - build_segment on the relevant cohort (or use existing ID) — prefer org-foundation.md
+      (or semantic-index.yaml on an old layer) IDs
+    - 'compute_metric: p50 / p75 / p95 + count with denominator — not average alone'
+    - compute_metric with compare_to_previous=true if the analyst wants trend context
+      alongside the snapshot
+    - get_opportunities — scale validation and independent signal check; if empty
+      or org is not Premium/Advanced, run the opportunities fallback chain from the
+      industry overlay
+    after_measurement:
+      rule: "State the Fullstory measurement, then immediately state the known divergence\
+        \ sources. Do not wait for the analyst to ask. The format is: 1. Fullstory\
+        \ measurement (p50 / p75 / p95 + denominator) 2. Known divergence sources\
+        \ that apply to this specific comparison 3. Directional read: consistent /\
+        \ contradicts / partially overlaps — with what the\n   gap suggests about\
+        \ the underlying cause\n4. Offer to structure the output for SQL translation\
+        \ if that is the next step\n"
+    divergence_proforma: '"Fullstory shows [N] — [p50/p75/p95 distribution]. Your
+      warehouse shows [analyst''s number]. Known sources of this gap: [applicable
+      divergence sources from validation_oracle above]. Directionally: [consistent
+      / contradicts / partially overlaps] — the gap suggests [reason]. This is a starting
+      point; parity is not the goal."
+
+      '
+    stop_conditions:
+    - Fullstory measurement delivered at p50/p75/p95 with denominator, divergence
+      sources stated, directional read given — stop
+    - If the analyst wants to go deeper into one divergence source (e.g. identity
+      resolution) — pivot to mechanism mode and name what is and is not measurable
+      from behavioral data alone
+  evidence_form: defensible_measurement
+  entry_altitude: cohort
+  routes_to:
+  - audience: engineering
+    form: named divergence source with supporting segment ID — data quality issue
+      for the warehouse team
+  - audience: product-mgmt
+    form: validated finding with Fullstory measurement, denominator, and directional
+      read
+  asr: none
+- id: recency_query
+  description: 'Analyst needs current behavioral state — something the warehouse ETL
+    has not processed yet. Fullstory''s recency is the primary differentiator here.
+    The goal is a fast, accurate snapshot with visible methodology so the analyst
+    can trust and act on it.
+
+    '
+  currency_code: UTL
+  currency: recency — getting current behavioral state before the warehouse ETL runs;
+    the value is in the time advantage, not the number itself
+  currency_breadth: single
+  spans: []
+  triggers:
+  - what's happening right now
+  - last hour
+  - last 5 minutes
+  - ETL hasn't updated yet
+  - near real-time
+  - live traffic
+  - what's going on today
+  - real-time check
+  - before the batch runs
+  - current state
+  investigation_priors:
+    opening_move: 'Define the time window explicitly (last 1h, last 4h, etc.) — never
+      leave it ambiguous. Get the measurement. State the Fullstory recency advantage
+      explicitly: how far ahead of the warehouse this data is. If an incident is detected,
+      flag routing to engineering.
+
+      '
+    mcp_sequence:
+    - confirm the time window with the analyst before building — ambiguity in a recency
+      query wastes the advantage
+    - 'build_segment: the relevant behavior in the named time window — prefer existing
+      segment IDs from org-foundation.md (or semantic-index.yaml on an old layer)'
+    - 'compute_metric: count + rate with denominator in the time window'
+    - compute_metric with compare_to_previous=true — same window yesterday or last
+      week for reference
+    - get_opportunities — if org is Premium/Advanced, check for emergent issues in
+      the window; global fallback chain applies if empty or non-Premium
+    recency_framing: 'After delivering the number, note: "This reflects behavior up
+      to approximately [time]. Your warehouse ETL is typically [lag if known] behind
+      — this is the window where Fullstory has signal and the warehouse does not."
+
+      '
+    stop_conditions:
+    - Current-state metric delivered with time window explicit, denominator visible,
+      recency framing stated — stop
+    - 'If the query surfaces a breaking signal (error rate spike, rage-click surge):
+      immediately note it and offer routing to engineering incident investigation
+      — do not continue the recency query, this is now an incident'
+  evidence_form: magnitude
+  asr: none
+  entry_altitude: cohort
+  routes_to:
+  - audience: engineering
+    form: signal and time window — incident investigation if a spike is detected
+  - audience: product-mgmt
+    form: current state metric with recency framing — campaign or feature monitoring
+- id: sql_bootstrap
+  description: 'Analyst needs a Fullstory prototype they can translate to SQL. They
+    will use the MCP analysis as a target to match in Looker, Tableau, dbt, or their
+    own warehouse queries. The deliverable is the analysis plus the methodology details
+    that make it SQL-reproducible.
+
+    '
+  currency_code: UTL
+  currency: a SQL-ready analysis artifact — a Fullstory prototype the analyst can
+    translate into a dbt model, Looker view, or Snowflake query
+  currency_breadth: single
+  spans: []
+  triggers:
+  - help me write SQL
+  - prototype this metric
+  - I need a segment definition
+  - translate this to SQL
+  - what's the equivalent SQL
+  - I'll write the dbt model
+  - what would this look like in Looker
+  - I want to put this in Tableau
+  - can you build this so I can match it
+  - Fullstory as a reference
+  investigation_priors:
+    opening_move: 'Ask what metric or segment the analyst wants to prototype — if
+      they haven''t specified. Build it in Fullstory, then package the methodology
+      with enough precision that the analyst can reconstruct it in SQL. Segment IDs,
+      element selectors, event names, time windows, and the exact logical definition
+      of the query all belong in the output.
+
+      '
+    mcp_sequence:
+    - clarify the metric or segment definition if not specified — ask for the exact
+      question they want the SQL to answer
+    - build_segment or build_metric — prefer existing IDs from org-foundation.md (or
+      semantic-index.yaml on an old layer); document the exact logical query
+    - compute_metric — deliver the number with p50/p75/p95 as appropriate
+    - log segment/metric IDs to methodology.yaml — mandatory; the analyst will reference
+      these when writing SQL
+    output_format:
+      rule: 'The output must be SQL-translation-ready. Include: - The Fullstory segment
+        or metric definition in plain logic (not just ''I ran a segment'') - Exact
+        event names, element selectors, or behavioral signals used - Time window as
+        an explicit parameter, not embedded in the query - Segment ID from the MCP
+        response — the analyst can reference this for comparison - Known Fullstory-to-SQL
+        translation considerations (session definition, identity resolution)
+
+        '
+      do_not_do: 'Do not produce a literal SQL string. Fullstory''s schema is not
+        the warehouse schema. Produce the logical definition and the parameters; the
+        analyst writes the SQL.
+
+        '
+    output_format_offer: 'At the moment a final analysis or output exists, offer format
+      options: "The analysis is ready. I can produce an HTML report with the design
+      system, or if you prefer to pipe this to SQL, I can structure the output with
+      segment IDs, event definitions, and time windows formatted for translation.
+      Which is more useful?" This is not a menu — name what we actually ship, then
+      open the door. Do not list capabilities the kit may not have.
+
+      '
+    stop_conditions:
+    - Fullstory prototype computed, methodology logged to methodology.yaml with IDs,
+      output packaged for SQL translation — stop
+    - 'If the analyst wants the HTML deliverable instead: produce it per the kit''s
+      standard output format and stop'
+  evidence_form: artifact
+  entry_altitude: population
+  routes_to:
+  - audience: data
+    form: methodology package with segment IDs and event definitions — analyst translates
+      to SQL
+  asr: none
+- id: proactive_field_scan
+  description: 'Analyst wants to know what is worth dashboarding — a proactive scan
+    for high-impact behavioral signals that have not been captured or reported yet.
+    The goal is a ranked list of findings by user impact × surface severity, with
+    trend direction for each.
+
+    '
+  currency_code: KNW
+  currency: a ranked signal field — knowing which behavioral problems are costing
+    users the most, by impact × surface weight, with trend direction
+  currency_breadth: single
+  triggers:
+  - what should I be dashboarding
+  - what's worth tracking
+  - what am I missing
+  - give me a briefing
+  - what should the team know
+  - high impact signals
+  - what do you see
+  - scan for issues
+  - what's costing us the most
+  - what's changed recently
+  investigation_priors:
+    opening_move: 'Start with StoryAI opportunities — let the ranked field seed the
+      scan before building anything. Then build the frustration signal view across
+      the conversion path. Trend direction is part of the deliverable — the analyst
+      needs to know which issues are getting worse, not just which are the biggest
+      right now.
+
+      '
+    mcp_sequence:
+    - get_opportunities — StoryAI ranked field (global fallback chain applies if empty
+      or org not on Premium/Advanced)
+    - 'compute_metric: frustration signals × conversion path surfaces (rage-click,
+      error-click, network-error, dead-click, page-reload)'
+    - build_funnel / compute_funnel on ACQ path from industry overlay — find the worst
+      drop-off step
+    - compute_metric with compare_to_previous=true on the top 3–5 signals — trend
+      direction for each
+    - 'rank results: magnitude (user count with denominator) × industry surface severity
+      weights'
+    after_scan:
+      rule: 'Deliver a ranked list. For each finding: 1. Signal type and surface —
+        what is happening and where 2. User count with denominator — ''34% of checkout
+        sessions = ~1,200 users/week'' 3. Trend direction — getting worse / stable
+        / improving (with the comparison window) 4. Recommendation: which audience
+        this routes to for action (engineering / product-mgmt) Do not produce a narrative
+        — produce a structured ranked list with visible methodology.
+
+        '
+    stop_conditions:
+    - Top 3–5 findings ranked by magnitude × surface weight, each with user count,
+      denominator, and trend direction — stop
+    - 'If get_opportunities returns a ranked field with 5+ active findings: use those
+      as the list, add trend direction per finding, stop — do not rebuild what StoryAI
+      already ranked'
+  evidence_form: magnitude
+  asr: none
+  entry_altitude: population
+  routes_to:
+  - audience: product-mgmt
+    form: ranked finding list with magnitude, denominator, and trend direction — prioritized
+      backlog
+  - audience: exec
+    form: top 3 highest-impact signals with roll-up framing — briefing
+- id: conversion_attribution
+  description: 'Analyst needs to understand which behavioral patterns correlate with
+    conversion failure — where users drop from the acquisition funnel, what signals
+    precede abandonment, and whether post-error exits are inflating bounce rates.
+    The output is a structured attribution view the team can cross-reference with
+    warehouse conversion data.
+
+    '
+  currency_code: KNW
+  currency: causal attribution for acquisition failure — knowing which funnel steps
+    and error events are driving exits before commitment (ACQ)
+  currency_breadth: single
+  triggers:
+  - where are we losing users in the funnel
+  - what's driving abandonment
+  - post-error exits
+  - conversion rate drop
+  - funnel drop-off
+  - acquisition funnel analysis
+  - why are users not converting
+  investigation_priors:
+    opening_move: 'Build the acquisition funnel first, then overlay error signals
+      at each step. The goal is a step-by-step abandonment view with behavioral signals
+      that explain drop-off — not just the rates.
+
+      '
+    mcp_sequence:
+    - build_funnel / compute_funnel on the acquisition path from the industry overlay
+    - 'build_segment: post_error_exit cohort in the last 30 days — users who hit an
+      error and then exited'
+    - 'compute_metric: post_error_exit rate with denominator, compare_to_previous=true'
+    - 'compute_metric: error_click rate per funnel step'
+    - get_opportunities — cross-reference funnel findings against StoryAI acquisition
+      signals
+    stop_conditions:
+    - Funnel step drop-off rates identified, error signals mapped per step, post_error_exit
+      rate with trend — stop
+  evidence_form: magnitude
+  asr: none
+  measure_resolution: count_rate
+  entry_altitude: population
+  routes_to:
+  - audience: product-mgmt
+    form: funnel drop-off table with error signal attribution per step
+  - audience: engineering
+    form: error event chains at highest drop-off steps — reproducible segment definitions
+- id: data-cohort-retention-arc
+  trigger: 'A stakeholder asks whether a change, segment, or acquisition source is
+    working, and the answer cannot be read from a single-session conversion rate without
+    cohorting.
+
+    '
+  currency_code: KNW
+  currency: a cohort-bounded trend that survives mix-shift and one-week noise
+  currency_breadth: single
+  spans: []
+  evidence_form: defensible_trend
+  entry_altitude: arc
+  asr: optional
+  routes_to:
+  - audience: product-mgmt
+    form: cohort chart plus the behavioral covariates that separate retained from
+      lost
+  - audience: marketing
+    form: source or campaign cohorts with leading behavioral indicators
+  stop_conditions:
+  - the claim is stated as a cohort trend with a window, a comparison, and a known
+    confound
+  - a single-session metric is no longer being used as a proxy for retention
+- id: data-causal-window-claim
+  trigger: 'A team wants to treat a before/after movement as caused by a release,
+    experiment, or incident, and the analyst must decide whether the window supports
+    a causal_claim or only a defensible_trend.
+
+    '
+  currency_code: KNW
+  currency: a warrantable causal or explicitly non-causal reading of a multi-session
+    window
+  currency_breadth: single
+  spans: []
+  evidence_form: causal_claim
+  entry_altitude: arc
+  asr: required
+  routes_to:
+  - audience: product-mgmt
+    form: claim with identification strategy, threats, and the behavioral mechanism
+      if one is supported
+  stop_conditions:
+  - the output names the identification strategy or explicitly downgrades the claim
+    to trend
+  - session_close

@@ -1,0 +1,66 @@
+<!-- PATH CARD — NUMBERED FLOW
+     Use: integration architecture paths, numbered user journeys with step-by-step logic.
+     .path-number variants: .p1 (green) .p2 (orange) .p3 (purple) .p4 (pink/red)
+     .path-body is a two-col grid: .path-flow (left, step diagram) + .path-details (right, bullets)
+     .flow-node: contains .flow-node-icon (emoji) and .flow-node-content (h4 + p)
+     .flow-line: vertical connector between nodes
+     Wrap multiple cards in .paths-grid for the grid layout.
+-->
+<div class="paths-grid">
+  <div class="path-card">
+    <div class="path-header">
+      <div class="path-number p1">01</div>
+      <div>
+        <h3>Path Name — Primary Approach</h3>
+        <p>One sentence framing when and why to use this path.</p>
+      </div>
+      <div class="path-verdict v-strong">Strongest Path</div>
+    </div>
+    <div class="path-body">
+      <div class="path-flow">
+        <div class="flow-label">Integration Flow</div>
+        <div class="flow-steps">
+          <div class="flow-node">
+            <div class="flow-node-icon">📡</div>
+            <div class="flow-node-content">
+              <h4>Step 1 — Source</h4>
+              <p>What triggers this step and where data originates.</p>
+            </div>
+          </div>
+          <div class="flow-line"></div>
+          <div class="flow-node">
+            <div class="flow-node-icon">⚡</div>
+            <div class="flow-node-content">
+              <h4>Step 2 — Transform</h4>
+              <p>How the signal is processed or routed.</p>
+            </div>
+          </div>
+          <div class="flow-line"></div>
+          <div class="flow-node">
+            <div class="flow-node-icon">🎯</div>
+            <div class="flow-node-content">
+              <h4>Step 3 — Destination</h4>
+              <p>Where the output lands and what it enables.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="path-details">
+        <div class="detail-list">
+          <div class="detail-item pro">
+            <div class="detail-item-icon">✓</div>
+            <div class="detail-item-text"><strong>Key advantage</strong> — why this path is preferred in this scenario.</div>
+          </div>
+          <div class="detail-item pro">
+            <div class="detail-item-icon">✓</div>
+            <div class="detail-item-text"><strong>Second advantage</strong> — latency, reliability, or coverage benefit.</div>
+          </div>
+          <div class="detail-item note">
+            <div class="detail-item-icon">△</div>
+            <div class="detail-item-text"><strong>Watch-out</strong> — prerequisite or constraint to be aware of.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

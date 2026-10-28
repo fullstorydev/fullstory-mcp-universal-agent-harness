@@ -1,0 +1,629 @@
+schema_version: 2
+# .claude/rails/industry-travel.yaml
+# Layer 2 industry profile — travel
+# Derivation engine Wave 3 / W-10
+#
+# ROLLBACK: rm .claude/rails/industry-travel.yaml
+#
+# This file is a parameter overlay. It carries no job definitions.
+# It is composed into audience profiles at runtime by the derivation engine (W-20).
+# Flat file — no nested directory. Flat naming convention: industry-travel.yaml.
+
+industry: travel
+
+evidence:
+  sources:
+    - "industry/travel-lane-20260910.md"
+    - "persona/ux-design-lane-20260908.md"   # contributes flow_shape finding only
+  independence: self_sourced
+  notice: >
+    Both sources are Lane Greer, the same person building this system — not independently
+    corroborated. The travel interview (2026-09-10) is the primary source. The ux-design
+    interview (2026-09-08) is from a different session with a different question focus and
+    independently produced the primary_journey flow-shape model without being prompted
+    specifically about travel — providing convergent confirmation of that specific finding
+    from the same informant. This is still self_sourced per MANIFEST; it is not independent
+    corroboration in the sense of Sekizui (fintech) or Tim (engineering × SaaS).
+    Treat all authored values as hypotheses bounded by a single informant.
+    The travel interview explicitly did not cover: reference_point (inferred from retail),
+    currency mix, stop condition, evidence rejected, tempo. Those fields are authored from
+    structural reasoning and benchmark data; confidence is lower than where a direct
+    interview answer exists.
+
+# ── END-USER CURRENCIES ───────────────────────────────────────────────────────
+# N-1 MANDATORY: derivation field is present. The currency mix cannot be measured
+# through the Fullstory MCP — no tool exposes time-per-behavior-category or intent
+# classification. This ranked list is an informed hypothesis, not a measurement.
+#
+# SUPERSEDED COMMENTARY, corrected 2026-09-11. An earlier version of this header argued
+# that ACQ should rank primary because it is "the exchange the business and the user have
+# oriented around," explicitly on business-value rather than session-frequency grounds.
+# That was the conflation Lane ruled on: ranked[] is MAJORITY OF THE SESSION, and business
+# value now lives in its own field. The benchmark corpus was right — it lists
+# primary_currencies: [KNW, ACQ] for travel because research spans multiple visits before a
+# single booking, and that is exactly what ranked[] is supposed to capture.
+
+end_user_currencies:
+  derivation: authored_pending_capability   # GUARD N-1 — mandatory; do not remove
+  # CORRECTED 2026-09-11, Lane ruling. ranked = MAJORITY OF THE SESSION (user time spent),
+  # NOT business value. The prior ordering was ACQ / KNW / UTL, justified as "the booking is
+  # the goal" — a business-value claim. This profile's own text already undercut it: users
+  # "verify repeatedly before committing." That verification is where the session time goes.
+  # Business-value ordering preserved verbatim in business_value_order below.
+  # W-45: ranked is now cohort-conditional. Travel has three distinct session populations
+  # with genuinely different currency mixes. The key structural evidence from
+  # travel-lane-20260910.md is that post-booking management sessions are explicitly SEPARATE
+  # from booking sessions — they are a distinct cohort, not a later phase of the same session.
+  # Source: build plan §9, W-45 ruling 2026-09-11.
+  ranked:
+    cohorts:
+      pre_booking_researchers:
+        # Users in the research phase — comparing options, verifying details, researching
+        # destinations and routes. KNW dominates because travel is high-stakes and often
+        # non-refundable: certainty-seeking (re-reading fare rules, cancellation policy,
+        # date re-checking) consumes most session time. ACQ is present as the target but
+        # not yet entered. This cohort may span multiple sessions before a booking occurs.
+        # Source: travel-lane-20260910.md — "research spans multiple visits before a single
+        # booking"; G&B prototype confirmed KNW primary for travel.
+        ranked: [KNW, ACQ, UTL]
+
+      committed_bookers:
+        # Users who arrived with booking intent and are executing the transaction. ACQ
+        # dominates because deliberation is largely complete — they are in narrow-window
+        # commit mode. KNW remains present (final verification: is this the right date,
+        # the right fare class, cancellation policy one more time) but ACQ is the session
+        # organizer. This is the cohort where ACQ detection matters most and where loss
+        # at the booking step is committed-intent loss.
+        # Source: travel-lane-20260910.md — booking funnel mirrors retail checkout;
+        # emotional loading makes pre-submit verification high but ACQ is the orientation.
+        ranked: [ACQ, KNW, UTL]
+
+      post_booking_managers:
+        # Users managing an existing booking, completing check-in, or accessing loyalty.
+        # These are SEPARATE sessions from the booking session — confirmed by travel interview.
+        # UTL dominates: seat change, upgrade, cancel, add bag, online check-in (deadline-driven).
+        # KNW present (itinerary status, flight status checks). ENJ present for loyalty members
+        # accumulating points — high-frequency travelers may be buying miles, not flights.
+        # Source: travel-lane-20260910.md UTL intents — "NOTE: typically SEPARATE sessions
+        # from the booking session." Loyalty complexity note — "they are buying miles or points,
+        # not a flight."
+        ranked: [UTL, KNW, ENJ]
+
+    # Fallback when cohort cannot be determined from session signals. Equals the prior
+    # flat ranked[] — preserves backward compatibility. Reflects the population-level
+    # truth that KNW dominates across most travel sessions because research sessions
+    # outnumber booking sessions in total count.
+    population_default: [KNW, ACQ, UTL]
+
+  business_value_order:
+    # ADVISORY ONLY — never operative for derivation. Prior ranked[] ordering, preserved.
+    - ACQ
+    - KNW
+    - UTL
+  toll: NAV  # wayfinding overhead; NAV is never a headline finding (Commitment 3)
+  minor: [ENJ]  # ENJ is real but arc-level: destination content browsing is minor at session level;
+                # loyalty point accumulation as ENJ is only visible at arc altitude (repeat visits).
+                # demoted, not absent — demote instructs calibration; absent suppresses detection
+  absent: [BEL, INF]  # BEL (social participation) and INF (contribution/feedback) are not
+                       # meaningful primary modes in the travel booking context
+
+  intents:
+    ACQ:
+      - "book a flight, hotel, or package"          # derivation: authored_pending_prototype
+      - "complete a booking already in progress"    # return visit with itinerary staged; arc-altitude
+      - "add ancillary to existing commitment"      # seat selection, bag, insurance after initial booking
+    KNW:
+      - "compare options before committing"         # derivation: confirmed_prototype (G&B prototype)
+      - "verify details before submitting"          # users re-read fare rules, cancellation policy, etc.
+      - "check flight status or itinerary"          # post-booking KNW; check-status intent
+      - "research a destination or route"           # early-funnel KNW; may not resolve to booking
+    UTL:
+      - "manage an existing booking"                # seat change, upgrade, cancel, add bag
+      - "complete online check-in"                  # high-intent UTL; deadline-driven
+      - "access loyalty account or points balance"  # servicing intent; not an ACQ session
+
+  currency_note: >
+    CRITICAL CONSTRAINT — Unlike retail, travel is not browsed recreationally. Source:
+    travel-lane-20260910.md — "very few exceptions." A travel session with no booking funnel
+    interaction is more likely a failed ACQ attempt than a completed KNW exchange (which
+    is the opposite of retail, where browsing without purchasing is a legitimate ENJ or KNW
+    success). The "non-buying sessions are not failed purchases" rule from currency-grammar.yaml
+    does not apply with the same force here: establish whether the session had booking intent
+    before assuming KNW success.
+
+    LOYALTY COMPLEXITY: For high-frequency travelers (business travelers, road warriors),
+    the ENJ exchange is the points accumulation itself — they are buying miles or points,
+    not a flight. The business metric (revenue per booking) misses this entirely. Loyalty
+    members may behave differently from non-members on every surface. Isolate as a segment
+    before attributing loyalty-tier performance to site-wide friction.
+
+    EMOTIONAL LOADING: ACQ in travel is more emotionally loaded than retail. A booking
+    commits the user to a future experience they cannot preview or return. KNW (certainty-
+    seeking) is extremely high in the pre-booking phase because the stakes are high and
+    returns are often impossible. Long pre-booking sessions are KNW success, not ACQ failure.
+
+# ── FLOW SHAPE ────────────────────────────────────────────────────────────────
+# Travel is structurally a close cousin of retail: a primary conversion funnel
+# with deliberation pockets alongside it.
+# Sources:
+#   - travel-lane-20260910.md — "Discovery, shopping/selection, and checkout funnels
+#     all apply, same as retail." Also: "Booking engine," not product search.
+#   - ux-design-lane-20260908.md — "ecommerce and travel are experiences predicated on
+#     LINEAR flows but those linear flows contain non-linear components."
+#     (Flow-shape finding confirmed independently by the ux-design interview.)
+#
+# Key structural difference from retail: the "search" surface in travel is not a
+# keyword search — it is a constrained configurator (origin, destination, dates,
+# passengers). The path search → results → select → book is rigid. Any deviation
+# from this path is friction, not exploration. In retail, a refined PLP browse is
+# legitimate KNW exchange; in travel, a user stuck in the configurator is stuck.
+
+flow_shape: primary_journey
+
+# ── SURFACE CLASSES ───────────────────────────────────────────────────────────
+# Three functional purpose-stages from the travel booking model.
+# Source: travel-lane-20260910.md + ux-design-lane-20260908.md flow-shape finding.
+
+surface_classes:
+  - name: trip_research
+    surfaces: [entry, search, plp]
+    purpose: >
+      KNW dominant — the configurator query (origin/destination/dates) and the
+      results list (flight options, hotel options). Users are spending attention
+      and patience to build certainty before committing.
+    note: >
+      The `search` surface in travel is the booking engine configurator, not a
+      keyword search. It is a constrained configurator with a finite option set.
+      Dead clicks and error clicks on date pickers, destination autocomplete,
+      and passenger selectors are the primary KNW-blocking signals here.
+      Long sessions on this surface are KNW success; refinement loops (changing
+      dates, origin, or passenger count repeatedly) may signal either deliberation
+      (KNW) or friction (NAV toll on a confusing configurator).
+
+  - name: decision_and_selection
+    surfaces: [pdp]
+    purpose: >
+      KNW → ACQ transition. The user has results and is selecting a specific
+      flight, hotel, or package. Long dwell is KNW (fare rules, cancellation
+      policy, amenities) or ACQ-approaching (ready to commit). Disambiguation
+      is mandatory — the same long session can be success or failure.
+    note: >
+      Unlike retail PDP, travel PDP typically leads to a direct booking flow
+      (no cart stage in airline flows, sometimes a staging cart in OTA flows).
+      PDP drop-off after long dwell is a high-confidence ACQ failure signal —
+      the user did the research and then abandoned. Much more informative than
+      early PDP exit.
+
+  - name: booking_and_ancillaries
+    surfaces: [cart, checkout, confirmation]
+    purpose: >
+      ACQ exchange moment — the booking flow and the post-commitment microfunnels
+      (seat selection, bag selection, insurance add-on). The `cart` surface is
+      present in OTA (online travel agency) flows; direct airline flows skip
+      directly to checkout from PDP.
+    note: >
+      Microfunnels within this surface class are NOT optional branches — they are
+      separate ACQ sub-exchanges embedded in a linear flow. Seat selection, bag
+      selection, and insurance are presented sequentially after the primary booking
+      commitment and before payment confirmation. A user who abandons at seat
+      selection may still have completed the primary booking (depending on flow
+      design). These are distinct detection events, not variants of checkout
+      abandonment. Source: travel-lane-20260910.md — "Named microfunnels unique
+      to the vertical: seat selection, bag selection, insurance add-on at purchase."
+
+  - name: account_and_loyalty
+    surfaces: [account, auth]
+    purpose: >
+      UTL and loyalty ENJ — post-booking management, check-in, loyalty points
+      balance, trip history. Auth is a particularly sensitive gate in travel:
+      loyalty members arrive expecting one-click access; friction at auth is
+      a disproportionate loyalty member frustration signal.
+    note: >
+      Loyalty program orgs (airlines, hotel chains) run dedicated loyalty platform
+      teams — 50+ staff at major airlines. These flows have distinct instrumentation
+      and may have separate Fullstory orgs or data layers. Never analyze loyalty
+      and non-loyalty flows as a single population. Source: travel-lane-20260910.md.
+
+# ── SEVERITY ORDER ────────────────────────────────────────────────────────────
+# Descending stakes — where a failure costs the most.
+# All values must be MANIFEST surface keys (N-5).
+# checkout is highest: the ACQ exchange moment after long research investment.
+# confirmation is second: a failed confirmation means booking may have processed
+#   but the user has no proof — a uniquely damaging state in travel.
+# pdp third: the decision surface where commitment begins; drop-off here is a
+#   high-confidence ACQ failure given the prior research investment.
+
+severity_order: [checkout, confirmation, pdp, search, auth, plp, cart, account, entry, support, content]
+
+# Booking microfunnels — distinct sub-exchanges within the booking_and_ancillaries stage.
+# These occur after primary booking commitment and before final payment confirmation.
+# Source: travel-lane-20260910.md — "Named microfunnels unique to the vertical."
+booking_microfunnels:
+  - seat_selection       # post-commitment; failure is friction but may not void the booking
+  - bag_selection        # same pattern — separate ACQ sub-exchange for ancillary revenue
+  - insurance_add_on     # same pattern — often the last step before payment confirmation
+
+# ── REFERENCE POINT ───────────────────────────────────────────────────────────
+# How benchmarks are framed for travel customers.
+# Note: the travel interview did not confirm this directly (gap flagged in the interview).
+# Inferred from: (1) the retail interview finding that cross-org comparison is not the
+# frame customers use; (2) the benchmark_corpus industry_calibration_notes which frames
+# travel around "booking conversion after research phase."
+# Source inference: travel-lane-20260910.md (gap noted) + benchmark-corpus.yaml §travel.
+
+reference_point: "booking conversion after research phase — own historical baseline"
+reference_point_note: >
+  The catastrophic moment in travel is booking friction that occurs after an extended
+  research phase: "perceived value diverges from realized" (benchmark-corpus.yaml).
+  The comparison customers make is: "our booking conversion is lower than it was, and
+  the research investment our users made means the loss is amplified." Historical baseline
+  is the primary frame (same as retail — not confirmed directly, inferred from structural
+  similarity). Industry benchmarks from the Fullstory 2026 Benchmark Report are a valid
+  secondary frame; cite with source and never as cross-org Fullstory customer data (N-3).
+  Source: benchmark-corpus.yaml §industry_calibration_notes.travel.
+
+# ── SUBSTRATE TOLERANCE ───────────────────────────────────────────────────────
+# CWV bands sourced from Google Core Web Vitals specification.
+# Literal numeric values are legal under the unified N-2/N-4 rule:
+# they cite an external published standard (Google) that does not vary by org.
+#
+# Travel-specific note: substrate tolerance varies by surface class.
+# - Research surfaces (search, plp): users are in KNW mode; slightly more tolerance for
+#   deliberate page loads, but configurator interactivity must be responsive.
+# - Decision/booking surfaces (pdp, checkout): no tolerance; ACQ exchange is high-stakes
+#   and any slowness here signals failure. Same alert boundary as retail checkout.
+# This profile uses the Needs Improvement boundary for the primary alert, consistent
+# with the high-stakes ACQ exchange at booking time.
+
+substrate_tolerance:
+  lcp_alert_boundary: needs_improvement
+  lcp_alert_ms: 2500
+  source: "Google Core Web Vitals specification — Needs Improvement boundary, web.dev/vitals"
+  rationale: >
+    Travel's ACQ exchange carries high emotional loading — a slow booking confirmation
+    after a long research arc is catastrophic. The 2500ms Needs Improvement boundary
+    applies to the booking engine and decision surfaces (search configurator, pdp, checkout).
+    Research surfaces (plp, content) have marginally more tolerance in that users are
+    actively reading — but slow results lists still block comparison, so the same
+    boundary is used for simplicity. Source of rationale: structural reasoning from
+    travel-lane-20260910.md + build plan §2 (Google CWV as approved literal source).
+
+  cwv_reference:
+    LCP:  { good_ms: 2500, ni_ms: 4000, measure: p75, source: "Google Core Web Vitals specification" }
+    INP:  { good_ms: 200,  ni_ms: 500,  measure: p75, source: "Google Core Web Vitals specification" }
+    CLS:  { good: 0.10,    ni: 0.25,    measure: p75, source: "Google Core Web Vitals specification" }
+    FCP:  { good_ms: 1800, ni_ms: 3000, measure: p75, source: "Google Core Web Vitals specification" }
+    TTFB: { good_ms: 800,  ni_ms: 1800, measure: p75, source: "Google Core Web Vitals specification" }
+    deprecated: "FID — replaced by INP March 2024. Never reference FID in any profile or deliverable."
+
+# ── LEXICON ───────────────────────────────────────────────────────────────────
+# Industry-specific interpretations. Maps terms to their meaning in travel context.
+# Sources: travel-lane-20260910.md, ux-design-lane-20260908.md, benchmark-corpus.yaml.
+
+lexicon:
+  booking_engine: >
+    The primary search/configurator surface in travel — universal terminology in the
+    vertical, specifically airlines. It is NOT a keyword search engine. It is a
+    constrained configurator: origin, destination, dates, passengers. The path
+    configurator → results → select → book is rigid; any deviation is friction, not
+    exploration. The word "search" in travel UI maps to this configurator, not to an
+    open-text discovery tool. Source: travel-lane-20260910.md.
+
+  long_session: >
+    Valence depends entirely on the surface and phase of the booking arc (Commitment 2).
+    On search (configurator): KNW success (comparing options, adjusting dates) OR friction
+    (stuck in the configurator, can't find the right parameters). Discriminate by whether
+    the session progresses to the results list.
+    On plp (results list): KNW success (comparing flights/hotels) — longer sessions here
+    mean more deliberation, which is normal for high-stakes purchases.
+    On pdp: KNW (reading fare rules, cancellation policy) OR ACQ-approaching (ready to
+    commit). Same disambiguation rule as retail PDP applies.
+    On checkout: ACQ failure. A long checkout session is friction on the exchange moment.
+    On content (destination pages): minor ENJ — browsing destination content is real but
+    uncommon in sessions without booking funnel interaction.
+    Source: benchmark-corpus.yaml travel §session_duration_trend — YoY +62%, longest-
+    growing in any industry. Research phase expanding; longer sessions are predominantly
+    a signal of growing KNW investment, not growing frustration.
+    Source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §Travel"
+
+  search_results: >
+    In travel, the search results list (plp surface) is a flight or hotel option list,
+    not a keyword search results page. Dead clicks on filter controls (price, duration,
+    airline, star rating) and sort controls are the primary KNW-blocking signals — users
+    cannot narrow the option set to complete comparison. This is distinct from retail's
+    zero-result search (which is a KNW failure at the query level). Travel results dead
+    clicks are filter-interaction failures. Source: structural reasoning from
+    travel-lane-20260910.md + MANIFEST surface context (search surface description).
+
+  no_booking_funnel_interaction: >
+    A session with no booking engine or results-list interaction. In retail, a session
+    without cart or checkout interaction may be ENJ or KNW success. In travel, a session
+    with no booking funnel interaction is more likely a failed ACQ than a completed KNW
+    exchange — the site is not browsed recreationally. Source: travel-lane-20260910.md —
+    "Unlike retail, travel is not browsed recreationally — very few exceptions."
+    Establish whether the session had booking intent (e.g., configurator interaction,
+    results list view) before attributing any session-level metric to a non-ACQ exchange.
+
+  loyalty_points: >
+    For high-frequency travelers (business travelers, road warriors), earning loyalty points
+    IS the ENJ exchange — they are buying miles as much as a flight. The business metric
+    (revenue per booking) misses this entirely. Two distinct user populations may share
+    the same booking flow: occasional travelers (ACQ primary) and loyalty members (ENJ
+    at arc-altitude is real). Segment by loyalty membership before attributing conversion
+    behavior to site-wide ACQ dynamics. A loyalty member who completes a sub-optimal
+    itinerary for points reasons is a conversion success that looks like poor UX by the
+    standard ACQ framing. Source: travel-lane-20260910.md — loyalty programs are "central
+    to the business, not a side feature."
+
+  microfunnel_ancillary: >
+    Seat selection, bag selection, and insurance add-on are NOT optional upsell branches —
+    they are sequential ACQ sub-exchanges embedded in the post-commitment linear flow.
+    They occur after the user has committed to the primary booking but before payment
+    confirmation. Abandonment at any microfunnel step may or may not void the primary
+    booking (depends on flow design). Do not analyze ancillary completion rates as
+    upsell conversion — analyze them as embedded conversion steps with their own friction
+    profiles. Source: travel-lane-20260910.md — "Named microfunnels unique to the vertical."
+
+  cross_device_arc: >
+    Research (KNW phase) happens disproportionately on mobile across multiple sessions;
+    booking (ACQ phase) happens disproportionately on desktop for complex itineraries.
+    A mobile session with heavy results-list browsing followed by no booking is often
+    a successful KNW session that will resolve in a subsequent desktop booking session.
+    Do not score mobile sessions without booking completion as ACQ failures without
+    checking whether the arc completed on another device. Source: structural reasoning
+    from ux-design-lane-20260908.md flow-shape model + benchmark-corpus.yaml data
+    showing mobile pinch_events YoY +48% (Source: "Fullstory 2026 Benchmark Report,
+    CY2025 — benchmarks-distilled.md §YoY Change Global").
+
+  date_picker: >
+    Date pickers and check-in/check-out selectors are a primary instrumentation gap in
+    travel. Flight date selection, check-in/check-out date selection, and flexible-date
+    browsing typically land in custom events or extracted DOM properties, not in standard
+    Fullstory element interactions. Source: travel-lane-20260910.md — "Data typically
+    lands in custom events or extracted DOM properties — date pickers, check-in/check-out
+    selectors." Before building any configurator-friction segment, verify how date
+    interactions are instrumented for this org.
+
+# ── BLIND SPOTS ───────────────────────────────────────────────────────────────
+# Systematic things travel orgs miss or under-instrument.
+
+blind_spot:
+  - >
+    Sessions without booking funnel interaction scored as KNW success: in retail, a
+    session without purchase is often a legitimate ENJ or KNW exchange. In travel, it
+    is more often a failed ACQ. Do not apply the retail "non-buying sessions are not
+    failures" rule without establishing booking intent. Source: travel-lane-20260910.md.
+
+  - >
+    Loyalty members analyzed as revenue customers: a user optimizing for points accumulation
+    has fundamentally different behavior than an occasional traveler making a pure price-
+    based decision. Blended conversion analysis hides this split entirely. Always segment
+    loyalty vs. non-loyalty before interpreting booking conversion patterns.
+    Source: travel-lane-20260910.md.
+
+  - >
+    Cross-device arc invisible in single-session analysis: mobile KNW + desktop ACQ is a
+    common split pattern. A mobile-heavy session corpus with low booking completion may be
+    a research arc completing on desktop, not an ACQ failure. Requires arc-altitude analysis
+    across sessions to distinguish. Source: structural reasoning from ux-design-lane-20260908.md.
+
+  - >
+    Ancillary microfunnels treated as upsells rather than embedded ACQ steps: seat, bag,
+    and insurance are post-commitment steps in the primary booking flow — not optional
+    add-ons in a separate conversion funnel. An ancillary abandonment rate should be
+    analyzed as part of the booking funnel drop-off sequence, not as a separate upsell
+    effectiveness metric. Source: travel-lane-20260910.md.
+
+  - >
+    Date picker and configurator interactions under-instrumented: standard Fullstory element
+    tracking often misses date selection, flexible-date browsing, and passenger count
+    adjustment because these land in custom events or DOM extractions. A booking engine
+    friction analysis without confirming date-picker instrumentation will miss the primary
+    KNW-blocking surface. Source: travel-lane-20260910.md.
+
+  - >
+    Research phase amplifies booking failure cost: a booking failure after a long KNW
+    phase (45+ minutes of comparing options, reading fare rules) carries significantly
+    more cost than a retail cart abandonment. The perceived-value-to-realized-value gap
+    is at its peak when the user has invested heavily in the decision. Do not normalize
+    booking error rates to retail post-error-exit benchmarks without accounting for the
+    research investment preceding the failure. Source: benchmark-corpus.yaml
+    §industry_calibration_notes.travel — "Booking friction after long research — perceived
+    value diverges from realized." Source: "benchmarks-distilled.md §Travel"
+
+  - >
+    Mobile and desktop performance blended: travel shows the strongest cross-device
+    behavioral split of any ecommerce-adjacent industry. Mobile hosts the research arc;
+    desktop hosts the booking completion. A site-wide metric that blends both obscures
+    which phase is broken. Always device-split travel findings — and compare mobile
+    findings to the mobile slice in benchmark-corpus.yaml, never to blended global.
+    Source: structural reasoning + YoY pinch_events +48% trend.
+    Source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §YoY Change Global"
+
+# ── DEFAULT SPLITS ────────────────────────────────────────────────────────────
+# Dimensions to always apply when analyzing travel data.
+
+default_splits:
+  always_apply: [device, new_vs_returning, loyalty_member]
+  device_note: >
+    Mobile research arc vs. desktop booking is the strongest behavioral split in travel.
+    A site-wide metric blending both phases hides which phase is broken. Compare mobile
+    findings to the mobile benchmark slice, never to blended global.
+  new_vs_returning_note: >
+    New users are predominantly in KNW mode (early research); returning users with a prior
+    configurator interaction are often in ACQ mode (ready to book). Loyalty members who
+    return frequently may have arc-altitude ENJ in play. Segment before attributing
+    conversion intent to any session.
+  loyalty_member_note: >
+    Loyalty member behavior differs fundamentally from non-member behavior on conversion,
+    session depth, and ancillary interaction. Never report booking conversion without
+    loyalty-member segmentation available.
+  optional: [trip_type, domestic_vs_international, booking_window]
+  booking_window_note: >
+    Booking window (days between search and departure) is a critical deliberation variable.
+    A 48-hour booking window for a domestic flight vs. a 3-month booking for an
+    international trip have different KNW investment profiles, different ancillary
+    behavior, and different price-sensitivity patterns. When available as a custom
+    attribute, include as an optional split for any ACQ-focused analysis.
+  suppress_when: "cell n < 100 — matches CLAUDE.md small-sample rule; do not split when n starves the cell"
+
+# ── DX DIMENSIONS ─────────────────────────────────────────────────────────────
+# Benchmark ranges from Fullstory's DX Score dimensions.
+# The benchmark-corpus.yaml does not carry travel-specific DX Score dimension bands;
+# the corpus holds per-metric per-industry slice data (rage, dead, error clicks, etc.)
+# but not per-industry DX Score dimension breakdowns. The bands below are cross-industry
+# reference ranges from the Fullstory 2026 Benchmark Report / Goals & Benchmarks
+# prototype, used as descriptive reference data (N-4 — band is reference data, not a
+# runtime threshold). Travel-specific notes indicate where travel calibration differs.
+# Source: Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml.
+
+dx_dimensions:
+  - name: forms_and_checkouts
+    band: [45, 88]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    travel_note: >
+      Primary ACQ completion surface in travel. Includes the booking payment flow and
+      the ancillary microfunnels (seat, bag, insurance). Travel post_error_exits are
+      123.2/1k globally — below retail (170.6/1k) but still significant given the
+      research investment preceding the exchange. Any error on checkout is an ACQ
+      exchange failure amplified by prior research cost.
+      Source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 Global"
+
+  - name: call_to_action
+    band: [55, 90]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    travel_note: >
+      Booking conversion effectiveness — the ACQ transition from selection to commitment.
+      Travel dead_clicks are 344.6/1k (lowest of any industry — "users find what they want").
+      Source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 Global"
+
+  - name: frustration_satisfaction
+    band: [50, 95]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    travel_note: >
+      Travel rage_clicks are 130.4/1k (lowest of any industry globally). Frustration in
+      travel is characteristically low in aggregate — but concentrated at the booking moment.
+      YoY rage -3% (stable); thrashed_cursor +80% YoY (worsening — a leading frustration
+      signal on configurator surfaces). The aggregate number understates configurator friction.
+      Source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §YoY Change Global"
+
+  - name: navigation_design
+    band: [60, 92]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    travel_note: >
+      NAV toll in travel concentrates in the configurator (date picker, destination
+      autocomplete, passenger selectors). Navigation complexity from multi-leg itineraries
+      and flexible-date browsing is a structural challenge not present in retail NAV analysis.
+
+  - name: personalization
+    band: [60, 95]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    travel_note: >
+      Loyalty program personalization is central to the travel business — targeted fare
+      offers, points redemption recommendations, status-tier recognition. Personalization
+      failure for loyalty members carries higher stakes than in retail.
+
+  - name: comprehension_accessibility
+    band: [55, 98]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    travel_note: >
+      Fare rules, cancellation policy, and baggage policy clarity are primary
+      comprehension surfaces in travel. Long dwell on fare-rule sections is KNW success,
+      not a comprehension failure — same Commitment 2 disambiguation rule as retail.
+
+  - name: search_functionality
+    band: [65, 97]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    travel_note: >
+      In travel this dimension covers the booking engine configurator, not keyword search.
+      Configurator dead clicks (date pickers, destination autocomplete, passenger selectors)
+      and zero-results states (no flights for this route/date combination) are the primary
+      signals. Date picker instrumentation is a known gap — verify before building
+      configurator-friction segments. Source: travel-lane-20260910.md.
+
+# ── KEY BENCHMARK CALLOUTS ────────────────────────────────────────────────────
+# Travel-specific benchmark signals from benchmark-corpus.yaml.
+# These calibrate the agent's deviation ranking (R1 Step 2) for travel orgs.
+# Every value carries a source. These are reference data — not runtime thresholds (N-4).
+# Source for all: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §Travel"
+
+benchmark_callouts:
+  - metric: rage_clicks
+    global_value: 130.4
+    unit: per_1k
+    note: >
+      Lowest rage of any industry. Aggregate frustration is low; when rage_click rates
+      deviate upward for a travel org, the deviation carries more signal than the same
+      deviation in retail. Concentrate investigation on the booking engine and checkout.
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 Global"
+
+  - metric: dead_clicks
+    global_value: 344.6
+    unit: per_1k
+    note: >
+      Lowest dead clicks of any industry — "users find what they want." Dead-click
+      deviations on travel orgs are therefore more actionable: they indicate a navigation
+      failure on surfaces that typically work.
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 Global"
+
+  - metric: post_error_exits
+    global_value: 123.2
+    unit: per_1k
+    note: >
+      Below retail (170.6/1k) but the business cost per exit is higher due to the
+      research investment preceding booking failure. Do not normalize to retail thresholds.
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 Global"
+
+  - metric: session_duration_yoy
+    global_value: "+62%"
+    unit: percent_change_yoy
+    note: >
+      Longest-growing session duration of any industry — the research phase is expanding.
+      Long sessions in travel are predominantly KNW success, not ACQ failure. Source context
+      from benchmark-corpus.yaml: "Research phase expanding." Do not surface a long-session
+      finding for a travel org as a problem without establishing which surface class and
+      which phase the duration occurs in.
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §YoY Change Global"
+
+  - metric: bounce_rate_yoy
+    global_value: "+18%"
+    unit: percent_change_yoy
+    note: >
+      Bounce rate is worsening YoY in travel — a deteriorating entry surface signal.
+      Worst of any industry on this dimension. Entry surface calibration matters: users
+      arriving with booking intent who bounce immediately represent failed ACQ entry.
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §YoY Change Global"
+
+  - metric: thrashed_cursor_yoy
+    global_value: "+80%"
+    unit: percent_change_yoy
+    note: >
+      Thrashed cursor is worsening YoY. Likely driven by configurator friction —
+      users moving the cursor rapidly while unable to complete date picker or
+      destination autocomplete interactions. Prioritize investigation on booking
+      engine configurator surfaces before checkout.
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §YoY Change Global"
+
+# Wave 7B — audience inheritance overrides
+# CX and AM in travel inherit support rails (ticket surge + VIP) by default.
+# Same pattern as gaming: no trust-recovery or portfolio-health arc native to the travel currency mix.
+# Override at harness build time via role.boundary if the org has a distinct CX/AM motion.
+audience_defaults:
+  customer-experience:
+    inherit: support
+    rationale: >
+      Travel CX inherits the support rail (ticket surge, VIP incident) by default.
+      No travel-native trust-recovery arc distinct from support exists in the currency mix.
+      Override via role.boundary at setup if distinct.
+  acct-mgmt:
+    inherit: support
+    rationale: >
+      Travel AM inherits the support rail by default.
+      Override via role.boundary at setup if distinct.
+  # All other audiences use their standard persona rails.
+
+# ── QUESTIONS ─────────────────────────────────────────────────────────────────
+# Empty stub — schema matches industry-gaming.yaml segments.igaming.questions.
+# Fill after an SME interview produces travel-specific analytical questions.
+# Item schema: id, tag (generalizable | gambling_specific), ask, maps_to_persona
+questions: []

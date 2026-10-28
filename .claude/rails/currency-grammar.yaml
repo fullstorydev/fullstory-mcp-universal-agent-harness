@@ -1,0 +1,319 @@
+schema_version: 1
+# Loaded before persona and industry rails. Defines the interpretive vocabulary.
+# Shared across all composed rail cells. Authoring-only — at runtime, load the
+# composed rail-{audience}-{industry}.yaml, not this file plus two others.
+
+two_layer_model:
+  l1: "The Fullstory user's job currency — what this person needs RIGHT NOW to do their job"
+  l2: "The end user's experience currency — what the customer's users are spending on the product"
+
+# L2 — end-user exchange currencies. Use these in industry files under end_user_currencies.
+l2_currencies:
+  ACQ: { spends: "money, commitment, risk", seeks: "goods, access, booking, completion" }
+  KNW: { spends: "attention, patience", seeks: "answers, certainty, comparison" }
+  UTL: { spends: "time, effort", seeks: "completed task, control over own state" }
+  ENJ: { spends: "attention, discretionary time", seeks: "diversion, immersion, play" }
+  BEL: { spends: "participation, social risk", seeks: "connection, recognition, standing" }
+  INF: { spends: "effort, goodwill", seeks: "reciprocity, a product that changes" }
+  NAV: { type: "TOLL — not a currency", note: "nobody seeks navigation; it is overhead on the real exchange" }
+
+l2_only_prohibition:
+  note: >
+    These three codes describe end-user behavioral exchanges only. They must NOT appear
+    in persona job currency_code fields (L1). Using them at L1 conflates the analyst's
+    epistemic exchange (receiving evidence) with the end user's behavioral exchange
+    (executing a transaction, seeking entertainment, or seeking social connection).
+    The derivation engine enforces this at runtime: `_check_l2_only_prohibition()` in
+    `derive.py` raises `ValueError` if any persona job `currency_code` is ACQ, ENJ, or BEL.
+    If a new code is assigned to a persona job that would fit one of these categories,
+    recode it as KNW, UTL, or INF — whichever describes what the analyst is actually
+    spending and seeking.
+  prohibited:
+    ACQ: "End-user spending only — money, commitment, risk seeking goods/access/booking. No analyst job has this exchange."
+    ENJ: "End-user spending only — discretionary attention seeking diversion/play. No analyst job seeks entertainment from data."
+    BEL: "End-user spending only — participation/social risk seeking connection/recognition. No analyst job seeks belonging from evidence output."
+
+l1_currencies:
+  note: >
+    These codes describe analyst-layer exchanges only. They operate at arc altitude
+    and must NOT appear in L2 end-user persona job contexts (where ACQ, ENJ, BEL,
+    KNW, UTL, INF apply). L1 codes are not a prohibition on L2 codes — L2 codes
+    remain valid for all end-user exchange jobs. L1 codes are additive at the analyst layer.
+  TRS:
+    name: "Trust & Relational Continuity"
+    level: L1
+    definition: >
+      The analyst spends relational capital, prior goodwill, and face with the customer
+      or stakeholder. They seek verified trustworthiness of the relationship, of a recovery,
+      or of a finding's reception. Jobs using TRS require arc altitude — trust state is
+      only visible across sessions, not within one.
+    prohibited_on: L2_persona_jobs
+    not_to_be_confused_with: >
+      UTL (task completion) — completing a task is not the same as repairing trust.
+      KNW (information seeking) — knowing what happened is not the same as knowing
+      whether the relationship survived.
+  RSK:
+    name: "Risk Containment under Reliability Threat"
+    level: L1
+    definition: >
+      The analyst spends scarce attention and remaining error-budget under threat of
+      recurrence or silent drift. They seek a defensible decision to freeze, fix, or
+      keep shipping, grounded in how user-visible reliability risk is accumulating.
+      Jobs using RSK require arc altitude — recurrence is invisible at session altitude.
+    prohibited_on: L2_persona_jobs
+    not_to_be_confused_with: >
+      KNW (information seeking) — diagnosing one exception is KNW. Tracking whether
+      the same exception class is recurring across releases is RSK.
+    corpus_constraint: >
+      RSK signals must be pattern: true. If a signal maps to a raw single-event
+      (exception, poor_lcp, network_error), it is KNW, not RSK.
+
+jobs_not_roles:
+  rule: "The operative unit is the JOB a person is in, not their title. Enumerate jobs per persona. Per job: l1_job_currency, evidence_accepted, evidence_rejected, stop_conditions."
+  failure_mode: "A rail that averages across jobs produces output no real person ever needs."
+
+# Every MCP sequence inherits these. Rails that skip them route around two mandatory kit gates.
+preconditions:
+  semantic_layer: "An org foundation is a precondition for every MCP call (CLAUDE.md Org Foundation Gate). Prefer existing segment/metric/funnel IDs from org-foundation.md (or semantic-index.yaml on an old layer) over building new objects."
+  discipline: "Build → Confirm → Compute per fullstory-mcp-expert-guide. Source every ID from a tool response. Pair stateful operations: session_open → session_view/diff → session_close."
+  surface_binding: "Resolve every surface key through the org's semantic-layer/surface-map.yaml. An unbound surface degrades to org-wide signal order — say so out loud, never silently."
+  logging: "Any segment or metric created during a run is appended to methodology.yaml per the Methodology Persistence Protocol."
+
+# One global rule — referenced from every job that calls get_opportunities rather than repeated per call site.
+opportunities_rule:
+  on_empty: "Any get_opportunities call that returns empty triggers the industry file's opportunities_fallback chain IN FULL before reporting that nothing was found. Never report 'no opportunities' without running the chain."
+  premium_note: "get_opportunities is Premium/Advanced-gated. On a lower-tier org the CLAUDE.md StoryAI Confirmation rule is unsatisfiable — state that once, run the fallback chain, and do not silently omit the badge step."
+
+universal_evidence_rules:
+  anecdote_rule: "A session replay without backing data is anecdotal evidence — evidence of anecdotes. Data first, representative clip second."
+  clip_selection: "Select the session that best represents the statistical finding. Median-ish path. Same device mix as the finding. Under 60 seconds. Never the most dramatic session."
+  magnitude_rule: "Always include denominator: '12% = ~1,400 users/week'. Never cite a percentage without a population."
+  benchmark_rule: "State the reference point behind every benchmark. A threshold without a stated expectation cannot be defended."
+
+loading_order:
+  "1": "currency-grammar.yaml  (this file — always first)"
+  "2": "industry-{industry}.yaml"
+  "3": "persona-{audience}.yaml"
+  note: "Composed rail-{audience}-{industry}.yaml resolves all references at build time. Factored files are authoring-only. Only composed cells are loaded at runtime."
+
+# ── W-06 EXTENSION — 2026-09-11 ──────────────────────────────────────────────
+# The following sections were added in Wave 2 (W-06). They extend the grammar
+# with invariants, universal exceptions, and discipline rules that apply to
+# every session regardless of industry or audience context.
+# Existing keys above this line are unchanged.
+
+commitments:
+  # Seven commitments from value-manifesto-distilled.md, encoded as invariants.
+  # Invariant means: no per-industry or per-audience override may contradict these.
+  "1": "Name the currency before naming the number — no metric ships without stating what the user was spending."
+  "2": "Never call a signal good or bad without the exchange in play — session length, scroll depth, and dwell time have no fixed valence."
+  "3": "Treat friction as a toll, not a category — wayfinding cost is subtracted from the exchange that follows; it is never a value in itself."
+  "4": "Index output to the job, not the title — the same human wants magnitude, cause, a clip, or a trend line depending entirely on which job they are in."
+  "5": "Measure realized and perceived value separately — behavior for the first, expressed judgment for the second; disagreement is the headline."
+  "6": "State the reference point behind every benchmark — satisfaction is a comparison; a threshold without a stated expectation cannot be defended."
+  "7": "Build rails that generate interpretation, not rails that memorize conclusions — encode the rules that produce a reading, not a list of readings."
+  enforceability:
+    "5":
+      enforceable: false
+      reason: >
+        Commitment 5 requires expressed judgment (survey, interview, NPS) to measure perceived value.
+        The Fullstory MCP instruments behavior only — the experiencing self, not the evaluating self.
+        When Commitment 5 cannot be satisfied, state the gap explicitly:
+        'Realized value is measured. Perceived value is not available from behavioral data alone —
+        expressed judgment is required.' Do not skip or silently omit it.
+  source: "value-manifesto-distilled.md — Seven Commitments"
+
+# These two rules extend universal_evidence_rules semantically.
+# They are top-level keys because YAML does not permit extending an existing
+# mapping in a later block without overwriting it.
+compare_successes_rule: >
+  Any finding about a failure path must also examine the success path. Compare sessions that
+  completed the exchange against sessions that did not. A finding built on failed sessions alone
+  is a finding about what frustrated users look like — not about what caused the frustration.
+  The diagnostic question is always: what did successful users do differently?
+  Source: COVERAGE.md; 04-field-model-purposes.md §7 analysis-assertions.
+
+non_buying_session_rule: >
+  Never call a non-buying session a failed purchase without first establishing that the user
+  had intent to buy. Users arrive at retail and travel sites from ads, social content, and
+  organic search with no purchase intent — shopping and brand exposure are complete, successful
+  exchanges that the business scores as failures. Maintain two separate ledgers: did the user
+  accomplish their goal? and did the business get a conversion? Test for ACQ intent before
+  attributing any behavioral signal to ACQ failure. Intent evidence: cart interaction, checkout
+  visit, or search with purchase-oriented signals.
+  Source: retail-lane-20260908.md; currency-transition.md §"whose success?"
+
+anti_confabulation:
+  rule: >
+    "We found nothing" and "it is real but not what they said" are valid analytical outcomes,
+    not failures. An agent oriented to serve is dangerous because it will confabulate a root
+    cause rather than return an honest negative. Disconfirmation is a substantiated finding.
+  valid_outcomes:
+    - "the reported issue is not visible in session data — the hypothesis was faulty"
+    - "the issue is real but the stated cause is wrong — the user's mental model of what happened is incorrect"
+    - "the issue is a product working as designed but delivering poor UX — not a technical bug"
+    - "no conclusion is possible — insufficient sessions or inconclusive evidence; state this and stop"
+  failure_mode: >
+    Continuing to search after exhausting available evidence, or constructing a narrative from
+    insufficient data, to avoid returning an empty-handed result. This is confabulation. Stop
+    conditions must be encoded per job; reaching a stop condition is a success, not a failure.
+  source: "support-lane-20260908.md; 04-field-model-purposes.md"
+
+session_selection_filter:
+  rule: >
+    Apply a sufficient-content test before committing time to a session. A session must contain
+    enough behavioral signal to be informative for the current job. Skip and move on if it fails.
+  bounce_gate: >
+    A clear bounce — entry page view followed immediately by exit, no meaningful interaction —
+    is a dead end. It contains no information about the exchange that failed. Skip it and watch
+    another session. Do not narrate a bounce as an insight.
+  minimum_content:
+    - "at least one interaction beyond a page view (click, scroll, form field, search)"
+    - "session duration sufficient for the job: engineering fault investigation may need 20+ seconds; support case review may need the full session"
+    - "the relevant surface must appear — a session that never reaches the surface under investigation is not a representative sample"
+  selection_priority: >
+    Prefer sessions that represent the statistical finding: median-ish path, same device as the
+    finding. Under 60 seconds where possible for clips. Never the most dramatic session — that
+    is a cherry-pick that undermines the finding.
+  source: "W-06 spec; universal_evidence_rules.clip_selection above"
+
+universal_exceptions:
+  note: >
+    Four exceptions that apply universally, regardless of industry or audience. These are the
+    systematic blind spots that any analysis is most likely to miss. W-25 expands these into a
+    formal register with per-audience and per-industry scoping; this entry is the seed.
+  exceptions:
+    survivorship:
+      id: "universal-survivorship"
+      claim: >
+        Success metrics measure completion, not ease. Users who completed a flow are not a
+        representative sample of users who attempted it — the most frustrated left before
+        finishing. Friction that the most tenacious users absorb is invisible in completion-rate
+        analysis. Measuring satisfaction on completers only measures the people patient enough
+        to persist.
+      detection: "compare completers against abandoners; check for rage clicks and error clicks inside the completing population, not only in the abandoning one"
+      source: "COVERAGE.md; ux-design-lane-20260908.md; 04-field-model-purposes.md"
+
+    compare_successes:
+      id: "universal-compare-successes"
+      claim: >
+        A finding about why sessions fail requires comparison against sessions that succeeded.
+        Watching only failed sessions answers 'what does failure look like' — not 'what causes
+        failure.' The causal question requires the contrast group.
+      detection: "any time a segment of failed or frustrated sessions is built, build the complement (completed or satisfied sessions) and compare the two"
+      source: "COVERAGE.md; support-lane-20260908.md; 04-field-model-purposes.md"
+
+    unbuilt_path:
+      id: "universal-unbuilt-path"
+      claim: >
+        The highest-value finding may be a path that does not exist and therefore leaves no data
+        trace. A user who tries to do something the product cannot do does not show up in funnel
+        analysis — they exit or find a workaround, and both look like noise. Query-driven
+        analytics cannot find an unbuilt path at any level of sophistication.
+      detection: "not detectable from behavioral data alone; flag as a product-gap candidate when common workarounds are observed; the gap requires direct questioning or exit-survey data to surface"
+      source: "fintech-sekizui-20260907.md; 04-field-model-purposes.md; 03-strategy.md"
+
+    hidden_powerusers:
+      id: "universal-hidden-powerusers"
+      claim: >
+        Expert users diverge from average users behaviorally — they use shortcuts, skip tutorial
+        flows, and interact with the product in ways that never appear in standard metric aggregates.
+        They are invisible to the benchmark by construction: they rarely trigger the frustration
+        signals that dominate signal rankings. Standard analysis averages across them and misses
+        both their engagement depth and their vulnerability to product changes that break
+        their workflows with no warning in aggregate metrics.
+      detection: "segment by session_count > p90 or by interaction density; compare their behavioral signature against the median-user segment; changes that disproportionately impact this cohort will not appear in aggregate frustration metrics"
+      # CORRECTED 2026-09-11 (W-25 finding): the primary source was missing. This exception is
+      # INDEPENDENT evidence — it comes from the Sekizui fintech interview, one of only two
+      # independent sources in the entire corpus. The planning documents cited here merely
+      # carried it forward. Independence is the corpus's scarcest property; do not lose its
+      # attribution again.
+      source: "fintech-sekizui-20260907.md; 04-field-model-purposes.md; 03-strategy.md; COVERAGE.md"
+
+seasonality_rule:
+  rule: >
+    Before making any trend claim — this metric is improving, rage clicks are rising, conversion
+    is down — consider whether the comparison window crosses a seasonal boundary for this specific
+    company and vertical.
+  method: >
+    Reason from what is known about this company: does this industry have peak periods (BFCM for
+    retail, tax season for fintech, summer booking window for travel)? Does the time window under
+    analysis span a high-traffic or promotional period that would systematically inflate or deflate
+    the metric? If yes, state the confound explicitly before concluding.
+  prohibition: >
+    Do NOT produce or reference a pre-authored per-industry seasonal calendar. That approach was
+    considered and rejected: it encodes a prior that overrides org-specific knowledge, and it is
+    wrong at the level of individual companies. A B2B SaaS company with fiscal-year budget cycles
+    is not captured by a retail BFCM calendar. Reason from what is known about this org, not from
+    a generic industry template.
+  correct_form: >
+    "This comparison spans November–December, which is the peak trading period for retail. The
+    apparent YoY improvement in post-error exits may reflect a better-optimized checkout for BFCM
+    rather than a structural change. Recommend comparing against a non-peak window to isolate the
+    structural trend."
+  incorrect_form: >
+    "Retail peak is BFCM; seasonal adjustment applied." — This is the rejected template approach.
+    Reason from org context, not from a loaded calendar.
+  source: "W-06 spec; retail-lane-20260908.md; value-manifesto-distilled.md Commitment 6"
+
+# ── ASK BREADTH ───────────────────────────────────────────────────────────────
+# Added 2026-09-11, Lane ruling. The Layer 1 mirror of the ranked/business_value
+# split at Layer 2: the same narrow-vs-broad distinction that governs an end user's
+# session also governs the Fullstory user's own session.
+# ── NUMBER CLAIMS ─────────────────────────────────────────────────────────────
+# Applies to all industries. Do not add a per-industry private copy.
+# Formerly called "sizing discipline" in SME skill — folded here, not renamed.
+# Source: SME igaming-value-report.skill; joint review W9 igaming overlay.
+
+number_claims:
+  every_number_is_one_of: [measured, derived, assumption]
+  invented_external_benchmarks: forbidden
+  annualize: assumption_only   # never treat ×N as arithmetic; state the multiplier as an assumption
+  prefer_period_figure: true   # use the actual window figure; annualize only if org requires it
+  label_rule: >
+    Every number in an analysis or deliverable must be labeled as one of:
+    measured (directly observed from Fullstory data in the stated window),
+    derived (computed from measured values — e.g., a rate, a ratio, a period sum),
+    or assumption (inferred, annualized, or benchmarked from outside this org's data).
+    Never let an assumption pass as a measurement. Never let a derived value be stated
+    without its measured inputs. Bracket impact claims as ranges — do not point-estimate.
+  bracket_rule: >
+    State ranges with explicit assumptions rather than point estimates: "between $X and $Y
+    assuming [A]." A range invites the stakeholder to substitute their own assumptions,
+    which is the conversation you want. A point estimate forecloses it and is harder to defend.
+  partial_remediation: >
+    Discount for partial remediation. An identified loss is not fully recoverable.
+    Do not present 100% of a quantified loss as guaranteed recoverable revenue.
+    State what fraction is addressable given the fix scope.
+
+ask_breadth_rule:
+  rule: >
+    Before analyzing, determine whether the ask is single-currency or spans several. A direct
+    question with a specific outcome in mind behaves like a one-currency session. A broad
+    question is several analyses wearing one sentence, and running at it as though it were one
+    produces a confident partial answer.
+  single_currency_form: >
+    "Here is a support ticket with a session URL." The job is known and the currency is known —
+    they are spending time and effort seeking a resolved ticket. Go straight at it. Decomposition
+    would be friction.
+  multi_currency_form: >
+    "How did this marketing campaign perform?" The word "performance" is doing a great deal of
+    work. It spans end-user behavior through the campaign, how that campaign compares against
+    others, and conversion through the funnel the campaign generated. Three analyses.
+  required_behavior: >
+    When the ask is broad, NAME THE PARTS BEFORE MEASURING ANY OF THEM. State the decomposition
+    back to the user so they can redirect it — they may only want one of the three. Do not
+    silently pick one part and answer as though it were the whole question, and do not run all
+    three without saying that is what is happening.
+  prohibition: >
+    Do NOT author or consult a dictionary of what broad words decompose into. "Performance,"
+    "engagement," "popular," "healthy" mean different things to different audiences, the list is
+    unbounded, and pre-authoring it is foreclosed (build plan §3a — generate interpretation, do
+    not memorize conclusions). Reason the decomposition live from who is asking and what is
+    actually measurable on this property.
+  detection: >
+    Breadth is visible in the phrasing, which is what jobs[].trigger exists to recognize. A
+    narrow trigger reads differently from a broad one. The audience profile declares whether a
+    job is characteristically single or multi via jobs[].currency_breadth; the specific
+    decomposition is never authored.
+  source: "Lane ruling 2026-09-11; profile-schema.md jobs[].currency_breadth field notes"

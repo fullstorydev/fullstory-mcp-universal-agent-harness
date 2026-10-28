@@ -1,0 +1,518 @@
+# GENERATED — do not edit manually
+# rail-format-version: 1.0
+# Generated: 2026-10-28
+audience: marketing
+industry: travel
+entry_altitude: arc
+tempo: slow
+truncation: 6
+currency_mix:
+- KNW
+- ACQ
+- UTL
+exec_rollup: false
+signals:
+- signal: campaign_sourced_session
+  currency: KNW
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: attribute a session to a campaign or traffic source
+- signal: dead_click
+  currency: KNW
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 0.6112
+  intent: find specific fact
+- signal: post_error_exit
+  currency: ACQ
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 1.019
+  intent: commit to purchase
+- signal: error_click
+  currency: ACQ
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 0.8263
+  intent: commit to purchase
+- signal: rage_click
+  currency: UTL
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 0.5772
+  intent: complete a form or structured task
+- signal: zero_result_search
+  currency: KNW
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: find specific fact
+generation_meta:
+  pattern_signals_excluded: 0
+  missing_benchmark_count: 22
+  derive_version: '1.0'
+
+# ── Jobs (appended by compose_cells_for_oss) ──
+jobs:
+- id: campaign_attribution
+  currency_code: KNW
+  currency: attribution confidence — which campaign drove this visit, and what did
+    those visitors do on site?
+  currency_breadth: single
+  spans: []
+  description: 'Identify which campaigns are driving traffic, via what tracking method
+    (UTM params or dedicated promo page), and whether the visitor is a first brand
+    impression or an existing customer. Arc altitude is mandatory — a display ad impression
+    may not produce a direct click but can influence an organic return visit two sessions
+    later. Single-session attribution systematically undervalues upper-funnel and
+    display campaigns by assigning their conversions to the final organic or direct
+    touch.
+
+    '
+  triggers:
+  - which campaign is driving this traffic
+  - where is this traffic coming from
+  - UTM breakdown
+  - campaign source
+  - attribution
+  - first touch
+  - which ad is working
+  - traffic source
+  - campaign traffic
+  - which channel
+  - source medium campaign
+  evidence_form: magnitude
+  entry_altitude: arc
+  asr: none
+  routes_to:
+  - audience: exec
+    form: campaign traffic volume by source with session share and denominator
+  - audience: product-mgmt
+    form: 'post-landing friction findings: which surfaces trip campaign visitors most
+      often'
+  investigation_priors:
+    tracking_signal_hierarchy:
+      '1': UTM parameters in session entry URL — utm_source, utm_medium, utm_campaign
+      '2': Dedicated landing or promo page as session entry point — page slug or URL
+        pattern
+      '3': Historical transaction presence — greenfield (first brand impression) vs.
+        returning customer already mid-relationship
+      source: persona/marketing-lane-20260910.md — Three concrete signals
+      note: 'Check discover_org_context for existing campaign-based segments or UTM-based
+        filters. Prefer existing segment IDs from org-foundation.md (or semantic-index.yaml
+        on an old layer) over rebuilding. If no campaign segments exist, build from
+        entry URL UTM params first, then named promo page patterns.
+
+        '
+    arc_altitude_note: 'Arc altitude is mandatory for attribution. A user who encounters
+      a display campaign but does not click may return organically three sessions
+      later and convert. Single-session analysis attributes that conversion to organic,
+      missing the display touch entirely. When cross-session data is available, look
+      for a prior campaign touchpoint in the arc before assigning the conversion session
+      to direct or organic. Flag the attribution gap explicitly when only last-touch
+      signal is available.
+
+      '
+    opening_move: 'Check discover_org_context for UTM-based segments or promo page
+      elements first. If they exist, use those IDs — do not rebuild. Then compute
+      bounce rate and funnel depth per campaign segment before watching any sessions.
+      Attribution before behavior: establish the source split first, then characterize
+      each cohort.
+
+      '
+    mcp_sequence:
+    - discover_org_context(['UTM', 'campaign', 'promo', 'landing']) — look for existing
+      campaign segments or promo page elements
+    - 'build_segment: sessions where entry URL contains UTM parameters (prefer existing
+      segment from org-foundation.md (or semantic-index.yaml on an old layer))'
+    - 'build_segment: sessions where entry URL matches named promo or campaign landing
+      page patterns'
+    - 'compute_metric: session count per campaign source with denominator (all sessions
+      in window)'
+    - 'compute_metric: bounce rate per campaign segment'
+    - 'compute_metric: funnel depth per campaign segment — how far into the site did
+      campaign visitors go?'
+    - 'build_segment: returning users in campaign traffic (historical transaction
+      event > 0 in prior window)'
+    - 'compute_metric: greenfield vs. returning customer split per campaign source'
+    - get_sessions on the highest-volume campaign segment — 3 to 5 sessions
+    - session_open(session_id)
+    - session_view() — confirm entry point, scroll depth, subsequent navigation
+    - session_close() — MANDATORY; pair every open with a close
+    - get_opportunities — cross-reference; if empty or non-Premium org, run the industry
+      overlay's opportunities fallback chain before reporting no results
+  stop_conditions:
+  - Campaign sources identified with session share per source and denominator — stop;
+    post-landing behavior is a separate job (landing_behavior)
+  - Bounce rate and funnel depth computed per campaign segment — attribution analysis
+    complete
+  - If no UTM parameters and no named landing pages found in session data — state
+    'no campaign tracking signal detected; cannot attribute traffic by campaign without
+    UTM parameters or named promo pages' and stop
+  - If arc-level cross-session data is unavailable — state the attribution gap ('only
+    last-touch session data available; upper-funnel display attribution may be undercounted')
+    and proceed with last-touch only
+- id: campaign_performance
+  currency_code: KNW
+  currency: 'campaign performance report — a multi-part analysis: behavior on site,
+    comparison against other campaigns, and conversion through the funnel'
+  currency_breadth: multi
+  spans:
+  - UTL
+  - ACQ
+  description: 'Full campaign performance analysis. This is the canonical multi-breadth
+    job: the question "how did this campaign perform?" spans three analyses wearing
+    one sentence — end-user behavior through the campaign, comparison against other
+    campaigns, and conversion through the campaign funnel. Name all three parts before
+    measuring any of them. The marketer may only want one.
+
+    '
+  triggers:
+  - how did this campaign perform
+  - campaign performance
+  - was this campaign successful
+  - campaign results
+  - campaign ROI
+  - did the campaign work
+  - how is the campaign doing
+  - post-campaign analysis
+  - campaign wrap-up
+  - performance of our website over [holiday/period]
+  - how did we do over Labor Day
+  - Labor Day performance
+  - holiday campaign performance
+  - performance over the holiday
+  evidence_form: magnitude
+  entry_altitude: arc
+  asr: none
+  routes_to:
+  - audience: exec
+    form: 'campaign ROI narrative: traffic volume, engagement depth, conversion rate
+      vs. prior campaign benchmark'
+  - audience: product-mgmt
+    form: 'post-landing friction: where did campaign visitors hit drop-off on the
+      conversion path?'
+  - audience: engineering
+    form: 'landing page performance issues: CWV or error signals specific to campaign
+      entry surfaces'
+  multi_breadth_protocol:
+    rule: 'Name all three analyses before measuring any of them. State the decomposition
+      back to the marketer so they can redirect it — they may only want one. Do not
+      silently pick one part and answer as though it were the whole, and do not run
+      all three without stating that is what is happening.
+
+      '
+    decomposition:
+      1_behavior: End-user behavior through this campaign — what did these visitors
+        do on site? (engagement depth, bounce, funnel navigation)
+      2_comparison: Campaign comparison — how does this campaign rank against others
+        in the same period? (relative source performance)
+      3_conversion: Conversion through the campaign funnel — what share of campaign
+        visitors completed the target action?
+    redirect_prompt: '"Before I measure anything: ''campaign performance'' spans three
+      analyses — (1) what campaign visitors did on site, (2) how this campaign compares
+      to others, and (3) how many converted. Do you want all three, or is there one
+      that matters most right now?"
+
+      '
+    if_all_three: 'Proceed in order: behavior → comparison → conversion. Summarize
+      each before starting the next.'
+  campaign_value_rule: 'Campaign success is not judged by ACQ (monetary conversion)
+    alone. A campaign that drives KNW (information-seeking at scale — deep content
+    reading, comparison behavior) or ENJ (entertainment / brand engagement) is a brand
+    success even with zero transactions. Newsletter signup, feature discovery, and
+    return visit rate are all legitimate conversion outcomes. Evaluate each campaign
+    against its stated objective; do not default to transaction rate as the universal
+    judge.
+
+    '
+  investigation_priors:
+    opening_move: 'Confirm campaign objective before measuring. A campaign designed
+      for brand awareness (KNW/ENJ) and one designed for direct response (ACQ) use
+      different success metrics. Ask if unclear. Then decompose the three analyses
+      and run in order.
+
+      '
+    mcp_sequence:
+      part_1_behavior:
+      - reuse campaign_attribution segment IDs from methodology.yaml — do not rebuild
+      - 'compute_metric: session depth (page views per session), scroll depth, dwell
+        time'
+      - 'compute_metric: bounce rate for the campaign cohort'
+      - 'compute_metric: post-click surface navigation — which surfaces do campaign
+        visitors reach after landing?'
+      - 'get_sessions: 3–5 representative engaged sessions from campaign cohort —
+        NOT bounces'
+      - session_open → session_view → session_close — MANDATORY pair
+      part_2_comparison:
+      - discover_org_context — find other active campaigns in the period
+      - build_segment per other campaign sources in the window
+      - compute same behavioral metrics across all campaign segments
+      - 'rank: session depth, bounce rate, funnel depth per campaign'
+      part_3_conversion:
+      - 'build_funnel: campaign visitor path to conversion (entry → relevant surfaces
+        → target action)'
+      - 'compute_funnel: conversion rate for campaign visitors with denominator'
+      - 'compute_metric: campaign conversion rate vs. organic baseline — same period'
+      - get_opportunities — cross-reference conversion blockers StoryAI has independently
+        surfaced; if empty or non-Premium org run fallback chain in full
+  stop_conditions:
+  - All three analyses complete with summaries — stop; do not continue adding dimensions
+  - If only one part was requested — complete that part only; offer the other two
+    but do not run them unsolicited
+  - If campaign tracking is absent — state 'campaign performance analysis requires
+    UTM parameters or named promo pages; neither was found' and stop
+- id: path_depth_analysis
+  currency_code: KNW
+  currency: path depth measurement — p50/p75/p95 distribution of sessions between
+    consecutive purchases; not an attribution model
+  currency_breadth: single
+  spans: []
+  description: 'Measure the distribution of sessions between two purchases — the in-house
+    "path." A purchase ends one path and starts the next; path depth is the count
+    of sessions in that span. This is NOT attribution-model "path" (first-touch /
+    last-touch / multi-touch). It is the behavioral rhythm of the customer: how many
+    visits before they buy again. Requires historical transaction events in the semantic
+    layer.
+
+    '
+  triggers:
+  - paths to conversion
+  - how many sessions to convert
+  - how many touches
+  - session span between purchases
+  - path depth
+  - sessions between orders
+  - return visit pattern
+  - how long before they buy again
+  - repurchase cadence
+  evidence_form: defensible_measurement
+  entry_altitude: arc
+  asr: none
+  routes_to:
+  - audience: product-mgmt
+    form: 're-engagement opportunity: p75 path depth indicates how much runway exists
+      before a second purchase for typical customers'
+  - audience: exec
+    form: 'customer lifecycle narrative: typical path depth and how it varies by acquisition
+      source or cohort'
+  path_vocabulary_gate: 'Before measuring, confirm the person means path-as-session-span,
+    not path-as-attribution-model. Ask once if ambiguous: "By ''path,'' do you mean
+    the number of sessions between two purchases, or are you asking about which marketing
+    channel influenced the purchase?" Do not assume.
+
+    '
+  investigation_priors:
+    precondition: 'Path depth analysis requires historical transaction events in the
+      semantic layer. Check org-foundation.md (or semantic-index.yaml on an old layer)
+      for a transaction or purchase event before building segments. If no transaction
+      event exists, state: "Path depth analysis requires a purchase or conversion
+      event in the semantic layer — none found. Session frequency for returning users
+      can still be analyzed, but sessions-between-transactions cannot be computed
+      without a transaction event." Stop and wait for direction.
+
+      '
+    opening_move: 'Verify transaction event in org-foundation.md (or semantic-index.yaml
+      on an old layer) first. Gate on absence — do not substitute. Then build the
+      repeat-purchaser segment (2+ transactions in the window) and compute the p50/p75/p95
+      distribution of sessions between consecutive transactions.
+
+      '
+    mcp_sequence:
+    - 'verify transaction event exists in org-foundation.md (or semantic-index.yaml
+      on an old layer) — gate: stop if absent, state precondition gap'
+    - 'build_segment: users with 2+ transactions in the analysis window'
+    - 'compute_metric: distribution of session count between consecutive transactions
+      — p50, p75, p95'
+    - 'compute_metric: path depth by acquisition source (UTM or landing page) — do
+      paid-traffic converters take shorter or longer paths?'
+    - 'compute_metric: calendar days between transactions at p50/p75/p95 — time span
+      alongside session count'
+    - 'compute_metric: path depth by new vs. repeat buyer cohort if available in semantic
+      layer'
+    - 'get_sessions: 3 representative arcs — one short-path converter (p25 or below),
+      one median-path converter, one long-path converter (p75 or above)'
+    - session_open → session_view → session_close — MANDATORY pair
+  stop_conditions:
+  - p50/p75/p95 of session count and calendar days between transactions computed with
+    denominator (users in analysis window) — that is the finding; stop
+  - If transaction event is absent from semantic layer — stop after stating the gap;
+    do not substitute returning-user segment for path depth
+  - If fewer than 100 users have 2+ transactions in the window — state 'insufficient
+    repeat-purchase sample (N < 100); treat as directional only' and stop
+- id: landing_behavior
+  currency_code: KNW
+  currency: post-landing engagement — count and rate of meaningful engagement by campaign
+    visitors vs. organic baseline
+  currency_breadth: single
+  spans: []
+  description: 'After attribution is established, diagnose what campaign visitors
+    do once they land. Builds on campaign_attribution segmentation — reuse those segment
+    IDs from methodology.yaml. The diagnostic question: do campaign visitors engage
+    with the site or land and leave? A non-buying session is not automatically a failed
+    campaign session — brand exposure and content consumption are complete exchanges.
+
+    '
+  triggers:
+  - what are these visitors doing
+  - post-click behavior
+  - landing page engagement
+  - what happens after they click
+  - campaign visitor behavior
+  - are these visitors engaged
+  - why are they bouncing
+  - landing page quality
+  evidence_form: magnitude
+  asr: none
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: 'friction on campaign landing surfaces: where do engaged visitors hit drop-off,
+      with magnitude and denominator'
+  - audience: engineering
+    form: 'landing page performance: CWV or error signals on campaign entry surfaces
+      that suppress engagement'
+  non_buying_session_rule: 'Apply non_buying_session_rule from currency-grammar.yaml.
+    A session that does not convert is not a failed campaign session unless ACQ intent
+    was established (cart visit, checkout attempt, or product search with purchase
+    signals). A user who lands from a brand campaign and reads three articles has
+    completed a KNW or ENJ exchange. Maintain two ledgers: did the user engage? and
+    did the business get a conversion? Test for ACQ intent before attributing any
+    signal to ACQ failure.
+
+    '
+  investigation_priors:
+    engaged_vs_bounced_split:
+      engaged_definition: session_depth > 1 page AND at least one interaction beyond
+        page view (click, scroll past 50%, form field, search)
+      bounced_definition: entry page only, no meaningful interaction, exits with no
+        second-page view
+      rule: 'Always split into engaged vs. bounced before diagnosing. A landing page
+        engagement problem is fixed by improving the page. A traffic quality problem
+        is fixed by improving campaign targeting. They are different root causes requiring
+        different owners.
+
+        '
+      source: Build plan W-18; persona/marketing-lane-20260910.md bounce-rate finding
+    opening_move: 'Retrieve campaign_attribution segment IDs from methodology.yaml.
+      Do not rebuild them. Build an organic/direct baseline segment for the same time
+      window — the diagnostic question is whether campaign visitors behave differently
+      from baseline, not whether they are perfect in isolation.
+
+      '
+    mcp_sequence:
+    - retrieve campaign_attribution segment IDs from methodology.yaml — do not rebuild
+    - 'build_segment: organic/direct sessions for same time window (baseline comparison)'
+    - 'compute_metric: bounce rate — campaign cohort vs. organic baseline'
+    - 'compute_metric: session depth (page views per session) — campaign cohort vs.
+      organic baseline'
+    - 'compute_metric: scroll depth on landing surface — campaign cohort vs. organic
+      baseline'
+    - 'build_segment: engaged campaign visitors (session_depth > 1, at least one non-pageview
+      interaction)'
+    - 'compute_metric: which surfaces do engaged campaign visitors navigate to after
+      landing?'
+    - 'compute_metric: frustration signals on the landing surface — rage-click, error-click,
+      dead-click for engaged cohort'
+    - 'get_sessions: 3–5 sessions from the ENGAGED cohort (bounces contain no useful
+      behavioral signal)'
+    - session_open → session_view → session_close — MANDATORY pair
+    - get_opportunities — cross-reference any engagement blockers with StoryAI findings;
+      if empty or non-Premium org run fallback chain
+  stop_conditions:
+  - Bounce rate and engagement split computed vs. organic baseline, with denominator
+    — that is the landing behavior finding; stop
+  - 'If campaign bounce rate > 70% — before diagnosing the landing page, offer to
+    return to campaign_attribution to diagnose traffic quality: high bounce may be
+    targeting, not page design'
+  - If engagement metrics match organic baseline — state 'campaign visitor behavior
+    is not meaningfully different from organic baseline on this surface' and stop;
+    that is a finding
+- id: creative_diagnosis
+  currency_code: KNW
+  currency: creative diagnosis — why the creative or message underperformed, not that
+    the metric dropped
+  currency_breadth: single
+  spans: []
+  description: 'When a campaign or landing page underperforms, this job distinguishes
+    creative and message failure from distribution, targeting, or timing failure.
+    Fullstory''s behavioral evidence is strongest on the landing and engagement side
+    — what did visitors who arrived actually do? Did they engage with the content,
+    ignore it, or leave immediately? It is weaker on pre-click targeting quality —
+    that is attribution-layer analysis. This job does not duplicate launch-watch;
+    launch-watch is a time-bounded post-launch assessment. Creative diagnosis is triggered
+    by sustained underperformance signals. Marketing creative diagnosis can overlap
+    with exec launch-watch; do not duplicate an exec-facing launch-watch job here.
+
+    '
+  triggers:
+  - why is this campaign not converting
+  - what's wrong with our creative
+  - the ad is getting clicks but nothing is happening
+  - why is the landing page not working
+  - our message isn't resonating
+  - which variant is underperforming
+  - creative isn't converting
+  - campaign is underperforming
+  - the creative is failing
+  - landing page isn't working
+  evidence_form: mechanism
+  entry_altitude: session
+  asr: optional
+  playbook_gate: 'Before firing any MCP sequence, confirm which read the human wants:
+    Are they diagnosing a specific variant? Comparing variants? Or looking at overall
+    landing behavior for the campaign cohort? One-sentence answer gates the sequence.
+    Do not fire a multi-metric sequence before this is confirmed.
+
+    '
+  routes_to:
+  - audience: exec
+    form: 'Creative performance summary: bounce rate vs. organic baseline, engagement
+      depth, and conversion gap — with denominator. Note: FS seat is partial for roadmap
+      prioritization — behavioral evidence informs product direction but does not
+      replace product strategy judgment.
+
+      '
+  - audience: product-mgmt
+    form: 'landing friction: which elements are blocking engagement for campaign visitors
+      vs. organic baseline'
+  investigation_priors:
+    opening_move: 'Check discover_org_context for existing campaign segments or variant-tagged
+      landing pages. Prefer existing segment IDs from org-foundation.md (or semantic-index.yaml
+      on an old layer). Build a campaign cohort (sessions from the underperforming
+      campaign) vs. an organic baseline cohort on the same surface. Compute bounce
+      rate and engagement depth first — determine whether visitors are landing and
+      leaving immediately (creative or targeting problem) or landing and engaging
+      without converting (landing or friction problem).
+
+      '
+    mcp_sequence:
+    - discover_org_context(['campaign', 'creative', 'variant', 'landing']) — find
+      existing campaign segments or tagged variant pages in org context
+    - 'build_segment: sessions from underperforming campaign (UTM or named landing
+      page)'
+    - 'build_segment: organic baseline sessions on the same surface (same date window)'
+    - 'compute_metric: bounce rate per cohort (campaign vs. organic) with denominator'
+    - 'compute_metric: engagement depth per cohort — scroll, click, or content interaction'
+    - 'compute_metric: conversion rate per cohort (if conversion event in semantic
+      layer)'
+    - 'get_sessions: 3–5 sessions from the campaign cohort — prefer engaged non-converters
+      over bounces'
+    - session_open(session_id)
+    - session_view() — observe landing, content interaction, navigation path, exit
+    - session_close() — MANDATORY pair
+    - get_opportunities — cross-reference conversion blockers with StoryAI findings
+  stop_conditions:
+  - 'kill variant — bounce rate significantly above organic baseline AND engagement
+    depth below baseline: creative is not landing; present evidence; recommend killing
+    or replacing the variant'
+  - 'iterate hook — engagement comparable to organic but conversion below baseline:
+    visitors land but conversion path is failing; recommend iterating CTA or offer
+    framing'
+  - 'reallocate budget — campaign delivers clicks but visitor cohort is structurally
+    different from the converting population (wrong audience signal): distribution
+    problem is upstream; recommend reallocating spend rather than redesigning creative'
+  - If creative and organic engagement are statistically indistinguishable — state
+    that FS behavioral evidence does not support a creative diagnosis; underperformance
+    may be attribution, timing, or external — stop

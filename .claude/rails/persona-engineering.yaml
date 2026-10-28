@@ -1,0 +1,734 @@
+schema_version: 2
+audience: engineering
+evidence:
+  sources:
+  - intersection/engineering-x-saas-tim-20260909.md
+  independence: independent
+  independence_note: 'Tim is an engineering manager with experience at ~10 SaaS companies
+    and 15 years in the industry — an independent source outside this team. This is
+    the only audience profile at the independent tier. Tim acknowledged limited ecommerce/retail
+    exposure; any cross-industry comparisons he drew are inferred, not observed. The
+    profile''s SaaS-specific structural findings (micro-flows, instrumentation burden)
+    are Tim''s own observations; the general engineering job patterns carry across
+    industries.
+
+    '
+industry_variance: []
+not_applicable_industries: []
+description: 'Software engineers and developers investigating digital experience issues
+  in a customer''s Fullstory org. Jobs are time-bound, cause-focused, and evidence-specific.
+  Engineers accept error chains and reject magnitude framing as a lead. Tim''s interview
+  finding: the defining dimension for this audience is maturity level (how metric-driven
+  the team is), not industry vertical.
+
+  '
+tempo: fast
+room: 'War room, Slack thread, GitHub PR, or Jira ticket. High-pressure synchronous
+  or asynchronous. Engineers reading a finding want to reproduce the error themselves
+  — not to be convinced of it. Status hierarchies are flat; correctness matters more
+  than presentation polish. Deliver the error chain; leave the narrative for the PM
+  meeting.
+
+  '
+maturity_signals:
+- reactive mode only (incoming bug reports) — low metric maturity; no proactive instrumentation
+  practice
+- tracks feature success proactively with retention, engagement, and breadth/depth
+  metrics — higher maturity
+- uses Fullstory annotations for deploy timestamps — enables automatic regression
+  check anchoring; absence is a prompt
+- uses data-testid attributes by component name — enables consistent element identification
+  across SaaS micro-flows; Tim's own team's practice
+accepts:
+- 'error_chain — exact event sequence: type → URL → console message → network failure'
+- percentile CWV labeled against Google's Good / Needs Improvement / Poor bands at
+  p75
+- before/after delta on a named signal with the baseline window and surface stated
+- funnel drop-off rate with denominator and surface concentration
+- breadth vs. depth adoption split for launch evaluation
+rejects:
+- user-impact summaries as a lead — engineers want cause, not user count
+- magnitude framing before the error chain is established
+- site-wide averages without surface isolation
+- narrative prose before the signal data
+- FID — deprecated March 2024; replaced by INP; do not reference
+- speculation about cause without signal evidence in session data
+volunteers:
+- one representative session URL after any finding — median-ish path, not most dramatic,
+  under 60 seconds
+- scale validation via get_opportunities after any incident — gives the EM blast-radius
+  framing without re-running the analysis
+- loading-indicator instrumentation gap when CWV passes but no loading element is
+  instrumented on the named surface
+- Fullstory annotation suggestion if regression_check runs without an annotation anchor
+declines:
+- executive narratives and business-impact summaries — route to product-mgmt or exec
+  audience
+- sentiment or NPS framing — behavioral data only
+job_discriminator:
+  rule: 'Has a session URL or live error report? → incident_investigation. Investigating
+    performance on a named surface? → performance_audit. Checking before/after a deploy
+    or annotated release? → regression_check. Has a symptom but no URL or live event?
+    → root_cause. Feature shipped, team needs to know if it is landing? → launch_watch.
+
+    '
+  note: 'The menu label "Funnel drop-off" routes to root_cause, not a separate job.
+    Hoist this discriminator — do not bury it inside one job''s body.
+
+    '
+session_opening:
+  deployment:
+  - harness
+  menu: 'A few things I can dig into:
+
+
+    - **Incident** — give me a session URL or error report and I''ll pull the error
+    chain, then watch the worst sessions.
+
+    - **Performance** — name a surface and I''ll run CWV at p75 against Google''s
+    bands, check rage/thrash co-occurrence, and inspect loading indicators.
+
+    - **Regression** — give me a deploy date or Fullstory annotation and I''ll compare
+    before/after on the signal set.
+
+    - **Root cause** — describe the symptom and I''ll run the funnel, find where drop-off
+    concentrates, and watch those sessions.
+
+    - **Launch watch** — name the feature or ship date and I''ll check retention,
+    breadth vs. depth of adoption, and return frequency.
+
+
+    Where do you want to start?
+
+    '
+jobs:
+- id: incident_investigation
+  trigger: an error is reported, a session URL is shared, or something is actively
+    broken
+  currency_code: UTL
+  currency: time-to-cause — find root cause fast; spending attention and effort to
+    locate the exact failure
+  currency_breadth: single
+  spans: []
+  evidence_form: error_chain
+  entry_altitude: event
+  routes_to:
+  - audience: product-mgmt
+    form: magnitude with denominator — only when blast radius has product implications;
+      pure code fixes route internally within engineering
+  stop_conditions:
+  - root cause identified and locatable in code — state surface, element, error type,
+    and one representative session; stop
+  - a single surface accounts for >60% of the error signal — stop broadening; go deep
+    on that surface
+  - 'cause requires infrastructure or dependency investigation beyond the Fullstory
+    event boundary — hand off with: surface + time window + error chain (type → URL
+    → console message) + one representative session; stop'
+  description: 'Find root cause fast. Engineer has an error signal or a session URL.
+    Goal: exact cause and location in code — not scope, not magnitude.
+
+    '
+  triggers:
+  - session URL
+  - error report
+  - something's broken
+  - users are getting errors
+  - seeing errors on
+  - something broke
+  - we have an incident
+  - users can't complete
+  - '404'
+  - '500'
+  - payment failing
+  - checkout error
+  investigation_priors:
+    surface_order:
+    - checkout
+    - cart
+    - pdp
+    - plp
+    - search
+    - entry
+    signal_order:
+    - network-error
+    - console-error
+    - error-click
+    - dead-click
+    - rage-click
+    - page-reload
+    thresholds:
+      session_sample_min: 5
+      single_surface_concentration_pct: 60
+    opening_move: 'If a session URL is provided: get_session_events first for the
+      full error chain, then session_open → session_view → session_close for visual
+      context that the event log misses. If no URL: ask for the surface area, build
+      a segment on the signal cluster, pull representative sessions, and watch the
+      worst. Scale-validate with get_opportunities at the end of either branch; if
+      get_opportunities returns empty or org is not on Premium/Advanced, run the fallback
+      chain from the industry overlay before reporting no results.
+
+      '
+    branches:
+      has_session_url:
+        mcp_sequence:
+        - 'get_session_events(session_id) — full event log: error chain, network failures,
+          console errors'
+        - session_open(session_id)
+        - session_view() — visual and contextual gaps the event log misses
+        - session_close() — MANDATORY; pair every open with a close
+        - get_opportunities — scale validation; if empty or non-Premium org, run opportunities
+          fallback chain from industry overlay before reporting no results
+      no_session_url:
+        first_question: What page or app surface are we looking at?
+        if_surface_named:
+          mcp_sequence:
+          - build_segment on signal cluster (network-error + error-click + console-error)
+            for the named surface — prefer existing segment IDs from org-foundation.md (or semantic-index.yaml on an old layer)
+          - get_sessions(segment_id, limit=5) — representative sessions across the
+            cluster
+          - get_session_events on the worst session — full error chain
+          - session_open(session_id)
+          - session_view() — visual context
+          - session_close() — MANDATORY
+          - get_opportunities — scale validation; if empty or non-Premium org, run
+            opportunities fallback chain from industry overlay
+        if_no_surface:
+          mcp_sequence:
+          - build_segment on broadest error signal set (network-error + error-click)
+            org-wide
+          - cluster by surface to find signal concentration
+          - narrow to the worst surface and proceed as if surface was named
+  presentation:
+    lead_with: Error type and location — not magnitude, not user count.
+    include:
+    - 'exact error event chain: type → URL → console message'
+    - network-error URL and HTTP status
+    - surface and element where error cluster concentrates
+    - one representative session clip selected by data — most typical, not most dramatic;
+      under 60 seconds
+    suppress:
+    - magnitude framing — engineer needs cause, not scale
+    - narrative prose describing the issue
+    - aggregate stats without the specific error chain
+    - user-impact summaries
+    vocabulary_note: 'Engineers read error chains, not user-impact summaries. Lead
+      with the event sequence. Save magnitude for the get_opportunities scale-validation
+      note at the end.
+
+      '
+  asr: none
+- id: performance_audit
+  trigger: a specific surface is described as slow, or CWV or loading times are in
+    question
+  currency_code: UTL
+  currency: defensible measurement — p75 labeled against a published band; spending
+    time and rigor to produce a number the team can act on
+  currency_breadth: single
+  spans: []
+  evidence_form: defensible_measurement
+  entry_altitude: session
+  routes_to:
+  - audience: product-mgmt
+    form: magnitude with denominator — when performance affects a user-facing conversion
+      surface broadly
+  stop_conditions:
+  - one surface accounts for >60% of the compound signal — stop broadening; go deep
+    on that surface
+  - all CWV Good AND loading-indicator p75 not elevated on the named surface — report
+    the negative result explicitly ('No performance issues detected on [surface] against
+    Google bands and loading-indicator thresholds at p75') and stop
+  - CWV passes but loading-indicator p75 is notably elevated — surface the gap, name
+    the affected session count and p75 duration, and stop; this is a finding, not
+    a signal to keep querying
+  description: 'Surface-specific performance investigation. CWV + behavioral proxies
+    + loading indicators. Goal: a defensible measurement the engineer can act on.
+
+    '
+  triggers:
+  - performance
+  - slow
+  - page load
+  - loading time
+  - CWV
+  - LCP
+  - INP
+  - vitals
+  - time to interactive
+  - hydration
+  - spinner
+  - skeleton
+  - "performance of our website"
+  - "performance over Labor Day"
+  - "how did the site hold up"
+  - "site performance during"
+  - "did the site stay up"
+  - "holiday traffic performance"
+  investigation_priors:
+    surface_order:
+    - checkout
+    - cart
+    - pdp
+    - plp
+    - search
+    - entry
+    signal_order:
+    - rage-click+cursor-thrash
+    - page-reload
+    - dead-click
+    - network-error
+    thresholds:
+      cwv_bands:
+        source: Google Core Web Vitals specification
+        LCP:
+          good_ms: 2500
+          ni_ms: 4000
+          measure: p75
+        INP:
+          good_ms: 200
+          ni_ms: 500
+          measure: p75
+        CLS:
+          good: 0.1
+          ni: 0.25
+          measure: p75
+        FCP:
+          good_ms: 1800
+          ni_ms: 3000
+          measure: p75
+        TTFB:
+          good_ms: 800
+          ni_ms: 1800
+          measure: p75
+      session_sample_min: 5
+    opening_move: 'Ask which surface. Check discover_org_context for loading indicator
+      elements first — branch on result. Build compound rage-click + cursor-thrash
+      segment for the named surface first (more diagnostic than either signal alone
+      — indicates page rendered but JS did not hydrate or CLS shifted the layout).
+      Then compute CWV at p75 against bands. get_opportunities is not a lead tool
+      here; use for scale validation only after signal analysis is complete.
+
+      '
+    mcp_sequence:
+    - discover_org_context(['loading', 'spinner', 'indicator', 'skeleton', 'loader'])
+      — branch on result below
+    - 'build_segment: rage-click AND cursor-thrash co-occurrence on the named surface
+      — compound signal runs first'
+    - 'compute: page-reload rate, dead-click rate, network-error rate on the named
+      surface'
+    - 'compute: session-duration p75 on checkout surface only (anomalously long =
+      stuck, not engaged)'
+    - 'compute: LCP p75, INP p75, CLS p75, FCP p75, TTFB p75 — named surface'
+    - 'if loading_indicator found: compute p75 visible duration; get_sessions where
+      duration is notably elevated relative to the org''s LCP p75 baseline on the
+      same surface (not a hardcoded ms threshold)'
+    - get_sessions on worst compound-signal segment — 3 to 5 sessions
+    - session_open(session_id)
+    - session_view() — confirm hydration state, layout shift, spinner persistence
+    - session_close() — MANDATORY
+    loading_indicator:
+      if_found:
+        check: 'Compute p75 visible duration. Pull sessions where duration is notably
+          elevated relative to the org''s LCP p75 on the same surface — use the org''s
+          own distribution as the baseline, not a hardcoded ms value.
+
+          '
+        cwv_gap_rule: 'If all CWV = Good but loading_indicator p75 is notably elevated,
+          surface this explicitly: "CWV passes — but [X]% of sessions experience [N]s
+          load states on [surface]. CWV measures network delivery; it does not capture
+          spinner-blocked interaction time."
+
+          '
+      if_absent:
+        note: 'Consider adding a named Fullstory element for loading states. CWV can
+          pass while a spinner blocks interaction for many seconds — this gap is invisible
+          without instrumentation.
+
+          '
+  presentation:
+    lead_with: Surface-specific breakdown — not site average.
+    include:
+    - p50 / p75 / p95 for each CWV metric — never average alone
+    - Google band label (Good / Needs Improvement / Poor) alongside every millisecond
+      value
+    - compound signal count (rage + thrash sessions) with surface and session context
+    - loading indicator p75 visible duration if instrumented
+    - representative clips from worst-performing sessions on the named surface
+    suppress:
+    - site-wide averages
+    - single LCP number without percentile label
+    - '"LCP is fine" without checking loading indicator duration'
+    vocabulary_note: 'Label every metric against its Google band. Never give raw milliseconds
+      alone. Lead with the surface name, not the site. The compound rage-click + cursor-thrash
+      signal is the highest-priority prior — name it before the CWV table.
+
+      '
+  asr: none
+- id: regression_check
+  trigger: behavior changed after a deploy, and attribution to the release is needed
+  currency_code: UTL
+  currency: attribution — before/after delta; spending time to establish whether this
+    change caused the signal shift
+  currency_breadth: single
+  spans: []
+  evidence_form: defensible_trend
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: magnitude with denominator — when regression is visible on a user-facing
+      conversion surface
+  - audience: engineering
+    form: before/after delta on signal set — when regression is a code-level issue
+      requiring a fix
+  stop_conditions:
+  - every signal in the set is within its typical pre-deploy variance on the named
+    surface — report 'No regression detected on [surface] between [pre-window] and
+    [post-window]' explicitly and stop
+  - 'a signal moved directionally in the wrong direction and the affected element
+    is localized — hand to root_cause or incident_investigation with: surface + time
+    window + signal delta + one representative session; stop regression_check'
+  - no annotation and engineer cannot provide a date or deploy description — state
+    that regression_check requires a time anchor; offer root_cause as the alternative
+    path and stop
+  description: 'Compare before/after on a named surface around a specific date or
+    deploy event. Goal: attribution — did this change cause a signal shift, and on
+    which surface?
+
+    '
+  triggers:
+  - regression
+  - after the deploy
+  - after we shipped
+  - something changed
+  - broke after
+  - before and after
+  - did the release cause
+  - deploy
+  - rollout
+  - release
+  - went out last
+  investigation_priors:
+    surface_order:
+    - checkout
+    - cart
+    - pdp
+    - plp
+    - search
+    - entry
+    signal_order:
+    - rage-click
+    - error-click
+    - network-error
+    - dead-click
+    - page-reload
+    regression_flagging: 'Flag signals that moved directionally in the wrong direction.
+      The magnitude that warrants flagging is calibrated to the pre-deploy variance
+      on this surface for this org — not a fixed percentage. A signal that moved more
+      than its typical week-to-week variance (estimated from the pre-deploy window)
+      is worth surfacing. State the pre-window, post-window, and the delta; never
+      cite a delta alone. [Prior hardcoded 15% threshold removed per N-4: unsourced
+      literal, org-specific. Derivation from pre-deploy variance is the correct form.]
+
+      '
+    opening_move: 'Check discover_org_context for Fullstory annotations — anchor the
+      time window to the annotation timestamp if found. If no annotations, ask for
+      the deploy date or a description of the change. Build segments for pre and post
+      windows on the named surface. Compute the signal set on both segments. Flag
+      any signal that moved directionally in the wrong direction relative to pre-deploy
+      variance. Watch a representative post-deploy session.
+
+      '
+    branches:
+      annotation_branch:
+        condition: Customer uses Fullstory annotations — confirm via discover_org_context
+        mcp_sequence:
+        - discover_org_context — confirm annotation exists for the relevant deploy
+        - 'build_segment: named surface, pre-annotation time window'
+        - 'build_segment: named surface, post-annotation time window'
+        - compute_metric signal set on both segments (rage-click, error-click, network-error,
+          dead-click, page-reload)
+        - compare pre vs post — flag signals that moved directionally in the wrong
+          direction beyond pre-deploy variance (compare_to_previous=true on compute_metric)
+        - get_sessions on worst post-annotation segment — 3 to 5 sessions
+        - session_open(session_id)
+        - session_view()
+        - session_close() — MANDATORY
+      no_annotation_branch:
+        condition: No annotations found or customer does not use Fullstory annotations
+        first_question: Can you give me a date or describe the change that went out?
+        mcp_sequence:
+        - Build time window from engineer's date or description
+        - 'build_segment: named surface, pre-deploy time window'
+        - 'build_segment: named surface, post-deploy time window'
+        - compute_metric signal set on both segments (rage-click, error-click, network-error,
+          dead-click, page-reload)
+        - compare pre vs post — flag signals that moved directionally in the wrong
+          direction beyond pre-deploy variance (compare_to_previous=true on compute_metric)
+        - get_sessions on worst post-deploy segment — 3 to 5 sessions
+        - session_open(session_id)
+        - session_view()
+        - session_close() — MANDATORY
+        opportunity_note: 'Flag once: "If you start using Fullstory annotations for
+          deploys, regression analysis can anchor automatically to deploy timestamps
+          — no date lookup required."
+
+          '
+  presentation:
+    lead_with: Before/after delta on the signal set — not the absolute numbers.
+    include:
+    - 'signal set with directional delta: pre-window value → post-window value, each
+      signal'
+    - surface and time windows used for comparison — state both explicitly
+    - one representative post-deploy session for the worst-moving signal
+    suppress:
+    - site-wide trend without surface isolation
+    - single session as proof of regression
+    - stack traces or technical root cause — that is incident_investigation territory
+    vocabulary_note: 'Engineers want the delta and where it concentrates. Show the
+      before/after comparison first. Do not narrate the sequence — let the table speak.
+
+      '
+  asr: optional
+- id: root_cause
+  trigger: users are dropping off or failing without a specific error or session URL
+    to start from
+  currency_code: UTL
+  currency: localization — find where in the funnel and surface the problem concentrates;
+    spending effort on diagnosis without a live signal
+  currency_breadth: single
+  spans: []
+  evidence_form: magnitude
+  asr: none
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: funnel drop-off rate with denominator — product friction findings go to
+      PM
+  - audience: engineering
+    form: signal concentration on worst step — if an error chain emerges, routes internally
+  stop_conditions:
+  - a single surface accounts for >60% of the drop-off — stop broadening; go deep
+    on that surface; hand to incident_investigation if an error chain is present
+  - top surface is unbound in the org's surface-map.yaml — fall back to org-wide signal
+    order, state this explicitly ('surface-map binding absent for [surface] — using
+    org-wide signal order'), and continue on the next-best bound surface
+  - funnel and signal evidence both converge on the same step — report the drop-off
+    rate with denominator and one representative session that best illustrates the
+    exit pattern; stop
+  description: 'Users are dropping off or having problems and the engineer has a symptom
+    but no session URL or live event. Find where the problem concentrates in the funnel
+    and what is happening in those sessions. Distinct from incident_investigation:
+    no live event, no URL — start from a symptom.
+
+    '
+  triggers:
+  - dropping off
+  - funnel
+  - users abandoning
+  - root cause
+  - where are users failing
+  - why are users leaving
+  - find the problem
+  - what's causing
+  - users aren't converting
+  - high exit rate
+  - low conversion
+  investigation_priors:
+    surface_order:
+    - checkout
+    - cart
+    - pdp
+    - plp
+    - search
+    - entry
+    signal_order:
+    - rage-click
+    - error-click
+    - network-error
+    - dead-click
+    - page-reload
+    thresholds:
+      single_surface_concentration_pct: 60
+      session_sample_min: 5
+    opening_move: 'Start with get_opportunities — let StoryAI rank the field first.
+      If get_opportunities returns empty or org is not on Premium/Advanced, run the
+      opportunities fallback chain from the industry overlay in full before reporting
+      no results. Then build a funnel on the industry conversion path. Find the step
+      with the worst drop-off. Build a segment of sessions that entered that step
+      but did not proceed forward. Compute the signal set on that segment. Watch representative
+      sessions last.
+
+      '
+    mcp_sequence:
+    - get_opportunities — let StoryAI rank the field; if empty or org not on Premium/Advanced,
+      run opportunities fallback chain from industry overlay before reporting no results
+    - build_funnel on industry conversion path — prefer existing funnel IDs from org-foundation.md (or semantic-index.yaml on an old layer)
+    - compute_funnel — identify the step with the worst drop-off
+    - 'build_segment: sessions that entered the worst drop-off step but did not proceed
+      forward'
+    - compute signal set on that segment (rage-click, error-click, network-error,
+      dead-click, page-reload)
+    - get_sessions on worst-signal sessions — 3 to 5
+    - session_open(session_id)
+    - session_view() — confirm what the exit pattern looks like
+    - session_close() — MANDATORY
+  presentation:
+    lead_with: Funnel drop-off rate by step with denominator — not session clips.
+    include:
+    - funnel drop-off rate by step with denominator (e.g. '34% of cart sessions did
+      not reach checkout = ~1,200 users/week')
+    - signal concentration on the worst drop-off step
+    - one representative session showing the exit pattern — selected by data, not
+      by drama
+    suppress:
+    - bounce rate without funnel context
+    - session clips as the first evidence — data must establish the pattern first
+    - magnitude claims without denominator
+    - speculation about cause without signal evidence
+    vocabulary_note: 'Engineers follow data to sessions — not the reverse. Establish
+      the funnel pattern and signal concentration first. Name the session that best
+      represents the statistical finding, not the most dramatic one.
+
+      '
+- id: launch_watch
+  trigger: a feature shipped and the team needs to know whether it is landing
+  currency_code: UTL
+  currency: signal clarity — working / breadth vs. depth / retention; spending time
+    and attention to evaluate feature adoption shape
+  currency_breadth: multi
+  spans:
+  - KNW
+  evidence_form: defensible_trend
+  entry_altitude: population
+  measure_resolution: direction_rate
+  routes_to:
+  - audience: product-mgmt
+    form: breadth/depth split with retention trend, feature utilization count, and
+      denominator
+  stop_conditions:
+  - breadth and depth split is clear, retention trend is directional, and feature-specific
+    key metrics are computed — report the adoption shape (wide / deep / mixed), state
+    the comparison basis (internally constructed per feature, no external benchmark),
+    and stop
+  - usage is too early to tell — fewer than two comparable periods for trend comparison
+    — report 'too early to tell — check back in [N days]' and stop; do not fabricate
+    a trend from one data point
+  - feature shows no adoption signal at the population level — report explicitly and
+    route to product-mgmt with the zero-adoption finding; do not watch sessions to
+    find a counter-example
+  description: 'Feature shipped. Evaluate whether it is landing. Tim''s framing: a
+    combination of retention and the key metrics tied to the feature''s purpose —
+    not a single number. The shape matters more than any individual metric. Breadth
+    vs. depth: power users vs. broad adoption. Return frequency. Reference point is
+    internally constructed per feature; no external benchmarks apply here. Engineers
+    and PMs read this together (Tim: "collaborative in practice").
+
+    '
+  triggers:
+  - we just shipped a feature
+  - is this landing?
+  - gauge the success of a product launch
+  - did the feature work
+  - is anyone using it
+  - what's the adoption
+  - launch metrics
+  - post-launch
+  investigation_priors:
+    reference_point: 'Internally constructed per feature. No cross-org benchmarks
+      apply — comparison is against the pre-ship baseline on the same feature surface,
+      or against other features in the same product area. Source: Tim''s interview
+      2026-09-09.
+
+      '
+    signal_order:
+    - unique-users-on-feature-surface
+    - return-frequency
+    - breadth-vs-depth-split
+    - session-duration-on-feature-surface
+    - feature-specific-key-metrics
+    opening_move: 'Ask: what surface or element represents this feature in Fullstory?
+      Then build a segment of sessions that touched the feature surface since ship.
+      Compute unique users, return frequency, and session duration. Build the breadth/depth
+      split: sessions with 1-2 feature interactions (broad) vs. sessions with 5+ (power).
+      Compute retention: of the users who touched the feature in week 1, what share
+      returned in week 2? Compute feature-specific key metrics as defined for this
+      feature. Do not watch sessions first — data establishes the shape, sessions
+      illustrate it.
+
+      '
+    mcp_sequence:
+    - 'build_segment: sessions touching the feature surface since ship date — prefer
+      existing segment IDs from org-foundation.md (or semantic-index.yaml on an old layer)'
+    - 'compute: unique users on feature surface (count_rate with denominator: % of
+      active users)'
+    - 'compute: return frequency — sessions per user over the observation window (distribution_shape)'
+    - 'build_segment: ''breadth'' cohort — users with 1-2 feature interactions since
+      ship'
+    - 'build_segment: ''depth'' cohort — users with 5+ feature interactions since
+      ship'
+    - 'compute: feature-specific key metrics (ask engineer or PM what metrics were
+      defined for this feature at spec time)'
+    - 'compute: retention — unique users from week 1 who returned in week 2 (direction_rate)'
+    - get_sessions on 3 to 5 sessions from the depth cohort — understand what power
+      users do differently
+    - session_open(session_id)
+    - session_view() — confirm what feature engagement looks like in practice
+    - session_close() — MANDATORY
+  presentation:
+    lead_with: The adoption shape — wide / deep / mixed — before any individual metric.
+    include:
+    - unique users with denominator (% of active users who touched the feature)
+    - breadth/depth split with user counts for each cohort
+    - retention rate (week 1 → week 2 return) with direction
+    - feature-specific key metrics (stated when job is kicked off)
+    - one representative session from the depth cohort — what power users are doing
+    suppress:
+    - 'a single metric as the launch verdict — Tim: ''the shape matters more than
+      any single number'''
+    - cross-org benchmark comparison for a new feature — reference point is internally
+      constructed
+    - session clips as the first evidence — establish the adoption shape first
+    vocabulary_note: 'Engineers and PMs read this together (Tim: "collaborative in
+      practice"). Keep language neutral to both: ''adoption,'' ''retention,'' ''breadth
+      vs. depth.'' Avoid product-management narrative vocabulary (''delight,'' ''engagement
+      score'') and engineering-only vocabulary (''instrumentation coverage,'' ''event
+      schema'').
+
+      '
+  asr: optional
+- id: eng-error-budget-and-recurrence-arc
+  trigger: 'Error-budget burn is stressed or a class of user-visible failures has
+    recurred across releases, and a single incident ticket can no longer explain the
+    shape of the reliability problem.
+
+    '
+  currency_code: RSK
+  currency: a decision to freeze, fix, or keep shipping, grounded in how user-visible
+    risk is accumulating
+  currency_breadth: single
+  spans: []
+  evidence_form: mechanism
+  entry_altitude: arc
+  asr: required
+  routes_to:
+  - audience: engineering-leadership
+    form: 'reliability brief: burn pattern, recurrence class, user-impact evidence,
+      recommended gate'
+  - audience: product-mgmt
+    form: what user behaviors are absorbing the unreliability, and what velocity trade
+      is required
+  stop_conditions:
+  - the burn is classified as spike vs. creep vs. recurrence-of-same-cause
+  - an explicit ship/fix/freeze recommendation is on the table with a review date
+  - exception fingerprint named, baseline window stated (default 7 days), comparison
+    operator applied (rate ≤ pre-incident baseline)
+  - session_close
+presentation:
+  format: Brief and structured. State the finding. Let the engineer ask for explanation.
+  evidence_before_clip: Always establish data before surfacing any session clip.
+  tool_before_narrative: Show the finding first. Narrate only if asked.
+  mobile_desktop_split: 'Split by device when the surface and finding warrant it.
+    For incident_investigation and performance_audit, always split — mobile and desktop
+    surface different error patterns and CWV distributions. For launch_watch, split
+    if the feature has a meaningfully different mobile experience.
+
+    '

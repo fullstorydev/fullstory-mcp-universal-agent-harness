@@ -1,0 +1,404 @@
+schema_version: 2
+# .claude/rails/industry-retail.yaml
+# Layer 2 industry profile — retail
+# Derivation engine Wave 3 / W-07 — migration from composition-era industry-retail.yaml
+#
+# ROLLBACK: git checkout HEAD -- .claude/rails/industry-retail.yaml
+#
+# This file is a parameter overlay. It carries no job definitions.
+# It is composed into audience profiles at runtime by the derivation engine (W-20).
+# Flat file — no nested directory. Flat naming convention: industry-retail.yaml.
+
+industry: retail
+
+evidence:
+  sources:
+    - "industry/retail-lane-20260908.md"
+    - "industry/retail-lane-20260910.md"
+  independence: self_sourced
+  notice: >
+    Both sources are Lane Greer, the same person building this system — not independently
+    corroborated. This is the first field input of any kind on retail; all prior assumptions
+    traced to a design brief, three AI reviews, and the benchmark table (see COVERAGE.md).
+    Treat all authored values as hypotheses bounded by a single informant.
+
+# ── END-USER CURRENCIES ───────────────────────────────────────────────────────
+# N-1 MANDATORY: derivation field is present. The currency mix cannot be measured
+# through the Fullstory MCP — no tool exposes time-per-behavior-category or intent
+# classification. This ranked list is an informed hypothesis, not a measurement.
+# Source: behavioral-currency-taxonomy.md §6 ("interim position for the build")
+
+end_user_currencies:
+  derivation: authored_pending_capability   # GUARD N-1 — mandatory; do not remove
+  # CORRECTED 2026-09-11, Lane ruling. ranked = MAJORITY OF THE SESSION (user time spent),
+  # NOT business value. The prior ordering was ACQ / ENJ / KNW, justified as "a retail site's
+  # job is to get people to purchase" — which is the SITE's job, not what the user spends the
+  # session doing. Business-value ordering is preserved verbatim in business_value_order below.
+  # W-45: ranked is now cohort-conditional. Two distinct retail populations have genuinely
+  # different session-time currency mixes. A single population average was true of neither
+  # cohort, and was worst exactly at the commit moment where ACQ detection matters most.
+  # Source: build plan §9, W-45 ruling 2026-09-11.
+  ranked:
+    cohorts:
+      browsers:
+        # Users arriving without purchase intent — social-ad traffic, brand discovery,
+        # recreational comparison. Shopping and brand exposure are COMPLETE exchanges.
+        # KNW dominates: comparing, evaluating, reading reviews. ENJ is real at the session
+        # level for this cohort (discovery browsing). ACQ is present but thin — may not be
+        # entered at all in a pure browsing session.
+        # Source: retail-lane-20260908.md — "Someone visiting a retail site may never have
+        # the intention to purchase, and purchase isn't the only form of a successful
+        # digital experience in a retail context."
+        ranked: [KNW, ENJ, ACQ]
+
+      decided_buyers:
+        # Users who arrived knowing what they want and walked directly toward checkout without
+        # extended deliberation. Their session IS the ACQ exchange — narrow-window at checkout
+        # but the whole session is oriented around that exchange from entry. KNW is present
+        # (product confirmation, re-verification) but ACQ dominates total session time because
+        # they skipped the deliberation pocket.
+        # Source: retail-lane-20260908.md — "If they came to purchase, then they've probably
+        # already done the shopping. They've already deeply considered products."
+        ranked: [ACQ, KNW, ENJ]
+
+    # Fallback when cohort cannot be determined from session signals. Equals the majority
+    # population — browsers outnumber decided buyers in most retail orgs. Matches the prior
+    # flat ranked[] to preserve backward compatibility.
+    population_default: [KNW, ENJ, ACQ]
+
+  business_value_order:
+    # ADVISORY ONLY — never operative for derivation. This is the prior ranked[] ordering,
+    # preserved because business-value ranking is real information that should not be lost.
+    - ACQ
+    - ENJ
+    - KNW
+  toll: NAV  # wayfinding overhead; NAV is never a headline finding (Commitment 3)
+  minor: [INF]   # review and rating widgets are real; broken INF (rage on rating widget) is relevant
+                 # demoted, not absent — demote instructs calibration; absent suppresses detection
+  absent: [BEL]  # social participation rarely the primary axis in ecommerce retail
+                 # UTL is also minor (account management exists but is not a primary mode)
+
+  intents:
+    ACQ:
+      - "commit to purchase"          # derivation: authored_pending_prototype
+      - "deliberate before committing"  # the currency hump (KNW → ACQ transition); see currency-transition.md
+      - "return to complete"          # arc-altitude: cross-session return with cart populated
+    ENJ:
+      - "browse for pleasure"         # derivation: authored_pending_prototype
+      - "discover a brand"            # derivation: authored_pending_prototype
+      - "consume content"             # derivation: authored_pending_prototype
+    KNW:
+      - "compare options"             # derivation: confirmed_prototype — G&B screenshot, 143 users 1h24m
+      - "find specific fact"          # derivation: confirmed_prototype — G&B screenshot, 256 users 38m
+      - "get advice or opinions"      # derivation: confirmed_prototype — G&B screenshot, 121 users 1h13m
+
+  currency_note: >
+    CRITICAL CONSTRAINT — ACQ primacy does not mean all sessions are ACQ attempts.
+    Users arrive from social ads with no purchase intent; shopping and brand discovery are
+    complete, successful exchanges that the business scores as failures. Two separate ledgers:
+    "did the user accomplish their goal?" and "did the business get a conversion?" The
+    currency mix applies only to the exchange in play, which must be established before
+    attributing any finding to ACQ failure. Source: retail-lane-20260908.md — "Someone
+    visiting a retail site may never have the intention to purchase, and purchase isn't the
+    only form of a successful digital experience in a retail context."
+
+# ── FLOW SHAPE ────────────────────────────────────────────────────────────────
+# Primary ACQ funnel with deliberation pockets alongside it. Users have a clear path
+# (entry → search → plp → pdp → cart → checkout) but exit into consideration loops
+# (reviews, comparisons, saves) and return. The purchase arc spans weeks.
+# Source: retail-lane-20260908.md — three functional stages model; currency-transition.md
+
+flow_shape: primary_journey
+
+# ── SURFACE CLASSES ───────────────────────────────────────────────────────────
+# Three functional stages from retail-lane-20260908.md.
+# These are purpose-stages, not page types. A single page may serve multiple stages.
+# Source: "The sharper list" — retail-lane-20260908.md §"What the site is for"
+
+surface_classes:
+  - name: brand_discovery
+    surfaces: [entry, content]
+    purpose: "First exposure to brand; ENJ and KNW dominant; no ACQ intent required or assumed"
+    note: "Success here is engagement, not conversion. Non-buying visits to this class are complete exchanges."
+
+  - name: product_discovery
+    surfaces: [search, plp, pdp]
+    purpose: "KNW serving ACQ — comparison, filtering, deliberation pocket. The currency hump lives here."
+    note: >
+      PDP long dwell = KNW (comparing, deciding) OR ACQ-blocked (stuck). Disambiguation is mandatory.
+      Deliberation signals: ≥3 search refinements, multi-PDP visits without cart interaction.
+
+  - name: selection_and_transaction
+    surfaces: [cart, checkout, confirmation]
+    purpose: "ACQ exchange moment. Users arriving here with purchase intent have already shopped."
+    note: >
+      "If they came to purchase, then they've probably already done the shopping. They've already
+      deeply considered products. They've already decided." Source: retail-lane-20260908.md.
+      Loss here is committed-intent loss, concentrated in error, usability, and inventory issues.
+      Three causes: (1) inventory issues, (2) error and usability issues, (3) aggregated frustration
+      sequences OR singular frustration signals — two distinct detection shapes.
+
+# ── SEVERITY ORDER ────────────────────────────────────────────────────────────
+# Descending stakes — where a failure costs the most.
+# All values must be MANIFEST surface keys (N-5).
+# The ACQ exchange moment (checkout) has the highest stakes in retail.
+# Numeric severity weights belong in derive.py (W-20), not here — see migration notes.
+
+severity_order: [checkout, cart, confirmation, pdp, plp, search, entry, account, auth, support, content]
+
+# Checkout subsurfaces — distinct error clusters within the checkout surface.
+# Carried forward from composition-era file; valid authored content.
+checkout_subsurfaces:
+  - address_entry
+  - promo_code_application   # frequent rage-click cluster; success/failure states often look identical
+  - payment
+  - guest_vs_account_decision
+
+# ── REFERENCE POINT ───────────────────────────────────────────────────────────
+# How benchmarks are framed for retail customers.
+# Source: retail-lane-20260910.md — closes Gap 1 from CONTEXT-DUMP-20260910.md
+
+reference_point: "own historical baseline"
+reference_point_note: >
+  For friction and error metrics (rage clicks, dead clicks, error rates), the comparison is
+  never external — it is the account's own historical trend. The question customers ask is
+  "is this anomalous relative to how we normally behave," not "how do we compare to the
+  industry." Same axis for revenue and conversion-adjacent metrics: historical trend.
+  Source: retail-lane-20260910.md — "the comparison is the account's own historical baseline."
+
+  Industry benchmarks (Fullstory 2026 Benchmark Report, benchmark-corpus.yaml) are a valid
+  secondary frame — use them when the customer asks "is this normal?" or to provide context
+  for a finding. But never as the primary comparison axis, and never representing cross-org
+  figures as sourced from Fullstory customer data. MSA rule: benchmark citations must name
+  their source. Source: retail-lane-20260910.md — benchmark provenance ruling.
+
+# ── SUBSTRATE TOLERANCE ───────────────────────────────────────────────────────
+# CWV bands sourced from Google Core Web Vitals specification.
+# Literal numeric values are legal under the unified N-2/N-4 rule:
+# they cite an external published standard (Google) that does not vary by org.
+
+substrate_tolerance:
+  lcp_alert_boundary: needs_improvement
+  lcp_alert_ms: 2500
+  source: "Google Core Web Vitals specification — Needs Improvement boundary, web.dev/vitals"
+  rationale: >
+    Retail's ACQ exchange cannot wait for a Poor LCP rating (4000ms). Purchase intent degrades
+    within the Needs Improvement band. Any LCP above 2500ms on the product_discovery or
+    selection_and_transaction surface classes is worth surfacing. Source of rationale:
+    retail-lane-20260908.md §"Three causes of loss" — performance/usability issues are a primary
+    loss cause on checkout.
+
+  cwv_reference:
+    LCP:  { good_ms: 2500, ni_ms: 4000, measure: p75, source: "Google Core Web Vitals specification" }
+    INP:  { good_ms: 200,  ni_ms: 500,  measure: p75, source: "Google Core Web Vitals specification" }
+    CLS:  { good: 0.10,    ni: 0.25,    measure: p75, source: "Google Core Web Vitals specification" }
+    FCP:  { good_ms: 1800, ni_ms: 3000, measure: p75, source: "Google Core Web Vitals specification" }
+    TTFB: { good_ms: 800,  ni_ms: 1800, measure: p75, source: "Google Core Web Vitals specification" }
+    deprecated: "FID — replaced by INP March 2024. Never reference FID in any profile or deliverable."
+
+# ── LEXICON ───────────────────────────────────────────────────────────────────
+# Industry-specific interpretations. Maps terms to their meaning in retail context.
+# These are authored disambiguation rules, not a term dictionary (§3a — no term dict).
+# Sources: retail-lane-20260908.md, retail-lane-20260910.md, composition-era industry-retail.yaml.
+
+lexicon:
+  long_session: >
+    Valence depends entirely on the surface and exchange in play (Commitment 2).
+    On PDP or content: ENJ (browsing) OR KNW (comparing) — requires discrimination.
+    On cart: ACQ-blocked. A long cart session is stalled commitment, not pleasure.
+    On checkout: ACQ failure. A long checkout session is friction.
+    On search: KNW seeking OR NAV toll — zero-result and refinement loops are KNW failures.
+    Discrimination signals: ≥3 search refinements in session → KNW; dead/error click on cart or
+    checkout → ACQ-blocked; scroll_depth >75% + ≥2 PDP views + no cart interaction → ENJ.
+    Priority if multiple match: ACQ-blocked > KNW > ENJ.
+    Source: composition-era industry-retail.yaml (carrying forward — valid authored content).
+
+  cart_abandonment: >
+    The 65–80% "normal cart abandonment" benchmark averages two unrelated states:
+    (1) people who quit — failed exchange; (2) people still deciding — deliberation,
+    commitment installment paid, risk and money outstanding. Cannot be read as failure
+    without establishing which state dominates. A cart populated for two weeks is
+    deliberation, not abandonment.
+    Source: retail-lane-20260908.md + currency-transition.md.
+
+  conversion_rate: >
+    Conversion rate over all sessions is a misleading denominator when a real share of traffic
+    never entered the ACQ exchange. Users arrive from ads with no purchase intent.
+    Report conversion against intent-established sessions (evidence of ACQ intent: cart
+    interaction, checkout visit, or search with purchase-oriented query) unless the customer
+    explicitly asks for the blended rate. When reporting blended: name the denominator.
+    Source: retail-lane-20260908.md — "Conversion rate over all sessions is a misleading
+    denominator when a real share of traffic never entered the exchange."
+
+  account_creation: >
+    Forward-looking buy signal, not a current-session conversion. If a user populates a cart
+    without an account and returns from another device, they must repopulate — so account
+    creation is one of the earliest buy signals. Score it as a leading indicator in
+    arc-altitude (cross-session) analysis. Do not interpret it as current-session ACQ conversion.
+    Source: retail-lane-20260908.md.
+
+  post_error_exit: >
+    ACQ exchange failure — user abandoned at the moment of commitment. Highest post-error
+    exit rate of all industries: 170.6/1k global (Fullstory 2026 Benchmark Report, CY2025;
+    see benchmark-corpus.yaml). +262% YoY rage clicks, +136% YoY dead clicks in retail —
+    check suspicious activity before citing YoY trend (AI crawler traffic is a confound).
+    Source: retail-lane-20260908.md + benchmark-corpus.yaml.
+
+  purchase_loss_shapes: >
+    Two detection shapes for loss at add-to-cart and checkout:
+    (1) Aggregated sequences of frustration — a pattern of dead clicks, rage clicks, and
+    navigation loops across multiple steps before abandonment.
+    (2) Singular frustration signals — a single rage click or post-error exit at the decisive
+    moment. Treat these as distinct diagnostic questions: sequences point to UX friction;
+    singular events point to specific technical failures.
+    Source: retail-lane-20260908.md §"Three causes of loss."
+
+  omnichannel: >
+    A failed digital session may be a successful channel switch — BOPIS, store-pickup
+    initiation, or call-centre handoff. Revenue framing that ignores omnichannel overstates
+    ACQ failure. Flag when checkout exit patterns suggest in-store pickup rather than
+    abandonment (e.g., exits concentrated in ZIP code / store-locator flows).
+    Source: composition-era industry-retail.yaml (carrying forward — valid authored content).
+
+  loyalty: >
+    Loyalty programs matter in retail, staffed at smaller scale than travel (3–4 people vs.
+    airline teams of 50+). Loyalty instrumentation is often separate from main checkout
+    instrumentation. Loyalty members may have distinct conversion behavior; isolate as a
+    segment before attributing loyalty-tier performance to site-wide friction.
+    Source: retail-lane-20260910.md — slug-back finding.
+
+  seasonal_context: >
+    Peak periods (BFCM — last week of November; Holiday — December 1–24; Back-to-school —
+    July–August) shift severity thresholds. The same rage-click rate at 2pm BFCM is a
+    categorically different severity than a Tuesday in March — magnitude claims shift.
+    During peak, prefer reversible, scoped fixes on checkout/payment/promo surfaces over
+    broad changes. A Friday 9am flash sale with no code deploy is still a launch event —
+    adjacent-surface regression still applies.
+    Note: no schema field for seasonal context exists — this content lives in lexicon as the
+    nearest fit. Flagged for schema extension in migration report.
+    Source: composition-era industry-retail.yaml (carrying forward — valid authored content).
+
+# ── BLIND SPOTS ───────────────────────────────────────────────────────────────
+# Systematic things retail orgs miss or under-instrument.
+# Sources: retail-lane-20260908.md, retail-lane-20260910.md, composition-era file.
+
+blind_spot:
+  - >
+    Non-buying sessions scored as ACQ failure: users arrive from ads with no purchase intent.
+    Shopping and brand discovery are complete, successful exchanges. Establish that ACQ intent
+    was present before attributing any session-level metric to ACQ failure.
+    Source: retail-lane-20260908.md.
+
+  - >
+    Cart abandonment read as failure: 65–80% figure averages quitters and deliberators.
+    A populated cart surviving two weeks is deliberation (commitment paid, risk outstanding).
+    Requires arc-altitude analysis to separate the two states.
+    Source: retail-lane-20260908.md + currency-transition.md.
+
+  - >
+    Deliberation thresholds inherited from industry benchmark: every basket's deliberation
+    depth depends on its price. High-end jewelry has no small carts; every purchase is
+    considered. Thresholds must be computed per property from actual prices — never inherited.
+    Source: retail-lane-20260908.md — "Some retail has no low-stake tier."
+
+  - >
+    Account creation read as current-session conversion: it is a leading indicator for future
+    sessions, not evidence that the current session resulted in purchase.
+    Source: retail-lane-20260908.md.
+
+  - >
+    Mobile performance hidden by blended numbers: retail mobile checkout and filter interactions
+    are disproportionate pain surfaces. A site-wide metric that hides a mobile checkout bleed
+    is analyst-shaped output, not customer-shaped. Always device-split retail findings.
+    Source: composition-era industry-retail.yaml (carrying forward).
+
+  - >
+    Peak severity masked by non-peak baselines: the same rage-click rate during BFCM is a
+    different severity than during a typical week. Report within-peak baselines separately from
+    non-peak. A live flash sale is a launch event for adjacent-surface regression analysis.
+    Source: composition-era industry-retail.yaml (carrying forward).
+
+  - >
+    Omnichannel exits misread as failure: BOPIS and store-pickup exits look like checkout
+    abandonment in funnel analysis. Flag when exits concentrate in geo/store-locator flows.
+    Source: composition-era industry-retail.yaml (carrying forward).
+
+  - >
+    Deliberation depth as a user trait: cohorting by deliberation style (quick vs. extended
+    consideration periods) may outperform demographic cohorts. Not natively measurable through
+    MCP today — requires arc-altitude cross-session analysis when that capability exists.
+    Source: retail-lane-20260908.md.
+
+# ── DEFAULT SPLITS ────────────────────────────────────────────────────────────
+# Dimensions to always apply when analyzing retail data.
+# Source: composition-era industry-retail.yaml (carrying forward — valid authored content).
+
+default_splits:
+  always_apply: [device, new_vs_returning]
+  device_note: >
+    Mobile checkout and filter interactions are disproportionate pain surfaces. A site-wide
+    number that masks a mobile checkout bleed is analyst-shaped, not PM-shaped. Always compare
+    mobile findings to the mobile slice in benchmark-corpus.yaml — never to blended global.
+  new_vs_returning_note: >
+    New users on PDP behave differently from returning users: new users may be in ENJ/KNW
+    (brand exposure, comparison); returning users with prior cart activity are arc-altitude
+    deliberators. Segment before attributing conversion intent.
+  optional: [category, traffic_source, peak_off_peak]
+  suppress_when: "cell n < 100 — matches CLAUDE.md small-sample rule; do not split when n starves the cell"
+
+# ── DX DIMENSIONS ─────────────────────────────────────────────────────────────
+# Benchmark ranges from Fullstory's DX Score dimensions.
+# Source: Fullstory 2026 Benchmark Report, CY2025 — ranges observed in the Goals &
+# Benchmarks prototype (behavioral-currency-taxonomy.md §4). The prototype surfaces
+# industry benchmark ranges per dimension; the Fullstory Benchmark Report is the
+# upstream source (approved per build plan §2 ruling, 2026-09-11).
+# Bands are descriptive ranges, not runtime thresholds (N-4 — band is reference data).
+# All seven DX Score dimensions included; retail weighting is informational only.
+
+dx_dimensions:
+  - name: forms_and_checkouts
+    band: [45, 88]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    retail_note: >
+      Primary ACQ completion surface. Lowest-scoring dimension in the example org
+      (behavioral-currency-taxonomy.md §4: score 67, ↓4% trend). The clearest demonstration
+      of the control layer's value: a checkout friction finding routed through ACQ currency.
+
+  - name: call_to_action
+    band: [55, 90]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    retail_note: "Conversion effectiveness — ACQ conversion path signal."
+
+  - name: frustration_satisfaction
+    band: [50, 95]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    retail_note: "Maps to rage_click, dead_click, post_error_exit signal cluster."
+
+  - name: navigation_design
+    band: [60, 92]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    retail_note: "NAV toll — important backdrop for ACQ/KNW exchange but not a headline finding."
+
+  - name: personalization
+    band: [60, 95]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+
+  - name: comprehension_accessibility
+    band: [55, 98]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    retail_note: >
+      Caution: the G&B prototype (behavioral-currency-taxonomy.md §5) misfiled a
+      long-session-on-documentation finding under Comprehension/Accessibility as a problem.
+      Long sessions on content surfaces in retail are KNW exchange success — not comprehension
+      deficit. This is the canonical Commitment 2 failure case.
+
+  - name: search_functionality
+    band: [65, 97]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    retail_note: "KNW serving ACQ — zero-result searches and refinement loops are KNW failures with ACQ consequences."
+
+# ── QUESTIONS ─────────────────────────────────────────────────────────────────
+# Empty stub — schema matches industry-gaming.yaml segments.igaming.questions.
+# Fill after an SME interview produces retail-specific analytical questions.
+# Item schema: id, tag (generalizable | gambling_specific), ask, maps_to_persona
+questions: []

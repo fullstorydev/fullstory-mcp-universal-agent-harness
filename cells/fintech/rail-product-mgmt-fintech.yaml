@@ -1,0 +1,292 @@
+# GENERATED — do not edit manually
+# rail-format-version: 1.0
+# Generated: 2026-10-28
+audience: product-mgmt
+industry: fintech
+entry_altitude: arc
+tempo: slow
+truncation: 6
+currency_mix:
+- UTL
+- KNW
+- ACQ
+exec_rollup: false
+signals:
+- signal: escalation_to_eng
+  currency: KNW
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: escalate diagnostic to engineering
+- signal: error_with_journey_break
+  currency: KNW
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: error followed by session exit or dead-end
+- signal: error_click
+  currency: UTL
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 1.0635
+  intent: complete a form or structured task
+- signal: dead_click
+  currency: UTL
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 0.8045
+  intent: complete a form or structured task
+- signal: rage_click
+  currency: UTL
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 0.5896
+  intent: complete a form or structured task
+- signal: post_error_exit
+  currency: ACQ
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 0.9098
+  intent: commit to purchase
+generation_meta:
+  pattern_signals_excluded: 0
+  missing_benchmark_count: 22
+  derive_version: '1.0'
+
+# ── Jobs (appended by compose_cells_for_oss) ──
+jobs:
+- id: prioritization
+  trigger: 'broad ranking or scanning ask — "how bad is this?" / "is this worth fixing?"
+    / "where does this rank?" / "what don''t we know about?" / "what''s costing us
+    money that''s not in Jira?" — any ask that requires sizing an issue or surfacing
+    unknown issues by user impact × surface weight; the ask typically spans three
+    analyses in one sentence
+
+    '
+  currency_code: KNW
+  currency: certainty about what to fix next, priced in user count and conversion
+    weight
+  currency_breadth: multi
+  spans:
+  - UTL
+  evidence_form: magnitude
+  asr: none
+  entry_altitude: population
+  routes_to:
+  - audience: engineering
+    form: ranked recommendation with magnitude and surface context — not root cause;
+      engineering resolves the cause
+  - audience: product-mgmt
+    form: backlog-ready ranked list with denominator on each item and trend direction
+  stop_conditions:
+  - issue ranked with magnitude estimate, trend direction, and surface weight — output
+    is a recommendation with numbers; stop
+  - three or more issues tie on magnitude — present the top three and ask which the
+    PM wants to go deep on; stop broadening
+- id: incident-framing
+  trigger: 'escalation language ("something is broken," "customers are calling in,"
+    "VP is asking") or time-pressure language ("right now," "live issue," "it''s still
+    happening") or scope question ("how bad is this," "how many users," "is it still
+    going") — the PM needs blast radius and a stakeholder sentence, not root cause
+
+    '
+  currency_code: UTL
+  currency: scope fast — the number I can say to my VP in the next five minutes
+  currency_breadth: single
+  spans: []
+  evidence_form: scope
+  entry_altitude: population
+  routes_to:
+  - audience: engineering
+    form: handoff payload — surface, time window, affected user count, still-happening
+      status, one representative session URL; no stack trace, no selector archaeology
+  - audience: product-mgmt
+    form: stakeholder framing — X users could not complete Y during window Z
+  stop_conditions:
+  - 'scope established: who, how many, when, which surface, still happening or resolved
+    — handoff payload ready; stop'
+  - incident already resolved and affected fewer than 1% of sessions — state that
+    explicitly and stop; do not continue building evidence for a closed incident
+  asr: none
+- id: experiment-hypothesis
+  trigger: '"why are users dropping off?" / "what should we test?" / "help me design
+    a test" / "does the data support X?" when confirmed that no test is live or annotated
+    yet — PM needs 1–3 testable claims grounded in behavioral patterns, not a proof
+    or a solution
+
+    '
+  currency_code: KNW
+  currency: a mechanism I can turn into a test — pattern plus explanation, not a feature
+    idea
+  currency_breadth: multi
+  spans:
+  - ACQ
+  evidence_form: mechanism
+  measure_resolution: distribution_shape
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: ranked hypothesis list — pattern with denominator, named mechanism, predicted
+      primary metric, named guardrail; max 3
+  - audience: ux-design
+    form: behavioral pattern with named mechanism — for user research validation of
+      the underlying explanation
+  stop_conditions:
+  - 1–3 competing testable explanations produced with named mechanisms — stop when
+    there are hypotheses, not when there is a list of ideas
+  - no pattern clears N >= 100 on any surface — state 'insufficient signal for hypothesis
+    generation; directional only' and stop
+  asr: none
+- id: experiment-readout
+  trigger: '"we just shipped X, did it work?" / "what did the test show?" / "evaluate
+    the result" / "was there a lift?" — a test has run or a ship was annotated; PM
+    needs a defensible claim about what moved, for whom, with guardrails
+
+    '
+  currency_code: KNW
+  currency: a causal claim the room can accept or reject, paired with named guardrails
+  currency_breadth: single
+  spans: []
+  evidence_form: causal_claim
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: primary metric movement with denominator, guardrails checked, segment heterogeneity
+      noted — roadmap decision input
+  - audience: engineering
+    form: guardrail breach if detected — regression handoff with surface, time window,
+      metric delta
+  stop_conditions:
+  - primary metric stated with denominator, guardrails checked, segment heterogeneity
+    noted — that is a causal claim the room can accept or reject; stop
+  - sample inadequate (N < 100 per variant, or test ran under 2 weeks) — state 'insufficient
+    sample for a defensible claim; directional only' and stop
+  asr: none
+- id: launch-watch
+  trigger: '"we just shipped" / "we launched" / "the feature went out today" / "the
+    promo is live" / "keep an eye on it" / "is anything breaking?" — active monitoring
+    after a ship or campaign; no control group, not a causal claim; a verdict is the
+    output
+
+    '
+  currency_code: KNW
+  currency: a verdict — working, broken, or not yet knowable — stated against a baseline
+  currency_breadth: single
+  spans: []
+  evidence_form: magnitude
+  asr: none
+  entry_altitude: population
+  routes_to:
+  - audience: engineering
+    form: regression handoff — surface, time window, signal delta, one representative
+      session; only if a breaking signal is detected
+  - audience: product-mgmt
+    form: minor regression added to prioritization backlog with launch context and
+      baseline
+  stop_conditions:
+  - verdict issued — working / broken / not yet knowable — with the baseline it was
+    measured against and the adjacent-surface regression check result; stop
+  - '''not yet knowable'' is a first-class terminal state — state it with the sample
+    or time threshold that would change the verdict, then stop; do not continue querying'
+  - breaking regression detected — graduate to incident-framing; launch-watch ends
+    at graduation
+  triggers:
+  - performance of our website over Labor Day
+  - how did [funnel] perform over Labor Day
+  - holiday window funnel performance
+  - did the funnel hold over [period]
+  - performance on my funnel
+- id: quarterly-narrative
+  trigger: '"QBR" / "quarterly review" / "exec presentation" / "board update" / "show
+    the impact of what we shipped" / "make the case for the roadmap" / "last quarter"
+    / "Q3" / "this year vs. last year" — any ask for a trend the room can accept over
+    a multi-week or multi-quarter window; this ask spans several analyses wearing
+    one sentence
+
+    '
+  currency_code: KNW
+  currency: a trend the room accepts — direction, rate of change, before/after attribution,
+    benchmark comparison
+  currency_breadth: multi
+  spans:
+  - UTL
+  evidence_form: defensible_trend
+  entry_altitude: population
+  routes_to:
+  - audience: exec
+    form: trend line with direction, rate, benchmark context, and before/after — exec-ready;
+      no operational detail
+  - audience: product-mgmt
+    form: roadmap justification package — impact attribution per shipped item, ranked
+      by conversion effect
+  stop_conditions:
+  - trend established with direction, rate, benchmark comparison with stated source
+    and slice, and before/after attribution — ready for exec presentation; stop
+  - shipped work fewer than 4 weeks old — flag as 'insufficient trend window; directional
+    only' and stop
+  asr: optional
+- id: pm-feature-adoption-trajectory
+  trigger: 'A shipped feature or outcome has been live long enough that single-session
+    conversion can no longer answer whether the bet is working, or a planning cycle
+    needs a 30/90-day readout before the next roadmap commit.
+
+    '
+  currency_code: KNW
+  currency: a defensible adoption-and-outcome trajectory the PM can hold in discovery
+    and planning
+  currency_breadth: single
+  spans: []
+  evidence_form: defensible_trend
+  entry_altitude: arc
+  asr: optional
+  routes_to:
+  - audience: product-leadership
+    form: outcome readout with cohort curves and a keep/iterate/kill recommendation
+  - audience: engineering
+    form: which behaviors moved, which did not, and where friction persists
+  stop_conditions:
+  - 30-day and 90-day adoption, retention, or outcome deltas are measured against
+    the pre-commit success criteria
+  - the trio can name the next opportunity without re-litigating whether the last
+    ship worked
+- id: pm-retention-opportunity-scan
+  trigger: 'Activation is acceptable but week-4 or week-12 retention is soft, or a
+    segment that should have formed a habit is flattening, and the opportunity solution
+    tree needs a behavior-backed opportunity rather than a feature idea.
+
+    '
+  currency_code: KNW
+  currency: the mechanism of drop-off across the habit window, not a single-session
+    funnel miss
+  currency_breadth: single
+  spans: []
+  evidence_form: mechanism
+  entry_altitude: arc
+  asr: required
+  routes_to:
+  - audience: product-trio
+    form: 'opportunity brief: who falls off, after which sessions, around which behaviors'
+  stop_conditions:
+  - the drop-off is located in a named window (activation, week-2-6 adoption, expansion)
+    with behavioral evidence
+  - at least one testable opportunity is written that does not require a new feature
+    as its premise
+  - session_close
+- id: pm-stakeholder-outcome-commit
+  trigger: 'Leadership or a partner team is asking the PM to commit a roadmap slice
+    and the PM must move that stance with behavioral evidence rather than output promises.
+
+    '
+  currency_code: INF
+  currency: stakeholder willingness to fund an outcome instead of a feature list
+  currency_breadth: multi
+  spans: []
+  evidence_form: causal_claim
+  entry_altitude: arc
+  asr: optional
+  routes_to:
+  - audience: exec-stakeholders
+    form: 'short causal narrative: this behavior change, over this window, is the
+      bet'
+  stop_conditions:
+  - the commit is framed as an outcome with a review date, not as a feature-and-date

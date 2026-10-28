@@ -1,0 +1,59 @@
+<!-- FUNNEL — COMBO TILE (KPI stat + wide mini bar)
+     Use: dashboard-style 3-up KPI rows where the number AND funnel context both need to read at a glance.
+     Prefer this over the mini-bar tile when vertical space is tight and bar labels must stay visible.
+     .mbc classes in order: entry wall1 survive wall2 convert (same semantics as all funnel components).
+     Add border-top for severity: var(--fs-pink) for walls, var(--fs-orange) for survive.
+-->
+<div class="tile-row">
+  <div class="combo-tile" style="flex:1;">
+    <div class="combo-tile-inner">
+      <div class="combo-tile-stat">
+        <div class="combo-tile-label">Funnel Entry → Conversion</div>
+        <div class="combo-tile-num" style="color:var(--fs-green);">24,800</div>
+        <div class="combo-tile-sub">users · 30-day window</div>
+      </div>
+      <div class="combo-tile-chart">
+        <div class="mini-bar-wide">
+          <div class="mbc entry"></div><div class="mbc wall1"></div><div class="mbc survive"></div><div class="mbc wall2"></div><div class="mbc convert"></div>
+        </div>
+        <div class="mini-bar-wide-labels">
+          <span>Entry</span><span>Wall1</span><span>Pass</span><span>Wall2</span><span>Conv</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="combo-tile" style="flex:1;border-top:2px solid var(--fs-pink);">
+    <div class="combo-tile-inner">
+      <div class="combo-tile-stat">
+        <div class="combo-tile-label">Wall 1 — Step Name</div>
+        <div class="combo-tile-num" style="color:var(--fs-pink);">62%</div>
+        <div class="combo-tile-sub">of entrants blocked</div>
+      </div>
+      <div class="combo-tile-chart">
+        <div class="mini-bar-wide">
+          <div class="mbc entry"></div><div class="mbc wall1"></div><div class="mbc survive"></div><div class="mbc wall2"></div><div class="mbc convert"></div>
+        </div>
+        <div class="mini-bar-wide-labels">
+          <span>Entry</span><span>Wall1</span><span>Pass</span><span>Wall2</span><span>Conv</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="combo-tile" style="flex:1;border-top:2px solid var(--fs-pink);">
+    <div class="combo-tile-inner">
+      <div class="combo-tile-stat">
+        <div class="combo-tile-label">Wall 2 — Step Name</div>
+        <div class="combo-tile-num" style="color:var(--fs-pink);">71%</div>
+        <div class="combo-tile-sub">fail at final submit</div>
+      </div>
+      <div class="combo-tile-chart">
+        <div class="mini-bar-wide">
+          <div class="mbc entry"></div><div class="mbc wall1"></div><div class="mbc survive"></div><div class="mbc wall2"></div><div class="mbc convert"></div>
+        </div>
+        <div class="mini-bar-wide-labels">
+          <span>Entry</span><span>Wall1</span><span>Pass</span><span>Wall2</span><span>Conv</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

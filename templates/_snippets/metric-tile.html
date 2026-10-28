@@ -1,0 +1,64 @@
+<!-- METRIC TILE + SPARKBAR
+     Use: single KPI with severity badge and trend bar. No funnel position context needed.
+     .sparkbar-fill width = pass-through rate as % of funnel entry.
+     Always set min-width on tiny values so they remain visible (e.g. 0.4% conversion → min-width:4px).
+     Badge variants: badge-green (healthy), badge-orange (warning), badge-red (critical).
+     Color the .metric-tile-num to match the severity: var(--fs-green), var(--fs-orange), var(--fs-pink).
+-->
+<div class="tile-row">
+  <div class="metric-tile" style="flex:1;min-width:140px;">
+    <div class="metric-tile-top">
+      <div class="metric-tile-label">Entry — Step 1</div>
+      <div class="metric-tile-badge badge-green">100%</div>
+    </div>
+    <div class="metric-tile-num" style="color:var(--fs-green);">24,800</div>
+    <div class="metric-tile-sub">users entered flow</div>
+    <div class="sparkbar" style="margin-top:12px;">
+      <div class="sparkbar-fill" style="width:100%;background:var(--fs-green);"></div>
+    </div>
+  </div>
+  <div class="metric-tile" style="flex:1;min-width:140px;">
+    <div class="metric-tile-top">
+      <div class="metric-tile-label">Step 2 — Wall 1</div>
+      <div class="metric-tile-badge badge-red">Critical</div>
+    </div>
+    <div class="metric-tile-num" style="color:var(--fs-pink);">62%</div>
+    <div class="metric-tile-sub">blocked at step name</div>
+    <div class="sparkbar" style="margin-top:12px;">
+      <div class="sparkbar-fill" style="width:62%;background:var(--fs-pink);"></div>
+    </div>
+  </div>
+  <div class="metric-tile" style="flex:1;min-width:140px;">
+    <div class="metric-tile-top">
+      <div class="metric-tile-label">Step 3 — Survivors</div>
+      <div class="metric-tile-badge badge-orange">3.2%</div>
+    </div>
+    <div class="metric-tile-num" style="color:var(--fs-orange);">~793</div>
+    <div class="metric-tile-sub">reach checkpoint</div>
+    <div class="sparkbar" style="margin-top:12px;">
+      <div class="sparkbar-fill" style="width:3.2%;min-width:6px;background:var(--fs-orange);"></div>
+    </div>
+  </div>
+  <div class="metric-tile" style="flex:1;min-width:140px;">
+    <div class="metric-tile-top">
+      <div class="metric-tile-label">Step 4 — Wall 2</div>
+      <div class="metric-tile-badge badge-red">Critical</div>
+    </div>
+    <div class="metric-tile-num" style="color:var(--fs-pink);">71%</div>
+    <div class="metric-tile-sub">fail at final step</div>
+    <div class="sparkbar" style="margin-top:12px;">
+      <div class="sparkbar-fill" style="width:71%;background:var(--fs-pink);"></div>
+    </div>
+  </div>
+  <div class="metric-tile" style="flex:1;min-width:140px;">
+    <div class="metric-tile-top">
+      <div class="metric-tile-label">Step 5 — Converted</div>
+      <div class="metric-tile-badge badge-green">&lt;1%</div>
+    </div>
+    <div class="metric-tile-num" style="color:var(--fs-green);">&lt;100</div>
+    <div class="metric-tile-sub">completed flow</div>
+    <div class="sparkbar" style="margin-top:12px;">
+      <div class="sparkbar-fill" style="width:0.4%;min-width:4px;background:var(--fs-green);"></div>
+    </div>
+  </div>
+</div>

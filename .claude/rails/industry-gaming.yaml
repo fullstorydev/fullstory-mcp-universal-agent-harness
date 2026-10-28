@@ -1,0 +1,648 @@
+schema_version: 2
+# .claude/rails/industry-gaming.yaml
+# Layer 2 industry profile — gaming
+# Derivation engine Wave 3 / W-11
+#
+# ROLLBACK: rm .claude/rails/industry-gaming.yaml
+#
+# This file is a parameter overlay. It carries no job definitions.
+# It is composed into audience profiles at runtime by the derivation engine (W-20).
+# Flat file — flat naming convention: industry-gaming.yaml.
+#
+# TWO FINDINGS — KEPT DELIBERATELY DISTINCT (hard rule, not a suggestion):
+#   Finding A — Risk / Compliance (output framing constraint): regulated-jurisdiction
+#     behavioral archetype analysis. Encoded in lexicon and blind_spot as a constraint
+#     on WHAT WE SAY in external-facing output, not a constraint on the analysis itself.
+#   Finding B — Retention / Product: ENJ-primary, BEL-secondary currency mix;
+#     retention as North Star; arc altitude as the defining analytical lens.
+# These must never be collapsed into a single finding.
+# Source: gaming-lane-20260910.md — "Two findings, kept deliberately distinct."
+
+industry: gaming
+segment_default: f2p
+# segment values: f2p | igaming  (default f2p — preserves Steam/Xbox/IAP behavior)
+# igaming = regulated gambling / betting / casino / sportsbook / lottery operator
+# See segments.igaming below for overrides.
+
+evidence:
+  sources:
+    - "industry/gaming-lane-20260910.md"
+  independence: self_sourced
+  notice: >
+    Single source, single informant (Lane Greer, the same person building this system).
+    No independent corroboration exists. The interview explicitly states it is "a first pass
+    establishing the two-finding split and the B2C-SaaS framing only." Reference point,
+    currency mix specifics, stop conditions, evidence rejected, tempo, level of analysis,
+    and flow shape were explicitly not covered ("Didn't cover" section of the interview).
+    Fields derived from the interview are single-informant hypotheses, bounded by that
+    limitation. Fields not covered by the interview are reasoned from the B2C SaaS framing
+    and the benchmark corpus — each such field is annotated with its derivation basis.
+
+# ── END-USER CURRENCIES ───────────────────────────────────────────────────────
+# N-1 MANDATORY: derivation field is present. The currency mix cannot be measured
+# through the Fullstory MCP — no tool exposes time-per-behavior-category or intent
+# classification. This ranked list is an informed hypothesis, not a measurement.
+# Sources: gaming-lane-20260910.md (Finding B); build plan W-11 brief (ENJ > BEL > ACQ).
+
+end_user_currencies:
+  derivation: authored_pending_capability   # GUARD N-1 — mandatory; do not remove
+
+  ranked:
+    - ENJ   # primary — Entertainment & Leisure. The user spends discretionary time
+            # seeking diversion and immersion. Gaming is ENJ-primary more than any
+            # other vertical in this set. Source: gaming-lane-20260910.md; W-11 brief.
+    - BEL   # secondary — Communication & Community. Social standing, guild membership,
+            # leaderboards, and competitive play are genuine exchange motives in gaming —
+            # a stronger BEL signal than any other industry in this set. The game is
+            # partly a social graph; competition and recognition are co-primary.
+            # Source: gaming-lane-20260910.md; W-11 brief.
+    - ACQ   # tertiary — Transaction & Acquisition. In-game purchases, DLC, season
+            # passes, and subscription access. When present, the micro-funnel around an
+            # IAP is ACQ-dominant within that session; the overall product exchange is
+            # ENJ/BEL. Retention is the North Star, not conversion.
+            # Source: gaming-lane-20260910.md; W-11 brief.
+
+  business_value_order:
+    # ADVISORY ONLY — never operative for derivation. Added 2026-09-11 alongside the
+    # ranked/business_value split. Gaming is a clear case where the two genuinely diverge:
+    # players spend their session on ENJ/BEL, while the business is organized around IAP
+    # revenue. Both facts are true; they must not share a field.
+    - ACQ   # in-app purchases, DLC, season passes, subscription access — the revenue
+    - ENJ   # retention is the North Star, and retention is bought with enjoyment
+    - BEL   # social graph drives retention and re-engagement
+
+  toll: NAV   # wayfinding overhead; NAV is never a headline finding (Commitment 3)
+
+  minor: [UTL, KNW, INF]
+  # UTL — account management, settings, profile control. Real but not a primary mode.
+  # KNW — build research, strategy guides, game lore. Mostly off-platform (wikis, YouTube);
+  #        where it appears on-platform (help, patch notes), it is minor.
+  # INF — bug reporting, community feedback, feature suggestions. Present but minor.
+
+  absent: []   # No currency is absent in gaming; BEL is elevated, not absent.
+
+  intents:
+    ENJ:
+      - id: play_and_explore
+        label: "play, explore, engage with game content"
+        derivation: authored_pending_prototype
+        note: "The core loop. Success signal is session depth and frequency, not completion."
+      - id: invest_in_progression
+        label: "invest in player progression and identity"
+        derivation: authored_pending_prototype
+        note: >
+          Long-term identity investment. A player's account IS their identity — levels,
+          items, achievements, history. This is what makes auth failure catastrophic and
+          arc altitude the dominant analytical lens. Source: gaming-lane-20260910.md.
+      - id: experience_flow_state
+        label: "experience flow state and immersion"
+        derivation: authored_pending_prototype
+        note: >
+          Deep immersion without friction. Performance failures on content surfaces disrupt
+          ENJ at the moment of exchange. Source: gaming-lane-20260910.md (Finding B);
+          benchmark-corpus.yaml — broken ENJ exchange is catastrophically personal.
+
+    BEL:
+      - id: compete_for_standing
+        label: "compete for standing on leaderboards or ranked play"
+        derivation: authored_pending_prototype
+      - id: participate_in_community
+        label: "participate in guild, clan, or community"
+        derivation: authored_pending_prototype
+      - id: signal_achievement
+        label: "signal achievement, status, or progression to peers"
+        derivation: authored_pending_prototype
+        note: "Cosmetic items, achievement display, season-pass flex — BEL exchange motives."
+
+    ACQ:
+      - id: purchase_game_access
+        label: "purchase game access or subscription"
+        derivation: authored_pending_prototype
+      - id: acquire_in_game_content
+        label: "acquire in-game currency, items, loot boxes, or season pass"
+        derivation: authored_pending_prototype
+      - id: unlock_dlc
+        label: "unlock DLC or premium content expansion"
+        derivation: authored_pending_prototype
+
+  currency_note: >
+    ENJ primacy does not mean all sessions are purchase attempts — the overwhelming majority
+    are ENJ/BEL exchanges with no IAP intent. Applying a conversion denominator to all gaming
+    sessions produces a meaningless rate. Establish IAP intent (session arrives at or navigates
+    to IAP/checkout surface) before attributing any metric to ACQ failure.
+    Retention is the North Star business metric. A gaming org that improves ENJ and BEL without
+    changing ACQ has improved its product. Source: gaming-lane-20260910.md — Finding B;
+    B2C SaaS framing.
+
+# ── FLOW SHAPE ────────────────────────────────────────────────────────────────
+# CORRECTED 2026-09-11, Lane ruling. W-11 originally set this to the shape now called
+# diffuse_journeys, reasoned from a B2C SaaS structural analogy and citing IAP
+# micro-funnels as structurally important.
+#
+# Two problems with that reasoning:
+#  1. MICRO-FUNNEL PRESENCE IS NOT A DIFFERENTIATOR. Micro-funnels exist in every
+#     flow shape — completing a date picker inside a linear travel booking flow is a
+#     micro-funnel too. Their presence tells you nothing about macro structure.
+#     See the flow_shapes block in MANIFEST.yaml.
+#  2. It worked past a SOURCED assignment. The flow-shape model in
+#     06-derivation-engine-spec.md §3b places gaming with fintech, and that row is the
+#     only one in the table carrying two sources (Lane, corroborated by Sekizui).
+
+flow_shape: parallel_journeys
+flow_shape_note: >
+  Reasoned on the MACRO axis: does a dominant path exist, and if not, are the
+  alternatives enumerable? Gaming has no dominant path, but its important journeys are
+  discrete and enumerable — play a session, buy currency, place a wager, browse the
+  catalogue. That is parallel_journeys, the same shape as fintech, and it is distinct
+  from saas (diffuse_journeys), where the key journeys cannot be enumerated at all and
+  there is "no obvious place to start."
+  EVIDENCE CAVEAT: the gaming interview listed flow_shape under "Didn't cover." The
+  supporting source is the flow-shape model in the ux-design interview
+  (ux-design-lane-20260908.md), where gaming appears as an example rather than as
+  stated coverage — COVERAGE.md carries that scope flag. So this is weakly sourced,
+  but it is sourced, which beats the unsourced structural analogy it replaces.
+  Sources: 06-derivation-engine-spec.md §3b; ux-design-lane-20260908.md (scope-flagged).
+
+# ── SURFACE CLASSES ───────────────────────────────────────────────────────────
+
+surface_classes:
+  - name: core_play
+    surfaces: [content]
+    purpose: "Primary ENJ/BEL exchange — gameplay, progression, social interaction"
+    note: >
+      Long dwell and high active_time here are ENJ success signals, not confusion.
+      A short session on core_play is the potential failure signal — player disengaged.
+      Do not apply the SaaS valence-ambiguity rule (long session = could be stuck) to
+      gaming content surfaces. Invert it: long session + high active_time = working.
+      Source: currency-grammar.yaml — Commitment 2; gaming ENJ primary.
+
+  - name: player_identity
+    surfaces: [account, auth]
+    purpose: "Player profile, progression state, social graph — BEL and account integrity"
+    note: >
+      Authentication failure is catastrophically high stakes in gaming. Years of player
+      progression reside in the account. Account lockout or auth failure means identity
+      loss, not just session friction. This surface class carries the highest severity
+      weight in gaming (see severity_order). Source: gaming-lane-20260910.md — Finding B
+      (identity investment); benchmark-corpus.yaml — exchange intensity note.
+
+  - name: acquisition_micro_funnel
+    surfaces: [checkout, pdp]
+    purpose: "IAP, season pass, DLC purchase — ACQ micro-funnels within the ENJ-dominant product"
+    note: >
+      These surfaces carry compliance sensitivity for regulated jurisdictions.
+      See lexicon → in_game_purchase_framing. Analyze these flows freely in
+      internal field guides; apply output framing constraints to external deliverables.
+
+  - name: discovery
+    surfaces: [entry, plp, search]
+    purpose: "Game discovery, new player acquisition, game catalogue browsing — KNW serving ACQ"
+
+  - name: support_and_help
+    surfaces: [support]
+    purpose: "Help center, ban appeals, account recovery — INF exchange and UTL resolution"
+
+# ── SEVERITY ORDER ────────────────────────────────────────────────────────────
+# Descending stakes — where a failure costs the most for a gaming org.
+# All values must be MANIFEST surface keys (N-5).
+# auth and account are highest because player identity is the product —
+# account loss destroys years of progression and severs BEL exchange entirely.
+
+severity_order: [auth, account, checkout, content, entry, pdp, plp, search, support]
+
+# In-game purchase flow subsurfaces (within checkout / acquisition_micro_funnel).
+# Carried as authored content; valid gaming-specific surface structure.
+iap_subsurfaces:
+  - currency_selection          # real-money to in-game currency exchange step
+  - payment                     # credit card / payment method entry
+  - promo_code_application      # discount / promo code entry; rage-click cluster risk
+  - confirmation                # purchase confirmation; failure here = purchase unclear
+
+# ── REFERENCE POINT ───────────────────────────────────────────────────────────
+# Not covered directly in the interview ("Didn't cover" list).
+# Reasoned from B2C SaaS framing and retention-as-North-Star metric.
+
+reference_point: "own retention baseline (session frequency, DAU/WAU ratios, lapse cohort trend)"
+reference_point_note: >
+  Not covered directly in the gaming interview; reasoned from the B2C SaaS framing.
+  Gaming reference points are own historical engagement trend — the question customers ask
+  is "are players engaging more or less than last month, last season, last title release?"
+  not cross-org or cross-industry comparison. Cross-org comparison is additionally
+  constrained by guard N-3. Industry benchmarks (benchmark-corpus.yaml) are a valid
+  secondary frame for frustration and error signals, especially the mobile outlier context.
+  Source: gaming-lane-20260910.md — B2C SaaS framing (reasoned from, not direct evidence).
+
+# ── SUBSTRATE TOLERANCE ───────────────────────────────────────────────────────
+# The interview did not cover substrate tolerance.
+# Applying Google CWV bounds to gaming web surfaces (lobby, store, account pages).
+# Core gameplay load times (game client startup, asset streaming) are out of CWV scope —
+# those are application performance metrics, not web vitals.
+
+substrate_tolerance:
+  lcp_alert_boundary: needs_improvement
+  lcp_alert_ms: 2500
+  source: "Google Core Web Vitals specification — Needs Improvement boundary, web.dev/vitals"
+  rationale: >
+    Substrate tolerance not covered in the gaming interview; applying Google CWV bounds to
+    web-facing surfaces. Gaming is more tolerant of longer initial load times for content
+    surfaces (ENJ exchange does not carry ACQ urgency), but IAP/checkout surfaces (ACQ
+    micro-funnels) should alert at the same boundary as retail: the Needs Improvement
+    boundary (2500ms LCP). Using Needs Improvement as the alert boundary is conservative.
+    Gaming orgs should validate this against their own distributions, particularly for
+    mobile — where performance is the dominant failure surface.
+
+  cwv_reference:
+    LCP:  { good_ms: 2500, ni_ms: 4000, measure: p75, source: "Google Core Web Vitals specification" }
+    INP:  { good_ms: 200,  ni_ms: 500,  measure: p75, source: "Google Core Web Vitals specification" }
+    CLS:  { good: 0.10,    ni: 0.25,    measure: p75, source: "Google Core Web Vitals specification" }
+    FCP:  { good_ms: 1800, ni_ms: 3000, measure: p75, source: "Google Core Web Vitals specification" }
+    TTFB: { good_ms: 800,  ni_ms: 1800, measure: p75, source: "Google Core Web Vitals specification" }
+    deprecated: "FID — replaced by INP March 2024. Never reference FID in any profile or deliverable."
+
+# ── LEXICON ───────────────────────────────────────────────────────────────────
+# FINDING A AND FINDING B encoded here — kept deliberately distinct.
+# Finding A entries: in_game_purchase_framing, behavioral_archetype
+#   These are OUTPUT FRAMING CONSTRAINTS — not domain facts, not analysis blocks.
+#   The analysis proceeds; what appears in external-facing output is constrained.
+# Finding B entries: lapse, session_length_valence, minutes_per_dollar, retention_arc
+
+lexicon:
+
+  # ── FINDING B — Retention / Product (f2p default) ────────────────────────
+  # Finding A (regulated-jurisdiction framing) lives in segments.igaming.lexicon below.
+
+  lapse: >
+    The gaming-industry term for what SaaS calls churn. A player who has not logged in
+    in 30 days is the gaming equivalent of a churned SaaS user — and equally invisible
+    from behavioral data alone, because absent players generate no sessions.
+    Disengagement precursors (declining session frequency, shorter sessions, BEL
+    withdrawal — fewer social interactions, leaderboard checks, guild activity) are
+    detectable before lapse and are the early-warning signal. The lapse itself is a
+    data gap; the pre-lapse trajectory is the analytical target.
+    Source: gaming-lane-20260910.md — B2C SaaS framing; parallel to SaaS churn model.
+
+  session_length_valence: >
+    Long sessions in gaming are a success signal for ENJ exchange — invert the SaaS
+    ambiguity rule. Do NOT apply "long session = could be stuck" to gaming content surfaces.
+    Correct interpretation: long session + high active_time on content = working.
+    Short session on a content surface = potential failure signal (player disengaged).
+    Exception: long sessions on IAP/checkout surfaces (acquisition_micro_funnel) may
+    indicate friction, not immersion — apply the standard ACQ blockage read there.
+    Source: currency-grammar.yaml — Commitment 2 applied to ENJ primary; benchmark-corpus.yaml
+    — gaming active_time: 71 sec/session (global), 115 sec (mobile), suggesting low active_time
+    relative to session duration indicates engagement depth deserves scrutiny per-org.
+
+  minutes_per_dollar: >
+    Candidate retention metric: minutes of active play per dollar of IAP spend — active time
+    as a function of in-game purchase investment. Flagged in the gaming interview as a
+    candidate for dx_dimensions. Not yet validated as a standard industry metric. Do not
+    cite as a benchmark; compute per-org as a directional signal only. Useful for framing
+    whether IAP spend is producing proportional engagement return.
+    Source: gaming-lane-20260910.md — Finding B, candidate metric, explicitly unvalidated.
+
+  retention_arc: >
+    DAU/WAU/MAU ratios and day-N retention (D1, D7, D30) are standard engagement metrics
+    for gaming, typically measured in a data warehouse rather than a behavioral analytics
+    tool. Fullstory contributes to this picture through session frequency (arc-altitude
+    analysis of individual player return patterns) and pre-lapse behavioral signals.
+    Before proposing behavioral proxies for retention metrics, establish what metrics the
+    gaming org already tracks — avoid duplicating existing warehouse measurements.
+    Source: gaming-lane-20260910.md — B2C SaaS framing (reasoned; not direct interview evidence).
+
+# ── BLIND SPOTS ───────────────────────────────────────────────────────────────
+
+blind_spot:
+  - >
+    Non-purchase sessions scored as ACQ failure: the overwhelming majority of gaming sessions
+    are ENJ/BEL exchanges with no IAP intent. Conversion rate over all gaming sessions is a
+    meaningless denominator. Establish IAP intent before attributing any session metric to
+    ACQ failure. Source: gaming-lane-20260910.md — B2C SaaS framing; W-11 brief.
+
+  - >
+    Mobile and desktop treated as one surface: gaming mobile is a documented extreme outlier
+    (rage clicks: 4,281/1k vs. global mobile 589/1k; dead clicks: 12,839/1k — ~25× global
+    average). Desktop/web gaming rage is actually low (148.6/1k). A blended gaming metric
+    hides the most extreme frustration signals in the benchmark corpus. Always split gaming
+    findings by platform before reporting. Source: benchmark-corpus.yaml — mobile outlier
+    warning; Fullstory 2026 Benchmark Report, CY2025.
+
+  - >
+    Lapse invisible from behavioral data: absent players generate no sessions. Disengagement
+    precursors are detectable (see lexicon → lapse); the lapse event itself is a data gap.
+    Arc-altitude analysis surfaces the pre-lapse trajectory, but the moment of lapse is
+    invisible the instant the player stops logging in. Do not report lapse rate from
+    behavioral data alone. Source: gaming-lane-20260910.md — B2C SaaS framing.
+
+  - >
+    Arc altitude neglected: gaming identity investment spans months or years. A single session
+    metric is almost meaningless without arc-altitude context. Player progression, return
+    frequency, and cohort retention require cross-session (arc) analysis that single-session
+    metrics miss entirely. This is the defining difference between gaming and retail: the
+    relevant exchange window is weeks to years, not one visit.
+    Source: gaming-lane-20260910.md — Finding B; W-11 brief.
+
+  - >
+    Session active_time requires context: gaming global active_time (71 sec/session) is among
+    the lowest in the benchmark corpus, but gaming session_duration (1,131 sec) is mid-range.
+    Low active_time in a long session is not automatically a failure signal — passive viewing
+    of in-game cinematics, spectating, or waiting for multiplayer lobbies contribute to session
+    duration without active_time. Interpret active_time against the specific game type.
+    Source: benchmark-corpus.yaml — gaming global slice; Fullstory 2026 Benchmark Report, CY2025.
+
+# ── DEFAULT SPLITS ────────────────────────────────────────────────────────────
+
+default_splits:
+  always_apply: [device, new_vs_returning]
+  device_note: >
+    Gaming mobile is the extreme outlier across all frustration metrics (see blind_spot).
+    "Device" in gaming context means mobile vs. web/desktop as distinct product surfaces —
+    not just form factor. Never report a gaming finding without device split.
+    Mobile and web/desktop gaming are not comparable experiences.
+    Source: benchmark-corpus.yaml — gaming mobile outlier; Fullstory 2026 Benchmark Report, CY2025.
+  new_vs_returning_note: >
+    New player acquisition and returning player retention are categorically different
+    engagement states. A new player on the entry or auth surface is in KNW/ENJ mode
+    (learning the game). A returning player is in ENJ/BEL mode (playing their game,
+    investing in their identity). Do not blend them — retention findings must isolate
+    returning players; acquisition findings isolate new players.
+  optional: [game_type, region, subscription_tier]
+  suppress_when: "cell n < 100 — matches CLAUDE.md small-sample rule; do not split when n starves the cell"
+
+# ── DX DIMENSIONS ─────────────────────────────────────────────────────────────
+# No gaming-specific DX Score dimension benchmark bands are available in
+# benchmark-corpus.yaml or from the gaming interview (flow_shape was in "Didn't cover").
+# Global bands are included below as reference context only — not as gaming-specific
+# thresholds. Annotated accordingly. Flagged for update when gaming-specific DX data
+# is available.
+
+dx_dimensions:
+  - name: forms_and_checkouts
+    band: [45, 88]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — global band; no gaming-specific range available"
+    gaming_note: >
+      Apply this dimension against IAP/acquisition_micro_funnel surfaces only. The primary
+      gaming exchange (ENJ/BEL on content) does not map to checkout-style forms. This is a
+      global reference band, not a gaming-specific calibration.
+
+  - name: frustration_satisfaction
+    band: [50, 95]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — global band; no gaming-specific range available"
+    gaming_note: >
+      Broken ENJ/BEL exchange is catastrophically personal in gaming — identity is invested.
+      Frustration reads as betrayal, not inconvenience. Apply this band to web/desktop surfaces
+      only; gaming mobile frustration metrics are extreme outliers outside normal band ranges
+      (rage: 4,281/1k, dead: 12,839/1k). Source: benchmark-corpus.yaml — exchange intensity note;
+      gaming mobile outlier warning.
+
+  - name: navigation_design
+    band: [60, 92]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — global band; no gaming-specific range available"
+    gaming_note: >
+      Gaming global scroll_depth (60.7%) is the lowest of all industries, which may indicate
+      that navigation structure is not optimized for discovery on web surfaces.
+      Source: benchmark-corpus.yaml — global slice, gaming scroll_depth.
+
+  - name: call_to_action
+    band: [55, 90]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — global band; no gaming-specific range available"
+    gaming_note: "Applies primarily to IAP and new-player acquisition conversion surfaces."
+
+  - name: personalization
+    band: [60, 95]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — global band; no gaming-specific range available"
+
+  - name: comprehension_accessibility
+    band: [55, 98]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — global band; no gaming-specific range available"
+
+  - name: search_functionality
+    band: [65, 97]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — global band; no gaming-specific range available"
+    gaming_note: "Applies to game discovery / catalogue search surfaces where present."
+
+# ── BENCHMARK SNAPSHOT (gaming-specific, from corpus) ────────────────────────
+# These are direct benchmark figures for this industry, carried here for quick
+# access during analysis. All figures from benchmark-corpus.yaml / the Fullstory
+# 2026 Benchmark Report, CY2025. N-2 satisfied: all carry corpus-level source.
+# N-4 satisfied: these are descriptive benchmarks, not runtime thresholds.
+#
+# CRITICAL: Always split by device. Global and web figures mask the mobile outlier.
+# Mobile outlier is the most important gaming benchmark fact in the corpus.
+
+benchmark_snapshot:
+  source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml for full tables"
+  period: CY2025
+
+  global:
+    rage_clicks_per_1k: 453.8      # 2× the all-industry average (225.9)
+    dead_clicks_per_1k: 1431.6     # 2.5× all-industry average (563.8)
+    post_error_exits_per_1k: 155.9
+    session_duration_s: 1131
+    active_time_s: 71              # low relative to session_duration — requires context (see lexicon)
+    bounce_rate_pct: 41.8          # lowest bounce rate of all industries; players stay
+    scroll_depth_pct: 60.7         # lowest scroll depth of all industries
+    suspicious_activity_per_100k: 0.9  # extremely low; gaming has minimal bot traffic
+
+  web:
+    rage_clicks_per_1k: 148.6     # desktop gaming rage is actually LOW — not a frustration story
+    dead_clicks_per_1k: 409.2
+    post_error_exits_per_1k: 147.5
+    session_duration_s: 994
+    active_time_s: 67
+
+  mobile:
+    mobile_outlier_warning: >
+      Gaming mobile frustration signals are extreme outliers — the largest in the entire corpus.
+      Never use these figures as a proxy for any other industry or as a mobile baseline.
+      Analyze gaming mobile separately. Source: benchmark-corpus.yaml — mobile outlier warning.
+    rage_clicks_per_1k: 4281.1    # ~7× gaming web, ~7× global mobile average
+    dead_clicks_per_1k: 12839.3   # ~25× gaming web, catastrophically elevated
+    post_error_exits_per_1k: 210.2
+    session_duration_s: 1643      # longest gaming session duration — mobile users stay
+    active_time_s: 115
+
+  yoy_trends:
+    rage_clicks_pct: +32           # worsening; not as severe as retail (+262) but trending up
+    dead_clicks_pct: +31           # worsening
+    error_clicks_pct: +32          # worsening — frustration and breakage both rising
+    post_error_exits_pct: -24      # improving
+    session_duration_pct: +38      # sessions getting longer — more time spent in product
+    active_time_pct: -17           # active engagement declining within sessions
+    source: "benchmark-corpus.yaml — yoy_change; Fullstory 2026 Benchmark Report, CY2025"
+    yoy_note: >
+      Session duration is growing (+38%) while active_time is declining (-17%). Players
+      are staying in sessions longer but engaging less actively within them. This divergence
+      is a leading signal worth investigating per org: are sessions longer because the game
+      is more immersive (ENJ win), or because players are waiting more / stuck more (friction)?
+      Requires per-org arc-altitude investigation to disambiguate.
+
+# Wave 7B — audience inheritance overrides
+# CX and AM in gaming inherit support rails (ticket surge + VIP) by default.
+# These audiences do not have distinct gaming-native gold signals.
+# Override at harness build time via role.boundary if the org has a distinct CX/AM motion.
+audience_defaults:
+  customer-experience:
+    inherit: support
+    rationale: >
+      Gaming CX is support with extra steps. No trust-recovery arc equivalent exists
+      in the gaming currency mix [ENJ, BEL, ACQ]. Inherits support rail (ticket surge,
+      VIP incident) by default. Override via role.boundary at setup if distinct.
+  acct-mgmt:
+    inherit: support
+    rationale: >
+      Gaming AM is support with extra steps. No book-health / portfolio arc equivalent
+      exists in the gaming currency mix. Inherits support rail by default.
+      Override via role.boundary at setup if distinct.
+  # All other audiences use their standard persona rails.
+
+# ── SEGMENTS ──────────────────────────────────────────────────────────────────
+# Runtime overlay — read by CLAUDE.md session logic, not by derive.py.
+# derive.py reads end_user_currencies.ranked from root (f2p default above).
+# When org context or analyst declares segment: igaming, load segments.igaming
+# INSTEAD OF the root currency mix and lexicon. All other root keys remain active.
+
+segments:
+  igaming:
+    # Regulated gambling / betting / casino / sportsbook / lottery operators.
+    # Currency mix is inverted: the deposit IS the revenue event.
+    # Analysis order: derive persona/job → check org context Regulatory section
+    # (jurisdiction + capture licensing) → read questions below → call
+    # /fullstory:general-analysis → invoke SME value-report skill only if
+    # QBR/value report/exec report/deck was explicitly requested.
+
+    end_user_currencies:
+      ranked: [ACQ, ENJ, BEL]
+      # ACQ-primary: the deposit is the revenue event. First-time deposit (FTD) is the
+      # activation event — not session count, not page view, not registration completion.
+      # ENJ secondary: ongoing engagement (session frequency, game variety, time-on-platform).
+      # BEL tertiary: social/competitive features present but not primary exchange motive
+      # in regulated betting/casino operators (stronger in F2P gaming).
+      derivation: authored_pending_interview
+      source: "SME igaming-value-report.skill; joint review Grok-W9-igaming-vertical-overlay-review-AAR-20260915.md"
+
+    lexicon:
+      # ── FINDING A — Risk / Compliance (output framing constraint) ──────────
+      # Moved from root f2p default: these constraints apply only to regulated operators.
+
+      in_game_purchase_framing: >
+        OUTPUT FRAMING CONSTRAINT (Finding A — igaming segment only) — applies to any
+        external-facing analysis deliverable for regulated gambling / betting / casino /
+        sportsbook / lottery operators. Deposit flows, cashier micro-funnels, and
+        wagering patterns may be analyzed freely in internal field guides and analyst
+        methodology notes. When surfacing findings in customer-facing deliverables, do not
+        frame them in ways that could be read as optimizing conversion for regulated
+        purchase / wagering flows. Choose evidence form (what the data shows) over
+        conversion narrative (how to extract more deposits). Findings that document
+        behavioral patterns around high-frequency deposit sequences are for internal
+        review only. This is a constraint on framing, not on analysis.
+        Source: gaming-lane-20260910.md — Finding A; SME igaming-value-report.skill.
+
+      behavioral_archetype: >
+        INTERNAL ANALYST CONTEXT ONLY (Finding A — igaming segment only) — do not
+        reference in external deliverables. In regulated gaming contexts, behavioral
+        archetypes are used to detect a shift from recreational to potentially problematic
+        behavior, enabling proactive responsible-gaming intervention. Fullstory behavioral
+        data can surface session-frequency increases, time-of-day clustering, and escalating
+        deposit sequences as early signals. Segment construction is the analytic method
+        (pattern: true in currency-signals.yaml). This analysis is valid and useful for
+        compliance teams under role.boundary: compliance. The framing constraint is on
+        external output: do not include in any deliverable shared with third parties,
+        regulators, or the public.
+        Source: gaming-lane-20260910.md — Finding A; SME igaming-value-report.skill.
+
+    questions:
+      # Minimum one question per group. Tag: gambling_specific = igaming segment only.
+      # Format: id, tag, ask, maps_to_persona
+
+      # Group: deposit-cashier
+      - id: deposit-cashier-largest-drop
+        tag: gambling_specific
+        ask: >
+          Where is the largest step-to-step drop in the deposit and cashier funnel?
+          Split by device, geography, new vs. returning, and deposit method — a drop
+          uniform across all cuts points to UX; a drop concentrated in one cut points
+          to a specific integration or payment-method issue.
+        maps_to_persona: product-mgmt
+
+      - id: deposit-cashier-dead-clicks
+        tag: gambling_specific
+        ask: >
+          Are there dead clicks or rage clicks on cashier controls? A dead click on a
+          deposit button produces no error and no failed-transaction record — it is a
+          lost deposit invisible to the transaction log. Run this before concluding
+          the cashier funnel is working correctly.
+        maps_to_persona: engineering
+
+      # Group: registration-no-kyc-internals
+      - id: registration-kyc-entry-exit
+        tag: gambling_specific
+        ask: >
+          What is the drop-off rate between entering the KYC verification step and
+          completing it (first page after the step)? Measure the transition, not behavior
+          inside the step — document-upload internals are off limits. Entry and exit
+          are the only measurement points.
+        maps_to_persona: product-mgmt
+
+      # Group: sportsbook-casino-cross-sell
+      - id: sportsbook-casino-cross-sell-visibility
+        tag: gambling_specific
+        ask: >
+          Of players whose first product was sportsbook: how many rendered a casino
+          entry point in any session (element visibility, not clicks)? Of those who
+          rendered it, how many clicked? These two numbers are different problems with
+          different fixes — low visibility is a placement problem; low click rate on
+          visible elements is a creative or relevance problem.
+        maps_to_persona: marketing
+
+      # Group: retention
+      - id: retention-session-frequency-arc
+        tag: gambling_specific
+        ask: >
+          For players retained past day 7, what does session frequency look like at
+          day 14, 30, and 60? Use arc-altitude analysis (player-by-player frequency
+          trajectory) — a per-player arc surfaces the decline shape before lapse,
+          which is the intervention window. Aggregate day-N retention hides the shape.
+        maps_to_persona: product-mgmt
+
+      # Group: bonus-promo
+      - id: bonus-promo-redemption-funnel
+        tag: gambling_specific
+        ask: >
+          Where do players drop off between receiving a bonus notification and completing
+          the qualifying wagering requirement? The entry to the promo landing page and
+          the qualifying bet confirmation are the two funnel endpoints — measure the
+          funnel between them, split by bonus type and acquisition channel.
+        maps_to_persona: product-mgmt
+
+      # Group: player-protection-aggregate-only
+      - id: player-protection-aggregate-signals
+        tag: gambling_specific
+        ask: >
+          How many players visited a deposit-limit page or responsible-gaming tool more
+          than once in a 7-day window? Report as aggregate counts and segment percentages
+          only — never open an individual session that is a candidate for gambling-harm,
+          never print self-exclusion status or limit values, and never use this signal
+          as a marketing targeting input (Massachusetts 205 CMR 257.02(3)).
+        maps_to_persona: support
+
+    blind_spots:
+      # igaming-specific harm restraint rules (analysis layer).
+      # Capture-layer restraints (age verification, KYC document recording) belong
+      # in org-context-template.md Regulatory / capture constraints section.
+      - "Do not open or link an individual session that is a candidate for gambling-harm."
+      - "Do not print self-exclusion status or limit values in any deliverable."
+      - "Do not feed play-management or responsible-gaming-tool usage to marketing investigation priors."
+      - >
+        Reached self-exclusion page and did not complete: allowed as an aggregate behavioral
+        signal only. Never as an individual session finding.
+      - "Measure KYC as entry and exit to the verification step. Do not analyze document-upload internals."
+      - >
+        In-game purchase / deposit framing risk: behavioral data on cashier and deposit flows
+        is sensitive in regulated jurisdictions. Internal field guides only for session-level
+        findings on wagering patterns. See lexicon → in_game_purchase_framing.
+        Source: gaming-lane-20260910.md — Finding A; SME igaming-value-report.skill.
+      - >
+        Regulated-jurisdiction behavioral archetype analysis is internal only: segment patterns
+        detecting shifts from recreational to potentially problematic behavior must not appear
+        in external-facing deliverables. See lexicon → behavioral_archetype.
+        Source: gaming-lane-20260910.md — Finding A; SME igaming-value-report.skill.

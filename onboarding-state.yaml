@@ -1,0 +1,20 @@
+# onboarding-state.yaml
+# Auto-seeded by harness_bundle.py at cook time. Do not edit manually.
+# Schema: _workshop/field-model/onboarding-state-schema.yaml (Wave 8-A, W-41)
+# ONBOARDING-OWNED FIELDS
+schema_version: 1
+verified_org: ""
+audience: []
+industry: ""
+current_topic: 1
+completed_topics: []
+last_updated: ""
+# PROFILE-OWNED FIELDS (written by onboarding piggyback; migrated to property-profile.yaml by W-30)
+profile_migrated: false
+budget_spent:
+  session_1: 0
+  session_2: 0
+  session_3: 0
+profile_inferences: []
+dropped_inferences: []
+continuity_gaps: []

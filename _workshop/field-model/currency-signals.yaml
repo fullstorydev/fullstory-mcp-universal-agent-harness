@@ -1,0 +1,953 @@
+schema_version: 1
+# _workshop/field-model/currency-signals.yaml
+# The broken-exchange map: currency → intent → exchange signal
+#
+# Used in derivation rule R1:
+#   Step 1: exchange_candidates  ← signals mapped from the ranked currency mix (this file)
+#   Step 2: substrate_candidates ← [cwv, network_error, availability] gated by industry
+#                                   substrate_tolerance (substrate_signals section, this file)
+#
+# This file is PERSONA-INDEPENDENT and STATIC. It does not change per audience or per org.
+# Industry profiles select which currencies are in play; this file maps what that implies.
+#
+# ROLLBACK: rm _workshop/field-model/currency-signals.yaml
+#
+# ── SOURCES ───────────────────────────────────────────────────────────────────
+# manifesto:  value-manifesto-distilled.md — Six Currencies table, Broken Exchange Signals column
+# taxonomy:   behavioral-currency-taxonomy.md — §2 intent layer from Goals & Benchmarks prototype
+# transition: currency-transition.md — deliberation model, retail arc, whose-success constraint
+#
+# ── INTENT COMPLETENESS ──────────────────────────────────────────────────────
+# The G&B prototype expanded only KNW and NAV in available screenshots (taxonomy §7).
+# KNW (8 intents) and NAV (4 intents) are marked: derivation: confirmed_prototype
+# ACQ, UTL, ENJ, BEL, INF intent lists are not visible. Those are marked:
+#   derivation: authored_pending_prototype
+# When the full prototype becomes accessible, authored intents should be verified or replaced.
+#
+# ── SIGNAL VOCABULARY ────────────────────────────────────────────────────────
+# Signal keys follow the Fullstory event vocabulary used in existing persona files.
+# Behavioral PATTERNS (search_refinement_loop, form_abandonment, etc.) require segment
+# construction — they are not single-event signals. These are marked pattern: true.
+# Single-event signals (rage_click, dead_click, etc.) map directly to Fullstory event types.
+#
+# ── CLASSIFICATION ───────────────────────────────────────────────────────────
+# class: exchange  — currency-specific; only relevant when that currency is in play
+# class: substrate — currency-agnostic; a slow page degrades every currency alike
+#
+# ── COMMITMENT 2 (manifesto) — governs this entire file ──────────────────────
+# "Never call a signal good or bad without the exchange in play — session length,
+#  scroll depth, dwell time have no fixed valence."
+# Source: value-manifesto-distilled.md — Seven Commitments, #2
+
+metadata:
+  manifesto_source: "value-manifesto-distilled.md"
+  taxonomy_source: "behavioral-currency-taxonomy.md"
+  transition_source: "currency-transition.md"
+  currency_grammar_ref: ".claude/rails/currency-grammar.yaml"
+  governing_commitment: "Commitment 2 — never call a signal good or bad without the exchange in play"
+
+# ── EXCHANGE SIGNALS ─────────────────────────────────────────────────────────
+
+exchange_signals:
+
+  ACQ:
+    name: "Transaction & Acquisition"
+    manifesto_source: "value-manifesto-distilled.md — ACQ row, Broken Exchange Signals column"
+    manifesto_signals: "Cart/checkout abandonment; error clicks at payment; repeat visits with no forward motion"
+    three_installments_note: >
+      Per currency-transition.md: ACQ spends money, commitment, and risk as three separate
+      installments — often weeks apart. Commitment (add-to-cart) precedes risk (address/card
+      entry) which precedes money (submit). Cart abandonment averages two unrelated states:
+      people who quit vs. people still deciding. Do not conflate them.
+    intents:
+      - id: commit_to_purchase
+        label: "commit to purchase"
+        derivation: authored_pending_prototype
+        signals:
+          - signal: error_click
+            class: exchange
+            surfaces: [checkout, cart]
+            manifesto_line: "error clicks at payment"
+          - signal: network_error
+            class: exchange
+            surfaces: [checkout]
+            manifesto_line: "error clicks at payment — API failure variant"
+          - signal: post_error_exit
+            class: exchange
+            surfaces: [checkout, cart]
+            manifesto_line: "cart/checkout abandonment — error recovery failure"
+          - signal: dead_click
+            class: exchange
+            surfaces: [checkout]
+            manifesto_line: "cart/checkout abandonment — submit blocked"
+          - signal: console_error
+            class: exchange
+            surfaces: [checkout]
+            manifesto_line: "error clicks at payment — JS exception variant"
+
+      - id: deliberate_before_committing
+        label: "compare options before committing"
+        derivation: authored_pending_prototype
+        transition_note: >
+          The deliberation state from currency-transition.md. This person is still spending
+          KNW (attention, patience) and has not yet started spending ACQ (money). The 'compare
+          options' intent in KNW — 143 users, 1h24m — is the closest instrumented proxy
+          (taxonomy §2). Cross-session arc (one person across weeks) is not directly measurable
+          today; it is the open piece in currency-transition.md §"Still to build."
+        altitude_note: "Arc altitude required for cross-session deliberation tracking."
+        signals:
+          - signal: search_refinement_loop
+            class: exchange
+            pattern: true
+            surfaces: [search, plp]
+            manifesto_line: "repeat visits with no forward motion — comparison-seeking"
+          - signal: repeat_pdp_return
+            class: exchange
+            pattern: true
+            surfaces: [pdp]
+            manifesto_line: "repeat visits with no forward motion — decision surface return"
+            transition_line: "currency-transition.md — cart populated across sessions without progression"
+
+      - id: return_without_progress
+        label: "repeat visits with no forward motion"
+        derivation: authored_pending_prototype
+        altitude_required: arc
+        altitude_note: >
+          Cross-session pattern. Not detectable within a single session. Requires arc-altitude
+          analysis: populated cart surviving across sessions with no progression toward checkout.
+          currency-transition.md: "A cart that sits populated for two weeks is not abandonment.
+          It is commitment paid, risk and money outstanding."
+        signals:
+          - signal: repeat_session_no_checkout
+            class: exchange
+            pattern: true
+            surfaces: [cart, pdp]
+            manifesto_line: "repeat visits with no forward motion"
+
+      - id: add_to_cart_as_shortlist
+        label: "use cart as shortlist (not a purchase signal)"
+        derivation: authored_pending_prototype
+        disambiguation_note: >
+          currency-transition.md §"add-to-cart fork": two distinct acts share the same
+          signal. Commitment: adds and RETURNS to the cart. Shortlisting: accumulates
+          without revisiting. Do not score shortlisting as a stalled purchase.
+          Signal that separates them: does the person return to the cart?
+        signals:
+          - signal: cart_accumulate_no_return
+            class: exchange
+            pattern: true
+            surfaces: [cart, plp, pdp]
+            transition_line: "currency-transition.md — the add-to-cart fork diagnostic"
+
+  KNW:
+    name: "Information Seeking & Learning"
+    manifesto_source: "value-manifesto-distilled.md — KNW row, Broken Exchange Signals column"
+    manifesto_signals: "Zero-result searches; search-refinement loops; dead clicks in docs; long dwell with no progression"
+    taxonomy_source: "behavioral-currency-taxonomy.md §2 — KNW intents confirmed from G&B prototype (8 intents visible)"
+    intents:
+      - id: find_specific_fact
+        label: "find specific fact"
+        derivation: confirmed_prototype
+        taxonomy_line: "behavioral-currency-taxonomy.md §2 — KNW row 1: 256 users, 38m"
+        signals:
+          - signal: zero_result_search
+            class: exchange
+            pattern: true
+            surfaces: [search]
+            manifesto_line: "zero-result searches"
+          - signal: search_refinement_loop
+            class: exchange
+            pattern: true
+            surfaces: [search]
+            manifesto_line: "search-refinement loops"
+          - signal: dead_click
+            class: exchange
+            surfaces: [search, content]
+            manifesto_line: "dead clicks in docs — result link variant"
+
+      - id: learn_about_topic
+        label: "learn about a topic"
+        derivation: confirmed_prototype
+        taxonomy_line: "behavioral-currency-taxonomy.md §2 — KNW row 2: 205 users, 3h 7m (highest time in KNW)"
+        signals:
+          - signal: scroll_depth_collapse
+            class: exchange
+            pattern: true
+            surfaces: [content, pdp]
+            manifesto_line: "long dwell with no progression — content not reached"
+          - signal: early_exit
+            class: exchange
+            pattern: true
+            surfaces: [content]
+            manifesto_line: "long dwell with no progression — early exit before content loads"
+          - signal: network_error
+            class: exchange
+            surfaces: [content]
+            manifesto_line: "long dwell with no progression — content load failure"
+
+      - id: check_status
+        label: "check status"
+        derivation: confirmed_prototype
+        taxonomy_line: "behavioral-currency-taxonomy.md §2 — KNW row 3: 187 users, 26m"
+        fintech_note: "Primary post-login servicing intent in fintech — Sekizui interview. No currency hump here."
+        signals:
+          - signal: dead_click
+            class: exchange
+            surfaces: [account, content]
+            manifesto_line: "dead clicks in docs — status-checking variant"
+          - signal: network_error
+            class: exchange
+            surfaces: [account]
+            manifesto_line: "long dwell with no progression — status API failure"
+          - signal: page_reload
+            class: exchange
+            surfaces: [account]
+            manifesto_line: "long dwell with no progression — user retries status load"
+
+      - id: understand_process
+        label: "understand process or instructions"
+        derivation: confirmed_prototype
+        taxonomy_line: "behavioral-currency-taxonomy.md §2 — KNW row 4: 179 users, 1h 32m"
+        signals:
+          - signal: dead_click
+            class: exchange
+            surfaces: [content, support]
+            manifesto_line: "dead clicks in docs"
+          - signal: long_dwell_no_progression
+            class: exchange
+            pattern: true
+            surfaces: [content, support]
+            manifesto_line: "long dwell with no progression"
+          - signal: bounce
+            class: exchange
+            pattern: true
+            surfaces: [support, content]
+            manifesto_line: "long dwell with no progression — user leaves before understanding"
+
+      - id: stay_updated
+        label: "stay updated"
+        derivation: confirmed_prototype
+        taxonomy_line: "behavioral-currency-taxonomy.md §2 — KNW row 5: 163 users, 47m"
+        signals:
+          - signal: bounce
+            class: exchange
+            pattern: true
+            surfaces: [entry, content]
+            manifesto_line: "long dwell with no progression — update not surfaced"
+          - signal: dead_click
+            class: exchange
+            surfaces: [content]
+            manifesto_line: "dead clicks in docs — update link variant"
+
+      - id: compare_options
+        label: "compare options"
+        derivation: confirmed_prototype
+        taxonomy_line: "behavioral-currency-taxonomy.md §2 — KNW row 6: 143 users, 1h 24m"
+        transition_note: >
+          This is the deliberation hump from currency-transition.md — the period spent in
+          KNW before transitioning to ACQ spending. 143 users, 1h24m is the second-highest
+          time within KNW. The claim in currency-transition.md that deliberation "has to be
+          built from scratch" was wrong; the prototype models it (taxonomy §2 correction note).
+        signals:
+          - signal: search_refinement_loop
+            class: exchange
+            pattern: true
+            surfaces: [search, plp]
+            manifesto_line: "search-refinement loops — comparison variant"
+          - signal: long_dwell_no_progression
+            class: exchange
+            pattern: true
+            surfaces: [plp, pdp]
+            manifesto_line: "long dwell with no progression — deliberation"
+          - signal: dead_click
+            class: exchange
+            surfaces: [plp, pdp]
+            manifesto_line: "dead clicks in docs — comparison-blocked variant"
+
+      - id: get_advice_or_opinions
+        label: "get advice or opinions"
+        derivation: confirmed_prototype
+        taxonomy_line: "behavioral-currency-taxonomy.md §2 — KNW row 7: 121 users, 1h 13m"
+        signals:
+          - signal: scroll_depth_collapse
+            class: exchange
+            pattern: true
+            surfaces: [content, pdp]
+            manifesto_line: "long dwell with no progression — review/opinion content not surfaced"
+          - signal: dead_click
+            class: exchange
+            surfaces: [content, pdp]
+            manifesto_line: "dead clicks in docs — review/rating link variant"
+
+      - id: find_contact_information
+        label: "find contact information"
+        derivation: confirmed_prototype
+        taxonomy_line: "behavioral-currency-taxonomy.md §2 — KNW row 8: 97 users, 18m"
+        support_deflection_note: >
+          A support-deflection signal. A user who cannot find contact information via KNW
+          is likely to escalate to a direct support channel. Finding this intent frustrated
+          (dead clicks, search-used-as-nav on contact queries) is an INF exchange setup:
+          the user wants to be heard but cannot reach the channel.
+        signals:
+          - signal: dead_click
+            class: exchange
+            surfaces: [support, content, account]
+            manifesto_line: "dead clicks in docs — contact-finding variant"
+          - signal: search_used_as_nav
+            class: exchange
+            pattern: true
+            surfaces: [search]
+            manifesto_line: "search-refinement loops — searching for phone/email"
+            nav_note: "When search locates contact info, it is NAV toll on a KNW intent"
+
+      - id: escalate_diagnostic_to_engineering
+        label: "escalate diagnostic to engineering"
+        derivation: authored_pending_prototype
+        wave: "wave6-knw-cluster-20260913"
+        design_note: >
+          PM arc signal: the session shifts from KNW diagnosis to cross-functional
+          escalation — "this is a bug, tagging eng." Distinguishes PM analysis sessions
+          from engineering triage sessions.
+        signals:
+          - signal: escalation_to_eng
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              PM session moves from passive KNW consumption (browsing sessions,
+              checking metrics) to an explicit handoff action indicating a defect
+              was identified and ownership transferred to engineering.
+
+      - id: error_with_journey_break_knw
+        label: "error followed by session exit or dead-end"
+        derivation: authored_pending_prototype
+        wave: "wave6-knw-cluster-20260913"
+        design_note: >
+          Session-level signal: an error event (network error, exception) is
+          immediately followed by an exit, rage click, or navigation dead-end
+          in the same session. Distinguishes errors with user impact from
+          silent errors users work around.
+        signals:
+          - signal: error_with_journey_break
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              An error (exceptions, 4xx/5xx request) occurs within a session
+              that also contains a journey-break event (early_exit, rage_click,
+              dead_click, or navigation dead-end) in close proximity. Requires
+              segment: sessions with error AND journey-break in same window.
+
+      - id: confirm_conversion_drop
+        label: "confirm a conversion drop is statistically significant"
+        derivation: authored_pending_prototype
+        wave: "wave6-knw-cluster-20260913"
+        design_note: >
+          Data analyst signal: a measured drop in conversion that survives a
+          significance test — not a wiggle in a small window. Distinguishes
+          data analyst sessions (is this drop real?) from PM sessions (why
+          did it drop?).
+        signals:
+          - signal: conversion_drop_significant
+            class: exchange
+            pattern: true
+            surfaces: [checkout, onboarding, any]
+            description: >
+              Funnel completion rate (from build_funnel / compute_funnel) drops
+              by a threshold that survives a two-window comparison test. Not a
+              single-day dip but a sustained directional decline across a
+              measurement window. Requires: compute_funnel across two comparable
+              time windows and a comparison of completion rates.
+
+      - id: attribute_session_to_campaign
+        label: "attribute a session to a campaign or traffic source"
+        derivation: authored_pending_prototype
+        wave: "wave6-knw-cluster-20260913"
+        design_note: >
+          Marketing signal: a session is attributed to a specific campaign,
+          channel, or traffic source. Marketing's job is attribution and
+          ROI measurement — not watching sessions for UX problems. Distinguishes
+          marketing analysis sessions from PM/UX sessions.
+        signals:
+          - signal: campaign_sourced_session
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              A session is tagged with a known campaign identifier (UTM parameter,
+              custom event property, or referral source) that maps to a named
+              marketing campaign or traffic source. Requires segment: sessions
+              where campaign_source or equivalent custom property matches a
+              named campaign.
+
+      - id: test_funnel_step_time_hypothesis
+        label: "test whether a funnel step takes longer than expected"
+        derivation: authored_pending_prototype
+        wave: "wave6-knw-cluster-20260913"
+        design_note: >
+          UX signal: a funnel step's median time-to-complete deviates from a
+          named expectation. Fullstory funnels carry median time-to-complete;
+          segments do not. Distinguishes UX hypothesis sessions (is step 3
+          too slow?) from data analyst sessions (is conversion dropping?).
+        signals:
+          - signal: funnel_median_time_hypothesis
+            class: exchange
+            pattern: true
+            surfaces: [checkout, onboarding, any]
+            description: >
+              A named funnel step's median time-to-complete (from compute_funnel)
+              deviates from an analyst-stated expectation by a threshold. Requires:
+              build_funnel on the named flow, compute_funnel to extract
+              step-level median time, and a named expected value to compare against.
+
+  UTL:
+    name: "Task Accomplishment & Management"
+    manifesto_source: "value-manifesto-distilled.md — UTL row, Broken Exchange Signals column"
+    manifesto_signals: "Form abandonment; rage clicks in settings; same task reattempted across sessions"
+    intents:
+      - id: complete_form
+        label: "complete a form or structured task"
+        derivation: authored_pending_prototype
+        signals:
+          - signal: form_abandonment
+            class: exchange
+            pattern: true
+            surfaces: [checkout, auth, account, support]
+            manifesto_line: "form abandonment"
+          - signal: rage_click
+            class: exchange
+            surfaces: [checkout, auth, account]
+            manifesto_line: "rage clicks in settings — form field variant"
+          - signal: error_click
+            class: exchange
+            surfaces: [checkout, auth, account]
+            manifesto_line: "form abandonment — submission error"
+          - signal: dead_click
+            class: exchange
+            surfaces: [checkout, auth, account]
+            manifesto_line: "form abandonment — form control unresponsive"
+
+      - id: manage_settings
+        label: "manage settings or preferences"
+        derivation: authored_pending_prototype
+        signals:
+          - signal: rage_click
+            class: exchange
+            surfaces: [account]
+            manifesto_line: "rage clicks in settings"
+          - signal: dead_click
+            class: exchange
+            surfaces: [account]
+            manifesto_line: "rage clicks in settings — control unresponsive"
+
+      - id: reattempt_task
+        label: "same task reattempted across sessions"
+        derivation: authored_pending_prototype
+        altitude_required: arc
+        altitude_note: "Cross-session pattern. Not detectable within one session."
+        signals:
+          - signal: repeat_task_attempt
+            class: exchange
+            pattern: true
+            surfaces: [account, checkout, auth]
+            manifesto_line: "same task reattempted across sessions"
+
+  ENJ:
+    name: "Entertainment & Leisure"
+    manifesto_source: "value-manifesto-distilled.md — ENJ row, Broken Exchange Signals column"
+    manifesto_signals: "Early exit mid-content; scroll-depth collapse; load/playback errors at payoff moment"
+    non_purchase_note: >
+      Per currency-transition.md §"whose success?": browsing for pleasure is a complete
+      successful exchange. Do not call a non-buying session a failed ACQ exchange without
+      first establishing the person was ever trying to buy. An ad-click browse is ENJ, not
+      abandoned ACQ.
+    intents:
+      - id: consume_content
+        label: "consume content or media"
+        derivation: authored_pending_prototype
+        signals:
+          - signal: scroll_depth_collapse
+            class: exchange
+            pattern: true
+            surfaces: [content]
+            manifesto_line: "scroll-depth collapse"
+          - signal: early_exit
+            class: exchange
+            pattern: true
+            surfaces: [content]
+            manifesto_line: "early exit mid-content"
+          - signal: network_error
+            class: exchange
+            surfaces: [content]
+            manifesto_line: "load/playback errors at payoff moment — media load failure"
+          - signal: dead_click
+            class: exchange
+            surfaces: [content]
+            manifesto_line: "load/playback errors at payoff moment — playback control blocked"
+
+      - id: browse_for_pleasure
+        label: "browse for pleasure or discovery"
+        derivation: authored_pending_prototype
+        browsing_is_complete_note: >
+          Per currency-transition.md: ENJ browsing on a retail site is a complete exchange
+          that the business scores as a failure. The retail profile's ranking (buying primary,
+          browsing secondary) encodes browsing as a lesser version of the same thing — that
+          is wrong. Two ledgers: "did the user get what they came for?" and "did the business
+          get a conversion?" are separate questions.
+        signals:
+          - signal: bounce
+            class: exchange
+            pattern: true
+            surfaces: [entry, plp, content]
+            manifesto_line: "early exit mid-content — ENJ hook not set at entry"
+            disambiguation_note: >
+              Bounce at entry = ENJ hook failed to engage. Long scroll with no ACQ action =
+              ENJ success. Distinguish before reporting either as a failure.
+          - signal: scroll_depth_collapse
+            class: exchange
+            pattern: true
+            surfaces: [content, plp]
+            manifesto_line: "scroll-depth collapse"
+
+  BEL:
+    name: "Communication & Community"
+    manifesto_source: "value-manifesto-distilled.md — BEL row, Broken Exchange Signals column"
+    manifesto_signals: "Abandoned posts/comments; drop-off at profile/identity steps; failed submissions after long composition"
+    intents:
+      - id: post_or_comment
+        label: "post or comment"
+        derivation: authored_pending_prototype
+        signals:
+          - signal: form_abandonment
+            class: exchange
+            pattern: true
+            surfaces: [content, account]
+            manifesto_line: "abandoned posts/comments; failed submissions after long composition"
+          - signal: rage_click
+            class: exchange
+            surfaces: [content]
+            manifesto_line: "failed submissions after long composition — submit blocked"
+          - signal: error_click
+            class: exchange
+            surfaces: [content]
+            manifesto_line: "failed submissions after long composition — submission error"
+
+      - id: create_or_complete_profile
+        label: "create or complete profile or identity"
+        derivation: authored_pending_prototype
+        signals:
+          - signal: form_abandonment
+            class: exchange
+            pattern: true
+            surfaces: [auth, account]
+            manifesto_line: "drop-off at profile/identity steps"
+          - signal: dead_click
+            class: exchange
+            surfaces: [auth, account]
+            manifesto_line: "drop-off at profile/identity steps — step blocked"
+          - signal: error_click
+            class: exchange
+            surfaces: [auth, account]
+            manifesto_line: "drop-off at profile/identity steps — submission error"
+
+  INF:
+    name: "Feedback & Contribution"
+    manifesto_source: "value-manifesto-distilled.md — INF row, Broken Exchange Signals column"
+    manifesto_signals: "Abandoned feedback/review forms; rage clicks on rating widgets; repeat reports of same issue"
+    intents:
+      - id: submit_feedback_or_review
+        label: "submit feedback or review"
+        derivation: authored_pending_prototype
+        signals:
+          - signal: form_abandonment
+            class: exchange
+            pattern: true
+            surfaces: [content, support]
+            manifesto_line: "abandoned feedback/review forms"
+          - signal: rage_click
+            class: exchange
+            surfaces: [content, support]
+            manifesto_line: "rage clicks on rating widgets"
+          - signal: error_click
+            class: exchange
+            surfaces: [content, support]
+            manifesto_line: "abandoned feedback/review forms — submission error"
+
+      - id: report_issue
+        label: "report an issue"
+        derivation: authored_pending_prototype
+        signals:
+          - signal: repeat_submission
+            class: exchange
+            pattern: true
+            surfaces: [support]
+            manifesto_line: "repeat reports of same issue"
+          - signal: rage_click
+            class: exchange
+            surfaces: [support]
+            manifesto_line: "rage clicks on rating widgets — issue report variant"
+
+  TRS:
+    name: "Trust & Relational Continuity"
+    l1_code: true
+    l1_definition: >
+      L1 analyst code: the analyst is spending relational capital (prior goodwill, face
+      with the customer or stakeholder) to buy verified trustworthiness of a relationship,
+      a recovery, or a finding's reception. Not interchangeable with UTL (task completion)
+      or KNW (information seeking).
+    data_dictionary_note: >
+      TRS signals require cross-session context. Primary Fullstory fields:
+      page_views.active_duration_millis (baseline comparison), page_views.max_scroll_depth
+      (engagement depth post-incident), clicks.fs_dead_count (cautious probing),
+      pageRefresh event (reload surge — MCP surface for navigate_reason:reload),
+      form_abandons (recurrence post-incident), user_id continuity for before/after comparison.
+    intents:
+      - id: trust_recovery_confirmation
+        label: "confirm trust actually recovered after a fix"
+        derivation: authored_pending_prototype
+        design_note: >
+          The service-recovery literature (Van Vaerenbergh et al.) is unambiguous: closing
+          a support ticket does not confirm trust returned. This intent surfaces the
+          behavioral evidence that trust did or did not come back in post-fix sessions.
+        signals:
+          - signal: post_incident_depth_drop
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              Users who had a rage-click or exception session return in subsequent sessions
+              but show materially lower active_duration_millis or max_scroll_depth than
+              their pre-incident baseline. Requires segment: users with prior exception or
+              rage-click session, comparison of post-fix session depth vs. rolling baseline.
+          - signal: cautious_return_dead_click
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              Elevated dead click rate in sessions of users returning after an incident,
+              on the same surface where the incident occurred. Behavioral signature of
+              testing UI before trusting it.
+
+      - id: repeat_contact_pattern
+        label: "identify systemic failure behind repeat contacts"
+        derivation: authored_pending_prototype
+        design_note: >
+          FCR failure is the behavioral signature that session-level UTL closed the ticket
+          but the underlying trust damage was not repaired. This intent surfaces it at scale.
+        signals:
+          - signal: session_recurrence_on_error
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              Same user_id returning to the same surface with the same exception or rage-click
+              across multiple sessions after a supposed fix. Requires segment: users with
+              exception on surface X in window 1 AND exception on same surface in window 2.
+          - signal: reload_surge_post_error
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              pageRefresh event rate spikes in sessions following an error or exception
+              session, indicating reduced trust in page state across session boundary.
+              MCP: pageRefresh event (confirmed 2026-09-12). Warehouse field:
+              navigates.navigate_reason:reload — do not use warehouse name in MCP workflow notes.
+
+      - id: account_behavioral_withdrawal
+        label: "detect behavioral withdrawal patterns in an account"
+        derivation: authored_pending_prototype
+        design_note: >
+          AM and CX arc jobs need signals that show an account is disengaging behaviorally
+          before the renewal conversation surfaces the risk. This is the behavioral leading
+          indicator of trust erosion at account level.
+        signals:
+          - signal: session_depth_decline
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              Account-level trend: active_duration_millis per session declining over a 30-60
+              day window, not explained by seasonality. Requires segment: account cohort with
+              declining session depth trend.
+          - signal: feature_abandonment_trend
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              Previously active features (elements_seen or custom_events for a named feature)
+              show declining interaction rate in account sessions over time. Leading indicator
+              of a user or team deprioritizing Fullstory usage.
+
+  RSK:
+    name: "Risk Containment under Reliability Threat"
+    l1_code: true
+    l1_definition: >
+      L1 analyst code: the analyst is spending scarce attention and remaining error-budget
+      under threat of recurrence or silent drift to buy a defensible decision to freeze,
+      fix, or keep shipping. Not interchangeable with KNW (single-event diagnostic).
+      RSK signals are ALWAYS pattern: true — raw single-event signals (exception, poor LCP)
+      are KNW signals, not RSK signals.
+    data_dictionary_note: >
+      RSK signals require time-windowed aggregation or release-window comparison.
+      Primary Fullstory fields: exceptions.exception_source_file (recurrence class),
+      exceptions.is_exception_handled (severity gate), requests.request_status (error rate
+      trend), loads.largest_paint_time_millis / loads.time_to_interactive_millis (perf trend),
+      cumulative_layout_shifts.cumulative_layout_shift (CLS trend — build_metric ONLY,
+      build_segment times out for CLS), crashes (mobile rate trend).
+    intents:
+      - id: reliability_drift
+        label: "detect accumulating reliability risk across releases"
+        derivation: authored_pending_prototype
+        design_note: >
+          SRE error-budget practice (Beyer et al. 2016): burn rate is a trend, not an event.
+          A single exception is a KNW question. The same exception class recurring across
+          three releases is an RSK question.
+        signals:
+          - signal: exception_recurrence
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              Same exception_source_file appearing in sessions across multiple release windows
+              or time periods, after a supposed fix. Requires segment: sessions with exception
+              source X in window 1 AND window 2 (post-fix). If exception_source_file recurs,
+              the fix did not close the root cause.
+          - signal: error_rate_trend
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              4xx/5xx request error rate (from requests table) trending upward across
+              consecutive time windows. Not a spike — a sustained directional increase.
+              Requires time-windowed segment comparison.
+
+      - id: performance_regression
+        label: "confirm whether a release introduced lasting perf degradation"
+        derivation: authored_pending_prototype
+        design_note: >
+          Engineering arc job eng-release-regression-arc needs signals that distinguish
+          a one-session performance outlier (KNW) from a sustained post-release degradation
+          (RSK). The pre/post release comparison window is the defining feature.
+        signals:
+          - signal: perf_degradation_trend
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              LCP (largest_paint_time_millis / NUMERIC_PROPERTY_LARGEST_CONTENTFUL_PAINT_DURATION),
+              TTI (time_to_interactive_millis), or CLS (NUMERIC_PROPERTY_CUMULATIVE_LAYOUT_SHIFT)
+              scores worsening compared to a pre-release baseline window. LCP and TTI use
+              build_metric (trend output); CLS — build_metric ONLY, build_segment times out.
+              MCP events: largestContentfulPaint, cumulativeLayoutShift.
+              Requires: build_metric across two time windows (pre/post release), compare p50/p75/p95.
+          - signal: crash_rate_trend
+            class: exchange
+            pattern: true
+            surfaces: [mobile]
+            description: >
+              Mobile crash events per session increasing over a multi-sprint window.
+              Not a single crash spike (which is KNW) but a sustained rate increase
+              indicating structural reliability risk. MCP: crashed event via build_segment.
+
+      - id: silent_error_spike
+        label: "detect error rate spike with no behavioral change"
+        derivation: authored_pending_prototype
+        wave: "wave6-rsk-cluster-20260913"
+        design_note: >
+          Engineering signal: error count spikes in a window but traversal
+          and journey metrics hold flat — users are not reacting to the error.
+          Distinguishes silent failures (errors users do not notice or work
+          around) from impactful errors (errors that break journeys). The
+          behavioral stability under error load is the signal that the issue
+          is server-side / non-blocking, not a UX crisis.
+        signals:
+          - signal: error_rate_spike_no_behavior_change
+            class: exchange
+            pattern: true
+            surfaces: [any]
+            description: >
+              4xx/5xx request error rate (from requests table) spikes in a window
+              while session traversal depth (active_duration_millis, pages per session)
+              and journey completion rates (build_funnel) hold at baseline levels.
+              Requires: build_metric for error rate + journey metric across same window,
+              confirm divergence between error trend and behavioral trend.
+
+# ── NAV TOLL ─────────────────────────────────────────────────────────────────
+# NAV is not a currency — it is overhead on the real exchange that follows.
+# A broken NAV toll suppresses the following currency exchange; it is not itself
+# a headline finding. Surface it as context for why the real exchange broke.
+# Source: value-manifesto-distilled.md — NAV row; behavioral-currency-taxonomy.md §2
+
+nav_toll:
+  name: "Navigation & Orientation — TOLL, not a currency"
+  manifesto_source: "value-manifesto-distilled.md — NAV row, Broken Exchange Signals column"
+  manifesto_signals: "Dead clicks in nav; orientation loops; back-and-forth between same two pages; search used as wayfinding"
+  taxonomy_source: "behavioral-currency-taxonomy.md §2 — NAV intents confirmed from G&B prototype (4 intents visible)"
+  nav_rule: >
+    NAV is transaction cost (Coase): overhead on whichever exchange follows.
+    Optimizing the toll booth instead of the road is a category error.
+    Source: value-manifesto-distilled.md — NAV row definition.
+  reporting_rule: >
+    Do not headline a NAV finding. Surface it as the explanation for why the following
+    currency exchange broke — "users couldn't find the checkout button, which is why
+    ACQ abandonment is elevated on this surface." The real finding is the ACQ failure.
+  intents:
+    - id: go_to_known_website
+      label: "go to known website"
+      derivation: confirmed_prototype
+      taxonomy_line: "behavioral-currency-taxonomy.md §2 — NAV row 1: 427 users, 18m"
+      note: "Low time-per-user (18m / 427 users ≈ 2.5min). When satisfied, leaves no signal."
+      signals:
+        - signal: bounce
+          class: exchange
+          pattern: true
+          surfaces: [entry]
+          manifesto_line: "orientation loops — failed to find the right destination"
+
+    - id: find_page_or_section
+      label: "find specific page or section"
+      derivation: confirmed_prototype
+      taxonomy_line: "behavioral-currency-taxonomy.md §2 — NAV row 2: 312 users, 32m"
+      signals:
+        - signal: dead_click
+          class: exchange
+          surfaces: [entry, account]
+          manifesto_line: "dead clicks in nav"
+        - signal: search_used_as_nav
+          class: exchange
+          pattern: true
+          surfaces: [search]
+          manifesto_line: "search used as wayfinding"
+        - signal: back_forward_oscillation
+          class: exchange
+          pattern: true
+          surfaces: [entry, plp, content]
+          manifesto_line: "back-and-forth between same two pages"
+
+    - id: locate_item_on_page
+      label: "locate item on page"
+      derivation: confirmed_prototype
+      taxonomy_line: "behavioral-currency-taxonomy.md §2 — NAV row 3: 193 users, 24m"
+      signals:
+        - signal: thrashed_cursor
+          class: exchange
+          surfaces: [content, plp, pdp]
+          manifesto_line: "orientation loops — cursor thrash while scanning"
+        - signal: dead_click
+          class: exchange
+          surfaces: [content, plp, pdp]
+          manifesto_line: "dead clicks in nav — item-location variant"
+
+    - id: understand_site_structure
+      label: "understand site structure"
+      derivation: confirmed_prototype
+      taxonomy_line: "behavioral-currency-taxonomy.md §2 — NAV row 4: 85 users, 43m"
+      severity_note: >
+        43m across 85 users = 30.5 min per person — highest time-per-user of any NAV intent.
+        This is concentrated toll on a few people, the shape of a wayfinding failure (structural
+        confusion) rather than a wayfinding cost (expected overhead). Flag separately from
+        routine NAV toll.
+        Source: behavioral-currency-taxonomy.md §2.
+      signals:
+        - signal: back_forward_oscillation
+          class: exchange
+          pattern: true
+          surfaces: [entry, plp, search]
+          manifesto_line: "back-and-forth between same two pages"
+        - signal: thrashed_cursor
+          class: exchange
+          surfaces: [entry, plp]
+          manifesto_line: "orientation loops"
+        - signal: long_dwell_nav
+          class: exchange
+          pattern: true
+          surfaces: [entry]
+          manifesto_line: "orientation loops — structural confusion, not content engagement"
+
+# ── SUBSTRATE SIGNALS ─────────────────────────────────────────────────────────
+# Substrate signals are CURRENCY-AGNOSTIC. A slow page degrades every currency alike.
+# These enter R1 as substrate_candidates, gated by the industry profile's
+# substrate_tolerance band — not by the currency mix.
+#
+# R1 algorithm: substrate_candidates = [cwv, network_error, availability]
+#               gated by: industry.substrate_tolerance.lcp_alert_boundary
+#               NOT gated by: the currency mix
+#
+# Classification rule: if a signal fires regardless of which currency is in play
+# on that surface, it is a substrate signal. If it fires specifically because a
+# currency exchange is broken (e.g., network_error blocking a payment API), it is
+# also listed as an exchange signal for that currency.
+
+substrate_classification_rule: >
+  Substrate signals fire regardless of currency. They are gated by industry
+  substrate_tolerance, not by the currency mix. Some signals appear in BOTH
+  exchange_signals and substrate_signals — that is correct: a network_error on
+  checkout is both an ACQ exchange failure AND a substrate failure. R1 deduplicates
+  via union (exchange ∪ substrate) before ranking.
+
+substrate_signals:
+  - signal: lcp
+    class: substrate
+    description: "Largest Contentful Paint — page load. Degrades time-to-engage for all currencies."
+    bands:
+      good_ms: 2500
+      ni_ms: 4000
+      measure: p75
+    source: "Google Core Web Vitals specification — web.dev/vitals"
+    industry_calibration: >
+      Industry substrate_tolerance determines which band boundary triggers an alert.
+      Retail alerts at Needs Improvement (2500ms) — ACQ cannot wait for Poor.
+      Other industries may alert at Poor (4000ms). Never hardcode; read from
+      industry.substrate_tolerance.lcp_alert_ms.
+
+  - signal: inp
+    class: substrate
+    description: "Interaction to Next Paint — responsiveness. Replaced FID March 2024."
+    bands:
+      good_ms: 200
+      ni_ms: 500
+      measure: p75
+    source: "Google Core Web Vitals specification — web.dev/vitals"
+    deprecation_note: "FID deprecated March 2024. Do not reference FID in any profile or deliverable."
+
+  - signal: cls
+    class: substrate
+    description: "Cumulative Layout Shift — visual stability. Especially damaging during ACQ (CTA shifts)."
+    bands:
+      good: 0.10
+      ni: 0.25
+      measure: p75
+    source: "Google Core Web Vitals specification — web.dev/vitals"
+
+  - signal: fcp
+    class: substrate
+    description: "First Contentful Paint — first visible content. Influences perceived load."
+    bands:
+      good_ms: 1800
+      ni_ms: 3000
+      measure: p75
+    source: "Google Core Web Vitals specification — web.dev/vitals"
+
+  - signal: ttfb
+    class: substrate
+    description: "Time to First Byte — server response time. Foundation of all subsequent load."
+    bands:
+      good_ms: 800
+      ni_ms: 1800
+      measure: p75
+    source: "Google Core Web Vitals specification — web.dev/vitals"
+
+  - signal: network_error
+    class: substrate
+    description: >
+      API failures and HTTP errors. Currency-agnostic in the general case — a failed
+      API call degrades ACQ (payment), KNW (status load), UTL (form submit), ENJ
+      (media load) equally. Also listed as an exchange signal when the failure directly
+      blocks a specific currency exchange moment (e.g., payment API failure = ACQ).
+    note: "Appears in exchange_signals for ACQ and KNW as well as here."
+
+  - signal: availability
+    class: substrate
+    description: "Page not found (404), server error (500), service unavailable (503). Blocks all exchanges."
+    patterns: [http_404, http_500, http_503]
+    source: "HTTP standard status codes — RFC 9110"

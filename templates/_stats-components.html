@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fullstory — Statistical Analysis Components</title>
+<link rel="stylesheet" href="https://use.typekit.net/jbp5lty.css">
+<style>
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --evergreen:#135050; --emerald:#07C799; --white:#ffffff; --fog:#f4f8f8;
+  --fs-green:#07c799; --fs-green-dk:#059573;
+  --fs-pink:#ff6f94; --fs-orange:#ffa12f; --fs-purple:#9e36f1;
+  --bg:#030e0e; --card:#091e1e; --card-2:#0c2828;
+  --border:#1c4e4e; --border-lt:#225858; --fs-gold:#ffca4b;
+  --text-hi:#e8f8f5; --text-md:#8ec8bf; --text-lo:#3d7a76;
+  /* stat-specific */
+  --stat-purple:#b06ef3;
+  --stat-accent:#c9a7f7;
+}
+body { background:var(--bg); color:var(--text-hi); font-family:'neulis-sans','Manrope',sans-serif; font-size:14px; line-height:1.6; }
+body::before {
+  content:''; position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse 70% 55% at 10% 90%, rgba(158,54,241,.15) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 88% 12%, rgba(7,199,153,.12) 0%, transparent 50%),
+    radial-gradient(ellipse 45% 40% at 75% 78%, rgba(255,111,148,.08) 0%, transparent 52%);
+  pointer-events:none; z-index:0;
+}
+h1, h2, h3, h4 { font-family:'neulis-neue','neulis-sans',sans-serif; }
+
+/* ── Layout ── */
+.wrap { max-width:1100px; margin:0 auto; padding:0 44px; position:relative; z-index:1; }
+.topbar { background:rgba(3,14,14,0.92); border-bottom:1px solid var(--border); padding:14px 44px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; backdrop-filter:blur(12px); }
+.topbar-brand { font-size:13px; font-weight:700; color:var(--text-hi); display:flex; align-items:center; gap:10px; }
+.topbar-brand span { color:var(--text-lo); font-weight:400; }
+.topbar-nav { display:flex; gap:4px; flex-wrap:wrap; }
+.topbar-nav a { color:var(--text-lo); font-size:12px; font-weight:600; text-decoration:none; padding:5px 10px; border-radius:6px; transition:color 0.15s; }
+.topbar-nav a:hover { color:var(--text-hi); background:rgba(255,255,255,0.04); }
+
+/* ── Section ── */
+.stat-section { padding:52px 0; border-bottom:1px solid var(--border); }
+.stat-section:last-child { border-bottom:none; }
+.stat-tag { display:inline-flex; align-items:center; gap:6px; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--stat-purple); margin-bottom:8px; }
+.stat-tag::before { content:''; width:20px; height:1px; background:var(--stat-purple); }
+.stat-title { font-size:24px; font-weight:800; letter-spacing:-0.7px; margin-bottom:8px; color:var(--text-hi); }
+.stat-desc { font-size:13px; color:var(--text-md); line-height:1.7; max-width:760px; margin-bottom:12px; }
+.stat-when { display:inline-block; font-size:11px; color:var(--fs-orange); background:rgba(255,163,47,0.08); border:1px solid rgba(255,163,47,0.2); border-radius:5px; padding:3px 10px; margin-bottom:24px; }
+
+/* ── Agent routing gate ── */
+.routing-gate { background:rgba(158,54,241,0.05); border:1px solid rgba(158,54,241,0.25); border-radius:14px; padding:24px 28px; margin-bottom:40px; }
+.routing-gate-header { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--stat-purple); margin-bottom:12px; }
+.routing-gate-rule { font-size:13px; color:var(--text-md); line-height:1.8; }
+.routing-gate-rule strong { color:var(--text-hi); }
+.routing-gate-rule code { font-family:'SF Mono','Fira Code',monospace; font-size:11px; color:var(--fs-orange); }
+.routing-stop { background:rgba(255,90,53,0.06); border:1px solid rgba(255,90,53,0.2); border-radius:10px; padding:14px 18px; margin-top:14px; }
+.routing-stop-label { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#ff7a5a; margin-bottom:6px; }
+.routing-stop-text { font-size:12px; color:var(--text-md); line-height:1.7; }
+.routing-go { background:rgba(7,199,153,0.04); border:1px solid rgba(7,199,153,0.2); border-radius:10px; padding:14px 18px; margin-top:10px; }
+.routing-go-label { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--fs-green); margin-bottom:6px; }
+.routing-go-text { font-size:12px; color:var(--text-md); line-height:1.7; }
+
+/* ── Component blocks ── */
+.comp-block { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:20px; }
+.comp-header { padding:16px 20px 14px; border-bottom:1px solid var(--border); }
+.comp-label { font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text-lo); margin-bottom:4px; }
+.comp-name { font-size:16px; font-weight:800; color:var(--text-hi); letter-spacing:-0.3px; margin-bottom:4px; }
+.comp-classes { font-family:'SF Mono','Fira Code',monospace; font-size:10px; color:var(--fs-orange); background:rgba(255,163,47,0.08); border:1px solid rgba(255,163,47,0.18); border-radius:4px; padding:2px 8px; display:inline-block; margin-bottom:6px; }
+.comp-trigger { font-size:11px; color:var(--text-md); line-height:1.55; }
+.comp-demo { padding:24px; border-bottom:1px solid var(--border); background:rgba(0,0,0,0.12); }
+.comp-code { padding:16px 20px; font-family:'SF Mono','Fira Code',monospace; font-size:10px; color:var(--text-md); line-height:1.65; background:#061414; white-space:pre; overflow-x:auto; }
+
+/* ── MANDATORY narrative block ── */
+.stat-narrative { background:rgba(158,54,241,0.06); border:1px solid rgba(158,54,241,0.22); border-radius:10px; padding:16px 20px; margin-top:18px; }
+.stat-narrative-header { font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--stat-purple); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.stat-narrative-header::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--stat-purple); flex-shrink:0; }
+.stat-narrative-text { font-size:13px; color:var(--text-md); line-height:1.75; }
+.stat-narrative-text strong { color:var(--text-hi); }
+
+/* ── SVG label helpers ── */
+text { font-family:'neulis-sans','Manrope',sans-serif; }
+
+/* ── Code colors ── */
+.c-comment { color:var(--text-lo); }
+.c-key { color:var(--fs-green); }
+.c-val { color:var(--fs-orange); }
+.c-purple { color:var(--stat-purple); }
+
+/* ── Footer ── */
+.doc-footer { border-top:1px solid var(--border); padding:28px 44px; display:flex; justify-content:space-between; align-items:center; color:var(--text-lo); font-size:12px; gap:24px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <img src="https://www.fullstory.com/images/fs_logo.svg" alt="Fullstory" style="height:16px;filter:brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(130deg);opacity:0.85;" />
+    <span>Statistical Analysis Components</span>
+  </div>
+  <nav class="topbar-nav">
+    <a href="#gate">Routing Gate</a>
+    <a href="#regression">Regression</a>
+    <a href="#control">Control Chart</a>
+    <a href="#boxplot">Box Plot</a>
+    <a href="#zscore">Z-Score</a>
+    <a href="#normal">Distribution</a>
+  </nav>
+</div>
+
+<div class="wrap">
+
+  <div style="padding:56px 0 32px;">
+    <div class="stat-tag">Statistical Layer</div>
+    <h1 style="font-size:36px;font-weight:800;letter-spacing:-1.3px;margin-bottom:10px;">Statistical Analysis Components</h1>
+    <p style="font-size:15px;color:var(--text-md);max-width:700px;line-height:1.7;">
+      Five statistical visualization components for deep quantitative analysis.
+      Use them when they add clarity that operational charts don't provide.
+      The routing harness below governs which component fits which question.
+    </p>
+    <div style="margin-top:16px;padding:14px 18px;background:rgba(158,54,241,0.06);border:1px solid rgba(158,54,241,0.22);border-radius:10px;font-size:12px;color:var(--text-md);line-height:1.75;max-width:700px;">
+      <strong style="color:var(--text-hi);">Rule:</strong> Every statistical component
+      <strong style="color:#b06ef3;">must</strong> include a
+      <code style="font-size:10px;color:var(--fs-orange);">.stat-narrative</code> block — a plain-English
+      explanation of what the chart shows and why it matters to the user's question.
+      A chart without a narrative block is incomplete and must not be rendered.
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       AGENT ROUTING GATE
+  ══════════════════════════════════════════════════════ -->
+  <div class="stat-section" id="gate">
+    <div class="stat-tag">Before You Build Anything</div>
+    <div class="stat-title">Agent Routing Harness</div>
+    <div class="stat-desc">Work through these gates before choosing a statistical component. Operational charts are faster to read and require no statistical literacy — use them when they're sufficient.</div>
+
+    <div class="routing-gate">
+      <div class="routing-gate-header">Gate 1 — Has the operational visual already answered the question?</div>
+      <div class="routing-gate-rule">
+        If a <strong>trend chart, funnel, top-N bar, segment comparison, gauge, waterfall, histogram, timeline, heat grid, or Sankey</strong>
+        can answer the user's question — <strong>use that</strong>. Operational charts are faster to read, require no statistical literacy,
+        and cover the vast majority of Fullstory Analytics MCP use cases.
+      </div>
+      <div class="routing-stop">
+        <div class="routing-stop-label">Stop — use an operational chart</div>
+        <div class="routing-stop-text">
+          "Show me rage clicks over time" → trend chart.<br>
+          "Which page has the most errors?" → top-N bars.<br>
+          "How does my funnel look?" → funnel waterfall or vertical bar chart.<br>
+          "Compare mobile vs desktop conversion" → segment comparison bars.
+        </div>
+      </div>
+    </div>
+
+    <div class="routing-gate">
+      <div class="routing-gate-header">Gate 2 — Would a statistical layer add clarity the operational chart doesn't?</div>
+      <div class="routing-gate-rule">
+        Ask: does the data contain something an operational chart leaves ambiguous?
+        <strong>A spike that may or may not be anomalous. A correlation worth quantifying.
+        Outliers that change the interpretation. A distribution whose shape matters.</strong>
+        If yes — add the statistical layer. If the operational chart already answers
+        the question clearly, stop here.
+      </div>
+      <div class="routing-stop">
+        <div class="routing-stop-label">Stop — operational chart is sufficient</div>
+        <div class="routing-stop-text">The data is clear without statistical analysis. Adding a stat chart would be complexity without clarity.</div>
+      </div>
+      <div class="routing-go">
+        <div class="routing-go-label">Proceed — statistical layer adds genuine clarity</div>
+        <div class="routing-go-text">Use Gate 3 to pick the right component. Mandatory: follow with .stat-narrative in plain English.</div>
+      </div>
+    </div>
+
+    <div class="routing-gate">
+      <div class="routing-gate-header">Gate 3 — Problem type → statistical component</div>
+      <div class="routing-gate-rule" style="margin-bottom:12px;">
+        Match the question to the right chart. Use every component whose statistical layer genuinely clarifies something the operational chart leaves ambiguous.
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="text-align:left;padding:8px 12px;color:var(--text-lo);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:1px;">User's question</th>
+            <th style="text-align:left;padding:8px 12px;color:var(--text-lo);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:1px;">Statistical component</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid rgba(28,78,78,0.4);">
+            <td style="padding:10px 12px;color:var(--text-md);">"Is there a relationship between X and Y?", "Does Y predict X?", "What's the trend line?"</td>
+            <td style="padding:10px 12px;color:var(--stat-purple);font-weight:700;">Regression Line + R²</td>
+          </tr>
+          <tr style="border-bottom:1px solid rgba(28,78,78,0.4);">
+            <td style="padding:10px 12px;color:var(--text-md);">"Is this within normal range?", "Is this a real spike or noise?", "SPC / control limits"</td>
+            <td style="padding:10px 12px;color:var(--stat-purple);font-weight:700;">Control Chart (mean ± σ)</td>
+          </tr>
+          <tr style="border-bottom:1px solid rgba(28,78,78,0.4);">
+            <td style="padding:10px 12px;color:var(--text-md);">"Show me the spread / distribution", "What's typical?", "Are there outliers in the data?"</td>
+            <td style="padding:10px 12px;color:var(--stat-purple);font-weight:700;">Box-and-Whisker Plot</td>
+          </tr>
+          <tr style="border-bottom:1px solid rgba(28,78,78,0.4);">
+            <td style="padding:10px 12px;color:var(--text-md);">"Which values are statistical outliers?", "Flag anomalies", "Show me what's abnormal"</td>
+            <td style="padding:10px 12px;color:var(--stat-purple);font-weight:700;">Z-Score Anomaly Chart</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 12px;color:var(--text-md);">"Is this normally distributed?", "Expected vs actual distribution", "Bell curve"</td>
+            <td style="padding:10px 12px;color:var(--stat-purple);font-weight:700;">Normal Distribution Curve</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="padding:14px 18px;background:rgba(255,90,53,0.05);border:1px solid rgba(255,90,53,0.2);border-radius:10px;font-size:12px;color:var(--text-md);line-height:1.75;margin-top:4px;">
+      <strong style="color:#ff7a5a;">Mandatory:</strong> Every statistical component must be followed immediately by a
+      <code style="font-size:10px;color:var(--fs-orange);">.stat-narrative</code> callout block — a visually distinct
+      section in the deliverable that a non-statistician can find and read. It must cover two things:
+      <br><br>
+      <strong style="color:var(--text-hi);">1. Reason for inclusion</strong> — why statistical analysis was applied here; what question it answers that the operational chart alone could not.<br>
+      <strong style="color:var(--text-hi);">2. Findings in plain English</strong> — what the statistical calculations actually show; the results explained for someone with no statistics background.
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       1. REGRESSION LINE + R²
+  ══════════════════════════════════════════════════════ -->
+  <div class="stat-section" id="regression">
+    <div class="stat-tag">Statistical Component 1 of 5</div>
+    <div class="stat-title">Regression Line + R²</div>
+    <div class="stat-desc">OLS linear regression drawn over a scatter of data points. The line shows the best-fit linear relationship; R² (coefficient of determination) quantifies how much of the variance in Y is explained by X. Computed in-page with vanilla JS — no external libraries.</div>
+    <div class="stat-when">Use when: "Is there a relationship between X and Y?" or "Does [metric A] predict [metric B]?"</div>
+
+    <div class="comp-block">
+      <div class="comp-header">
+        <div class="comp-label">Component</div>
+        <div class="comp-name">Regression Line + R²</div>
+        <div class="comp-classes">.regression-chart → svg + .regression-legend → .r2-badge</div>
+        <div class="comp-trigger">Rage click rate (X) vs. conversion rate (Y) across 20 pages — is rage clicking predictive of lost conversions?</div>
+      </div>
+      <div class="comp-demo">
+        <svg viewBox="0 0 340 220" style="width:100%;max-width:600px;display:block;margin:0 auto;">
+          <!-- Axes -->
+          <line x1="50" y1="10" x2="50" y2="180" stroke="#1c4e4e" stroke-width="1"/>
+          <line x1="50" y1="180" x2="330" y2="180" stroke="#1c4e4e" stroke-width="1"/>
+          <!-- Y-axis labels -->
+          <text x="44" y="13" text-anchor="end" font-size="7" fill="#3d7a76">100%</text>
+          <text x="44" y="60" text-anchor="end" font-size="7" fill="#3d7a76">75%</text>
+          <text x="44" y="110" text-anchor="end" font-size="7" fill="#3d7a76">50%</text>
+          <text x="44" y="160" text-anchor="end" font-size="7" fill="#3d7a76">25%</text>
+          <!-- X-axis labels -->
+          <text x="70" y="194" text-anchor="middle" font-size="7" fill="#3d7a76">0%</text>
+          <text x="145" y="194" text-anchor="middle" font-size="7" fill="#3d7a76">5%</text>
+          <text x="230" y="194" text-anchor="middle" font-size="7" fill="#3d7a76">10%</text>
+          <text x="315" y="194" text-anchor="middle" font-size="7" fill="#3d7a76">15%</text>
+          <!-- X-axis title -->
+          <text x="190" y="212" text-anchor="middle" font-size="8" fill="#3d7a76">Rage click rate</text>
+          <!-- Y-axis title -->
+          <text x="12" y="100" text-anchor="middle" font-size="8" fill="#3d7a76" transform="rotate(-90 12 100)">Conversion rate</text>
+          <!-- Gridlines -->
+          <line x1="51" y1="50" x2="330" y2="50" stroke="#1c4e4e" stroke-width="0.5" stroke-dasharray="3 3"/>
+          <line x1="51" y1="100" x2="330" y2="100" stroke="#1c4e4e" stroke-width="0.5" stroke-dasharray="3 3"/>
+          <line x1="51" y1="150" x2="330" y2="150" stroke="#1c4e4e" stroke-width="0.5" stroke-dasharray="3 3"/>
+          <!-- Scatter points -->
+          <circle cx="72" cy="35" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="85" cy="48" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="96" cy="62" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="110" cy="55" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="125" cy="80" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="140" cy="75" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="158" cy="95" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="170" cy="105" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="185" cy="118" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="198" cy="112" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="215" cy="130" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="228" cy="140" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="245" cy="148" r="3.5" fill="#07c799" opacity="0.7"/>
+          <circle cx="262" cy="155" r="3.5" fill="#ffa12f" opacity="0.8"/>
+          <circle cx="278" cy="162" r="3.5" fill="#ffa12f" opacity="0.8"/>
+          <circle cx="295" cy="168" r="3.5" fill="#ff5a35" opacity="0.85"/>
+          <!-- Regression line -->
+          <line x1="65" y1="28" x2="310" y2="172" stroke="#b06ef3" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <!-- R² badge -->
+          <rect x="56" y="155" width="62" height="18" rx="4" fill="rgba(158,54,241,0.15)" stroke="rgba(158,54,241,0.35)" stroke-width="0.8"/>
+          <text x="87" y="167" text-anchor="middle" font-size="8" fill="#c9a7f7" font-weight="700">R² = 0.84</text>
+        </svg>
+
+        <div class="stat-narrative">
+          <div class="stat-narrative-header">What this means</div>
+          <div class="stat-narrative-text">
+            <strong>R² = 0.84</strong> means that 84% of the variation in conversion rate across pages is explained by the rage click rate alone — a very strong linear relationship.
+            The negative slope confirms that <strong>as rage clicking increases, conversion consistently falls</strong>.
+            Pages with rage click rates above 10% (orange and red dots) are losing conversions at a rate far above the average.
+            Prioritize fixing friction on those pages first — a 5-point reduction in rage click rate on the top offender is predicted to recover roughly 12–15pp of conversion.
+          </div>
+        </div>
+      </div>
+      <div class="comp-code"><span class="c-comment">// OLS linear regression — computed in-page (no libraries)
+// points = [{x, y}]  where x = rage_click_rate, y = conversion_rate
+
+function olsRegression(points) {
+  const n = points.length;
+  const sumX  = points.reduce((a, p) => a + p.x, 0);
+  const sumY  = points.reduce((a, p) => a + p.y, 0);
+  const sumXY = points.reduce((a, p) => a + p.x * p.y, 0);
+  const sumX2 = points.reduce((a, p) => a + p.x * p.x, 0);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  const meanY = sumY / n;
+  const ssTot = points.reduce((a, p) => a + (p.y - meanY) ** 2, 0);
+  const ssRes = points.reduce((a, p) => a + (p.y - (slope * p.x + intercept)) ** 2, 0);
+  const r2 = 1 - ssRes / ssTot;
+  return { slope, intercept, r2 };
+}</span>
+
+<span class="c-comment">// SVG rendering
+// x_px = X_MIN_PX + (x_val / x_max) * X_RANGE_PX
+// y_px = Y_MAX_PX - (y_val / y_max) * Y_RANGE_PX  (y inverted)
+// Regression line: compute y at x_min and x_max → two endpoints</span>
+
+&lt;!-- MANDATORY: always follow with stat-narrative --&gt;
+&lt;div class="stat-narrative"&gt;
+  &lt;div class="stat-narrative-header"&gt;What this means&lt;/div&gt;
+  &lt;div class="stat-narrative-text"&gt;
+    [R² interpretation + slope direction + actionable implication]
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       2. CONTROL CHART (mean ± σ)
+  ══════════════════════════════════════════════════════ -->
+  <div class="stat-section" id="control">
+    <div class="stat-tag">Statistical Component 2 of 5</div>
+    <div class="stat-title">Control Chart (Mean ± σ Bands)</div>
+    <div class="stat-desc">Statistical process control (SPC) chart. A time series trend line with a mean centerline, ±1σ warning bands, and ±2σ control limit bands. Points outside the ±2σ bands are flagged as statistically out-of-control. Computed from the trend series itself.</div>
+    <div class="stat-when">Use when: "Is this spike within normal variation?" or "Is this process stable?" or "Was this change statistically meaningful?"</div>
+
+    <div class="comp-block">
+      <div class="comp-header">
+        <div class="comp-label">Component</div>
+        <div class="comp-name">Control Chart</div>
+        <div class="comp-classes">.control-chart → svg (bands + trend + outlier dots)</div>
+        <div class="comp-trigger">Daily error rate over 30 days — which spikes are signal vs. noise?</div>
+      </div>
+      <div class="comp-demo">
+        <svg viewBox="0 0 340 180" style="width:100%;max-width:600px;display:block;margin:0 auto;">
+          <!-- ±2σ band (control limits) -->
+          <rect x="50" y="28" width="280" height="124" fill="rgba(255,163,47,0.04)" rx="2"/>
+          <!-- ±1σ band (warning zone) -->
+          <rect x="50" y="55" width="280" height="70" fill="rgba(7,199,153,0.05)" rx="2"/>
+          <!-- Axes -->
+          <line x1="50" y1="10" x2="50" y2="160" stroke="#1c4e4e" stroke-width="1"/>
+          <line x1="50" y1="160" x2="330" y2="160" stroke="#1c4e4e" stroke-width="1"/>
+          <!-- Mean line -->
+          <line x1="51" y1="90" x2="330" y2="90" stroke="#07c799" stroke-width="1.5" stroke-dasharray="6 3"/>
+          <!-- +1σ / -1σ -->
+          <line x1="51" y1="55" x2="330" y2="55" stroke="#07c799" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.5"/>
+          <line x1="51" y1="125" x2="330" y2="125" stroke="#07c799" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.5"/>
+          <!-- +2σ / -2σ (control limits) -->
+          <line x1="51" y1="28" x2="330" y2="28" stroke="#ffa12f" stroke-width="1" stroke-dasharray="4 4" opacity="0.7"/>
+          <line x1="51" y1="152" x2="330" y2="152" stroke="#ffa12f" stroke-width="1" stroke-dasharray="4 4" opacity="0.7"/>
+          <!-- Labels -->
+          <text x="44" y="92" text-anchor="end" font-size="7" fill="#07c799">μ</text>
+          <text x="44" y="57" text-anchor="end" font-size="7" fill="#3d7a76">+1σ</text>
+          <text x="44" y="127" text-anchor="end" font-size="7" fill="#3d7a76">−1σ</text>
+          <text x="44" y="30" text-anchor="end" font-size="7" fill="#ffa12f">+2σ</text>
+          <text x="44" y="154" text-anchor="end" font-size="7" fill="#ffa12f">−2σ</text>
+          <!-- Trend line (within control) -->
+          <polyline points="64,85 82,95 100,78 118,102 136,88 154,80 172,95 190,70 208,92" fill="none" stroke="#07c799" stroke-width="1.5" stroke-linejoin="round"/>
+          <!-- Out-of-control points (above +2σ) -->
+          <circle cx="226" cy="22" r="4" fill="#ff5a35"/>
+          <circle cx="244" cy="18" r="4" fill="#ff5a35"/>
+          <!-- Re-control -->
+          <polyline points="244,18 262,85 280,90 298,87 316,92" fill="none" stroke="#07c799" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="2 2"/>
+          <!-- Warning ring on outliers -->
+          <circle cx="226" cy="22" r="7" fill="none" stroke="#ff5a35" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+          <circle cx="244" cy="18" r="7" fill="none" stroke="#ff5a35" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+          <!-- X-axis dates -->
+          <text x="64" y="172" text-anchor="middle" font-size="7" fill="#3d7a76">Jun 1</text>
+          <text x="172" y="172" text-anchor="middle" font-size="7" fill="#3d7a76">Jun 11</text>
+          <text x="280" y="172" text-anchor="middle" font-size="7" fill="#3d7a76">Jun 21</text>
+        </svg>
+
+        <div class="stat-narrative">
+          <div class="stat-narrative-header">What this means</div>
+          <div class="stat-narrative-text">
+            The red dots on June 18–19 are <strong>outside the ±2σ control limits</strong> — these spikes are statistically out-of-control, meaning they are unlikely to be random variation.
+            The process was stable for the first 17 days (all points within ±2σ). The Jun 18 spike is almost certainly a real event, not noise.
+            Look for a deploy, config change, or traffic pattern shift on that date.
+            <strong>Action: investigate what changed on Jun 18</strong> — this is a confirmed signal, not background variation.
+          </div>
+        </div>
+      </div>
+      <div class="comp-code"><span class="c-comment">// Compute mean and σ from the trend data_points array
+// values = trend.data_points.map(p => p.value)
+
+const mean   = values.reduce((a, v) => a + v, 0) / values.length;
+const sigma  = Math.sqrt(
+  values.reduce((a, v) => a + (v - mean) ** 2, 0) / values.length
+);
+const ucl2   = mean + 2 * sigma;   // upper control limit
+const lcl2   = mean - 2 * sigma;   // lower control limit
+const uwl    = mean + sigma;       // upper warning line
+const lwl    = mean - sigma;       // lower warning line
+
+<span class="c-comment">// SVG layout — same coordinate system as Full Trend Chart
+// y_for_mean = 100 - ((mean - y_min) / y_range) * 90
+// Band rects: y=y_for_ucl2, height=y_for_lcl2 - y_for_ucl2
+// Flag as out-of-control: point.value > ucl2 || point.value &lt; lcl2</span></span>
+
+&lt;!-- MANDATORY: always follow with stat-narrative --&gt;
+&lt;div class="stat-narrative"&gt;
+  &lt;div class="stat-narrative-header"&gt;What this means&lt;/div&gt;
+  &lt;div class="stat-narrative-text"&gt;
+    [How many points are out-of-control, which dates,
+    whether the process stabilized, what to investigate]
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       3. BOX-AND-WHISKER PLOT
+  ══════════════════════════════════════════════════════ -->
+  <div class="stat-section" id="boxplot">
+    <div class="stat-tag">Statistical Component 3 of 5</div>
+    <div class="stat-title">Box-and-Whisker Plot</div>
+    <div class="stat-desc">Displays the five-number summary: minimum (excluding outliers), Q1, median, Q3, maximum (excluding outliers), with individual outlier dots beyond 1.5×IQR. Shows distribution shape, spread, and outliers in a single compact visual. Compare multiple cohorts side-by-side when needed.</div>
+    <div class="stat-when">Use when: "Show me the spread", "What's typical vs. extreme?", "Are there outliers in session duration / load time / event count?"</div>
+
+    <div class="comp-block">
+      <div class="comp-header">
+        <div class="comp-label">Component</div>
+        <div class="comp-name">Box-and-Whisker Plot</div>
+        <div class="comp-classes">.boxplot-wrap → svg (whiskers + box + median + outlier dots)</div>
+        <div class="comp-trigger">Session duration distribution for completers vs. abandoners — are they fundamentally different populations?</div>
+      </div>
+      <div class="comp-demo">
+        <svg viewBox="0 0 340 200" style="width:100%;max-width:600px;display:block;margin:0 auto;">
+          <!-- Y-axis (time scale) -->
+          <line x1="60" y1="10" x2="60" y2="170" stroke="#1c4e4e" stroke-width="1"/>
+          <!-- Y labels -->
+          <text x="54" y="13" text-anchor="end" font-size="7" fill="#3d7a76">20m</text>
+          <text x="54" y="52" text-anchor="end" font-size="7" fill="#3d7a76">15m</text>
+          <text x="54" y="92" text-anchor="end" font-size="7" fill="#3d7a76">10m</text>
+          <text x="54" y="132" text-anchor="end" font-size="7" fill="#3d7a76">5m</text>
+          <text x="54" y="170" text-anchor="end" font-size="7" fill="#3d7a76">0m</text>
+          <!-- Gridlines -->
+          <line x1="61" y1="50" x2="330" y2="50" stroke="#1c4e4e" stroke-width="0.5" stroke-dasharray="3 3"/>
+          <line x1="61" y1="90" x2="330" y2="90" stroke="#1c4e4e" stroke-width="0.5" stroke-dasharray="3 3"/>
+          <line x1="61" y1="130" x2="330" y2="130" stroke="#1c4e4e" stroke-width="0.5" stroke-dasharray="3 3"/>
+
+          <!-- Box 1: Completers (centered at x=140) -->
+          <!-- Whisker top -->
+          <line x1="140" y1="38" x2="140" y2="60" stroke="#07c799" stroke-width="1.5"/>
+          <line x1="125" y1="38" x2="155" y2="38" stroke="#07c799" stroke-width="1.5"/>
+          <!-- Box Q1–Q3 -->
+          <rect x="115" y="60" width="50" height="65" fill="rgba(7,199,153,0.1)" stroke="#07c799" stroke-width="1.5" rx="2"/>
+          <!-- Median -->
+          <line x1="115" y1="95" x2="165" y2="95" stroke="#07c799" stroke-width="2.5"/>
+          <!-- Whisker bottom -->
+          <line x1="140" y1="125" x2="140" y2="148" stroke="#07c799" stroke-width="1.5"/>
+          <line x1="125" y1="148" x2="155" y2="148" stroke="#07c799" stroke-width="1.5"/>
+          <!-- Outliers -->
+          <circle cx="140" cy="22" r="3" fill="none" stroke="#07c799" stroke-width="1.5" opacity="0.7"/>
+          <circle cx="136" cy="14" r="3" fill="none" stroke="#07c799" stroke-width="1.5" opacity="0.5"/>
+          <!-- Label -->
+          <text x="140" y="186" text-anchor="middle" font-size="9" fill="#07c799" font-weight="700">Completers</text>
+          <text x="140" y="196" text-anchor="middle" font-size="7" fill="#3d7a76">median 7.2m</text>
+
+          <!-- Box 2: Abandoners (centered at x=240) -->
+          <!-- Whisker top -->
+          <line x1="240" y1="105" x2="240" y2="118" stroke="#ffa12f" stroke-width="1.5"/>
+          <line x1="225" y1="105" x2="255" y2="105" stroke="#ffa12f" stroke-width="1.5"/>
+          <!-- Box Q1–Q3 -->
+          <rect x="215" y="118" width="50" height="30" fill="rgba(255,163,47,0.1)" stroke="#ffa12f" stroke-width="1.5" rx="2"/>
+          <!-- Median -->
+          <line x1="215" y1="136" x2="265" y2="136" stroke="#ffa12f" stroke-width="2.5"/>
+          <!-- Whisker bottom -->
+          <line x1="240" y1="148" x2="240" y2="158" stroke="#ffa12f" stroke-width="1.5"/>
+          <line x1="225" y1="158" x2="255" y2="158" stroke="#ffa12f" stroke-width="1.5"/>
+          <!-- Outliers high -->
+          <circle cx="237" cy="72" r="3" fill="none" stroke="#ff5a35" stroke-width="1.5" opacity="0.7"/>
+          <circle cx="244" cy="56" r="3" fill="none" stroke="#ff5a35" stroke-width="1.5" opacity="0.5"/>
+          <!-- Label -->
+          <text x="240" y="186" text-anchor="middle" font-size="9" fill="#ffa12f" font-weight="700">Abandoners</text>
+          <text x="240" y="196" text-anchor="middle" font-size="7" fill="#3d7a76">median 2.8m</text>
+        </svg>
+
+        <div class="stat-narrative">
+          <div class="stat-narrative-header">What this means</div>
+          <div class="stat-narrative-text">
+            Completers and abandoners have <strong>fundamentally different session duration distributions</strong>.
+            Completers have a median of 7.2 minutes and a wide spread (Q1–Q3: ~4.5–9m) — they engage deeply and variably.
+            Abandoners are tightly clustered at a median of 2.8 minutes — they leave quickly and consistently, suggesting they hit friction early rather than deliberating.
+            The outliers in the abandoner group (above 8m) are worth investigating: a session that long but still abandoned may indicate form errors or payment failures, not simple disinterest.
+          </div>
+        </div>
+      </div>
+      <div class="comp-code"><span class="c-comment">// Five-number summary — computed from a sorted array of values
+function boxStats(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const n = sorted.length;
+  const q1  = sorted[Math.floor(n * 0.25)];
+  const med = sorted[Math.floor(n * 0.5)];
+  const q3  = sorted[Math.floor(n * 0.75)];
+  const iqr = q3 - q1;
+  const lo  = sorted.find(v => v >= q1 - 1.5 * iqr);
+  const hi  = [...sorted].reverse().find(v => v &lt;= q3 + 1.5 * iqr);
+  const outliers = sorted.filter(v => v &lt; lo || v > hi);
+  return { q1, med, q3, lo, hi, outliers };
+}</span>
+
+<span class="c-comment">// SVG: convert stat values to px using same y formula
+// Box: rect from y(q3) to y(q1)
+// Median: horizontal line at y(med)
+// Whiskers: lines from box edge to y(lo) and y(hi)
+// Outlier dots: circles at y(outlier_value)</span>
+
+&lt;!-- MANDATORY: always follow with stat-narrative --&gt;
+&lt;div class="stat-narrative"&gt;
+  &lt;div class="stat-narrative-header"&gt;What this means&lt;/div&gt;
+  &lt;div class="stat-narrative-text"&gt;
+    [Median comparison, spread interpretation, outlier explanation]
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       4. Z-SCORE ANOMALY CHART
+  ══════════════════════════════════════════════════════ -->
+  <div class="stat-section" id="zscore">
+    <div class="stat-tag">Statistical Component 4 of 5</div>
+    <div class="stat-title">Z-Score Anomaly Chart</div>
+    <div class="stat-desc">Transforms a trend series into standard deviations from the mean. Z-score = (value − mean) / σ. Points at |Z| > 2 are flagged as statistical anomalies. This normalizes different-scale metrics onto the same axis for comparison, or clarifies whether a spike is truly unusual relative to recent history.</div>
+    <div class="stat-when">Use when: "Which values are actual outliers?", "Is this anomalous?", "Flag the abnormal data points."</div>
+
+    <div class="comp-block">
+      <div class="comp-header">
+        <div class="comp-label">Component</div>
+        <div class="comp-name">Z-Score Anomaly Chart</div>
+        <div class="comp-classes">.zscore-chart → svg (zero line + ±2σ bands + z-series + anomaly dots)</div>
+        <div class="comp-trigger">30-day error rate trend — are the June 18 and June 24 spikes statistically anomalous or just high-noise days?</div>
+      </div>
+      <div class="comp-demo">
+        <svg viewBox="0 0 340 200" style="width:100%;max-width:600px;display:block;margin:0 auto;">
+          <!-- Bands -->
+          <rect x="50" y="10" width="280" height="40" fill="rgba(255,90,53,0.06)" rx="2"/>
+          <rect x="50" y="150" width="280" height="40" fill="rgba(255,90,53,0.06)" rx="2"/>
+          <rect x="50" y="50" width="280" height="100" fill="rgba(7,199,153,0.03)" rx="2"/>
+          <!-- Axes -->
+          <line x1="50" y1="10" x2="50" y2="190" stroke="#1c4e4e" stroke-width="1"/>
+          <line x1="50" y1="100" x2="330" y2="100" stroke="#07c799" stroke-width="1.5" stroke-dasharray="6 3"/>
+          <!-- Y labels -->
+          <text x="44" y="12" text-anchor="end" font-size="7" fill="#ff7a5a">+3σ</text>
+          <text x="44" y="52" text-anchor="end" font-size="7" fill="#ffa12f">+2σ</text>
+          <text x="44" y="76" text-anchor="end" font-size="7" fill="#3d7a76">+1σ</text>
+          <text x="44" y="102" text-anchor="end" font-size="7" fill="#07c799">μ=0</text>
+          <text x="44" y="128" text-anchor="end" font-size="7" fill="#3d7a76">−1σ</text>
+          <text x="44" y="152" text-anchor="end" font-size="7" fill="#ffa12f">−2σ</text>
+          <text x="44" y="192" text-anchor="end" font-size="7" fill="#ff7a5a">−3σ</text>
+          <!-- Band labels -->
+          <text x="334" y="52" font-size="7" fill="#ffa12f">UCL</text>
+          <text x="334" y="152" font-size="7" fill="#ffa12f">LCL</text>
+          <!-- Horizontal reference lines -->
+          <line x1="51" y1="50" x2="330" y2="50" stroke="#ffa12f" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.6"/>
+          <line x1="51" y1="150" x2="330" y2="150" stroke="#ffa12f" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.6"/>
+          <line x1="51" y1="75" x2="330" y2="75" stroke="#1c4e4e" stroke-width="0.5" stroke-dasharray="2 3"/>
+          <line x1="51" y1="125" x2="330" y2="125" stroke="#1c4e4e" stroke-width="0.5" stroke-dasharray="2 3"/>
+          <!-- Z-score series -->
+          <polyline points="64,105 82,98 100,108 118,92 136,110 154,95 172,88 190,30 208,45 226,100 244,55 262,102 280,97 298,105 316,100"
+            fill="none" stroke="#07c799" stroke-width="1.5" stroke-linejoin="round"/>
+          <!-- Anomaly dots (z > 2σ) -->
+          <circle cx="190" cy="30" r="5" fill="#ff5a35"/>
+          <circle cx="190" cy="30" r="8" fill="none" stroke="#ff5a35" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+          <circle cx="244" cy="55" r="4" fill="#ffa12f"/>
+          <!-- Normal dots -->
+          <circle cx="64" cy="105" r="2.5" fill="#07c799" opacity="0.6"/>
+          <circle cx="316" cy="100" r="2.5" fill="#07c799" opacity="0.6"/>
+          <!-- X-axis labels -->
+          <text x="64" y="195" text-anchor="middle" font-size="7" fill="#3d7a76">Jun 1</text>
+          <text x="190" y="195" text-anchor="middle" font-size="7" fill="#ff7a5a">Jun 18</text>
+          <text x="316" y="195" text-anchor="middle" font-size="7" fill="#3d7a76">Jun 30</text>
+        </svg>
+
+        <div class="stat-narrative">
+          <div class="stat-narrative-header">What this means</div>
+          <div class="stat-narrative-text">
+            The <strong>June 18 spike (Z = +3.2σ)</strong> is a confirmed statistical anomaly — it is more than 3 standard deviations above the monthly mean, which occurs less than 0.3% of the time by chance alone. This is not noise; something real happened.
+            The <strong>June 24 spike (Z ≈ +2.0σ)</strong> sits right at the control limit — borderline anomalous. Worth monitoring but not yet a confirmed incident.
+            All other days are within ±1σ and are consistent with normal process variation.
+            <strong>Action: root-cause Jun 18 as a priority</strong>. Jun 24 should be watched over the next 2–3 days to see if it normalizes.
+          </div>
+        </div>
+      </div>
+      <div class="comp-code"><span class="c-comment">// Transform trend values to z-scores
+const values = trend.data_points.map(p => p.value);
+const mean   = values.reduce((a, v) => a + v, 0) / values.length;
+const sigma  = Math.sqrt(
+  values.reduce((a, v) => a + (v - mean) ** 2, 0) / values.length
+);
+const zScores = values.map(v => (v - mean) / sigma);
+
+<span class="c-comment">// SVG layout
+// y center = 100 (z=0 → mean line)
+// y = 100 - z * 25  (each σ = 25px of chart height)
+// Flag |z| > 2 → anomaly dot (red/orange)
+// Band rect: y=10..50 (z=+3..+2) and y=150..190 (z=-2..-3)</span></span>
+
+&lt;!-- MANDATORY: always follow with stat-narrative --&gt;
+&lt;div class="stat-narrative"&gt;
+  &lt;div class="stat-narrative-header"&gt;What this means&lt;/div&gt;
+  &lt;div class="stat-narrative-text"&gt;
+    [Which points exceed 2σ, confidence that anomalies are real,
+    dates to investigate, borderline cases]
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       5. NORMAL DISTRIBUTION CURVE
+  ══════════════════════════════════════════════════════ -->
+  <div class="stat-section" id="normal">
+    <div class="stat-tag">Statistical Component 5 of 5</div>
+    <div class="stat-title">Normal Distribution Curve</div>
+    <div class="stat-desc">A Gaussian bell curve overlaid on a histogram of observed values. Used to visualize whether a dataset is normally distributed, or to compare expected distribution (the curve) vs. actual observations (the bars). The curve is computed from the empirical mean and σ of the data.</div>
+    <div class="stat-when">Use when: "Is this normally distributed?", "Compare expected vs. actual distribution", "Show me the bell curve for this metric."</div>
+
+    <div class="comp-block">
+      <div class="comp-header">
+        <div class="comp-label">Component</div>
+        <div class="comp-name">Normal Distribution Curve</div>
+        <div class="comp-classes">.normal-dist → svg (histogram bars + Gaussian polyline + μ line + σ regions)</div>
+        <div class="comp-trigger">Session event count distribution — does user behavior follow a normal pattern, or is it skewed toward power users?</div>
+      </div>
+      <div class="comp-demo">
+        <svg viewBox="0 0 340 200" style="width:100%;max-width:600px;display:block;margin:0 auto;">
+          <!-- Axes -->
+          <line x1="40" y1="10" x2="40" y2="170" stroke="#1c4e4e" stroke-width="1"/>
+          <line x1="40" y1="170" x2="330" y2="170" stroke="#1c4e4e" stroke-width="1"/>
+          <!-- σ region fills -->
+          <!-- −1σ to +1σ (68%) -->
+          <rect x="120" y="10" width="110" height="160" fill="rgba(7,199,153,0.06)" rx="2"/>
+          <!-- ±2σ outer fills -->
+          <rect x="75" y="10" width="45" height="160" fill="rgba(7,199,153,0.03)" rx="2"/>
+          <rect x="230" y="10" width="45" height="160" fill="rgba(7,199,153,0.03)" rx="2"/>
+          <!-- Histogram bars (observed) -->
+          <rect x="55" y="165" width="18" height="5" fill="rgba(7,199,153,0.3)" rx="1"/>
+          <rect x="77" y="148" width="18" height="22" fill="rgba(7,199,153,0.35)" rx="1"/>
+          <rect x="99" y="120" width="18" height="50" fill="rgba(7,199,153,0.45)" rx="1"/>
+          <rect x="121" y="88" width="18" height="82" fill="rgba(7,199,153,0.55)" rx="1"/>
+          <rect x="143" y="52" width="18" height="118" fill="rgba(7,199,153,0.7)" rx="1"/>
+          <rect x="165" y="40" width="18" height="130" fill="#07c799" opacity="0.5" rx="1"/>
+          <rect x="187" y="58" width="18" height="112" fill="rgba(7,199,153,0.65)" rx="1"/>
+          <rect x="209" y="90" width="18" height="80" fill="rgba(7,199,153,0.5)" rx="1"/>
+          <rect x="231" y="122" width="18" height="48" fill="rgba(7,199,153,0.4)" rx="1"/>
+          <rect x="253" y="148" width="18" height="22" fill="rgba(7,199,153,0.32)" rx="1"/>
+          <rect x="275" y="162" width="18" height="8" fill="rgba(7,199,153,0.25)" rx="1"/>
+          <!-- Gaussian curve (SVG path approximation) -->
+          <polyline points="46,168 55,168 64,166 75,158 88,138 102,112 116,82 130,55 144,36 158,26 172,24 186,32 200,50 214,76 228,105 242,132 256,153 270,164 284,168 300,169 320,169"
+            fill="none" stroke="#b06ef3" stroke-width="2" stroke-linejoin="round"/>
+          <!-- μ line -->
+          <line x1="174" y1="24" x2="174" y2="170" stroke="#07c799" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="174" y="184" text-anchor="middle" font-size="7" fill="#07c799">μ</text>
+          <!-- σ tick marks -->
+          <line x1="120" y1="168" x2="120" y2="174" stroke="#3d7a76" stroke-width="1"/>
+          <text x="120" y="184" text-anchor="middle" font-size="7" fill="#3d7a76">−1σ</text>
+          <line x1="228" y1="168" x2="228" y2="174" stroke="#3d7a76" stroke-width="1"/>
+          <text x="228" y="184" text-anchor="middle" font-size="7" fill="#3d7a76">+1σ</text>
+          <line x1="75" y1="168" x2="75" y2="174" stroke="#3d7a76" stroke-width="1"/>
+          <text x="75" y="184" text-anchor="middle" font-size="7" fill="#3d7a76">−2σ</text>
+          <line x1="275" y1="168" x2="275" y2="174" stroke="#3d7a76" stroke-width="1"/>
+          <text x="275" y="184" text-anchor="middle" font-size="7" fill="#3d7a76">+2σ</text>
+          <!-- Legend -->
+          <rect x="42" y="192" width="10" height="6" fill="rgba(7,199,153,0.5)" rx="1"/>
+          <text x="55" y="198" font-size="7" fill="#3d7a76">Observed</text>
+          <line x1="105" y1="195" x2="120" y2="195" stroke="#b06ef3" stroke-width="2"/>
+          <text x="125" y="198" font-size="7" fill="#b06ef3">Expected (normal)</text>
+        </svg>
+
+        <div class="stat-narrative">
+          <div class="stat-narrative-header">What this means</div>
+          <div class="stat-narrative-text">
+            The observed event count distribution (bars) closely follows the expected normal distribution (purple curve), which means user behavior on this metric is <strong>approximately normally distributed</strong>.
+            This validates that averages and standard deviations are meaningful summary statistics for this dataset — the mean is not being distorted by extreme skew.
+            However, note that the bars are <strong>slightly right-skewed</strong> — there is a small population of power users with very high event counts that pull the tail longer than expected.
+            This is common in session analytics. The practical takeaway: segment analyses using mean session depth are reliable for 90%+ of users, but the top 5–8% of power users may need separate treatment.
+          </div>
+        </div>
+      </div>
+      <div class="comp-code"><span class="c-comment">// Gaussian PDF for rendering the normal curve
+// Given empirical mean and sigma from histogram data:
+function gaussianY(x, mean, sigma) {
+  const exponent = -((x - mean) ** 2) / (2 * sigma ** 2);
+  return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+}
+
+<span class="c-comment">// Generate polyline points across x domain
+// Scale y_pdf to chart height: y_px = MAX_Y_PX - (pdf_val / pdf_max) * CHART_H
+// Histogram bars: use same x buckets as top-N input
+// Width = x_range_px / num_buckets; height ∝ count / max_count * CHART_H</span></span>
+
+&lt;!-- MANDATORY: always follow with stat-narrative --&gt;
+&lt;div class="stat-narrative"&gt;
+  &lt;div class="stat-narrative-header"&gt;What this means&lt;/div&gt;
+  &lt;div class="stat-narrative-text"&gt;
+    [Whether distribution is approximately normal, direction and degree of skew,
+    whether mean is a reliable summary statistic, practical implication]
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+    </div>
+  </div>
+
+</div><!-- /.wrap -->
+
+<footer class="doc-footer">
+  <div>
+    <img src="https://www.fullstory.com/images/fs_logo.svg" alt="Fullstory"
+         style="height:14px;filter:brightness(0) invert(1);opacity:0.35;vertical-align:middle;" />
+    &nbsp; Fullstory — Statistical Analysis Components
+  </div>
+  <div>Internal &nbsp;·&nbsp; Not for distribution &nbsp;·&nbsp; 2026</div>
+</footer>
+
+</body>
+</html>

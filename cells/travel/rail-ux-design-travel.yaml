@@ -1,0 +1,410 @@
+# GENERATED — do not edit manually
+# rail-format-version: 1.0
+# Generated: 2026-10-28
+audience: ux-design
+industry: travel
+entry_altitude: arc
+tempo: slow
+truncation: 6
+currency_mix:
+- KNW
+- ACQ
+- UTL
+exec_rollup: false
+signals:
+- signal: error_with_journey_break
+  currency: KNW
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: error followed by session exit or dead-end
+- signal: funnel_median_time_hypothesis
+  currency: KNW
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: test whether a funnel step takes longer than expected
+- signal: dead_click
+  currency: KNW
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 0.6112
+  intent: find specific fact
+- signal: post_error_exit
+  currency: ACQ
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 1.019
+  intent: commit to purchase
+- signal: error_click
+  currency: ACQ
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 0.8263
+  intent: commit to purchase
+- signal: rage_click
+  currency: UTL
+  class: exchange
+  requires_segment: false
+  benchmark_deviation: 0.5772
+  intent: complete a form or structured task
+generation_meta:
+  pattern_signals_excluded: 0
+  missing_benchmark_count: 22
+  derive_version: '1.0'
+
+# ── Jobs (appended by compose_cells_for_oss) ──
+jobs:
+- id: behavior_gap_investigation
+  currency_code: KNW
+  currency: 'causal explanation of why a specific behavior isn''t happening — the
+    WHY that motivates a design change, not just confirmation that the behavior is
+    absent
+
+    '
+  currency_breadth: single
+  spans: []
+  trigger: '"we have this button / step / interaction that''s important to the flow,
+    but users don''t seem to engage with it — we want to know why"
+
+    '
+  evidence_form: mechanism
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: 'behavioral finding with hypothesis — segment comparison establishing that
+      one population experiences the gap more than another, plus a falsifiable explanation
+      the PM can evaluate as a test candidate
+
+      '
+  - audience: engineering
+    form: 'element-level observation only — if the cause traces to a technical failure
+      (broken selector, unresponsive element, failed API), route with: surface + element
+      + error chain; no UX framing; UX analysis ends at the handoff
+
+      '
+  stop_conditions:
+  - 'Enough sessions on BOTH completing and abandoning populations watched to filter
+    false signal (users who skipped the interaction because something else was more
+    pressing) — and a falsifiable causal explanation is in hand. State the hypothesis
+    and stop.
+
+    '
+  - 'The cause is technical (broken element, failed API, no response from handler)
+    — hand to engineering with surface + element + error chain. UX analysis ends here;
+    do not continue narrating.
+
+    '
+  - 'The completing population shows the same friction as the abandoning population
+    (rage clicks, dead clicks, dwell anomaly on the interaction) — the survivorship
+    guard fired a positive finding inside the success cohort. State it explicitly
+    and stop.
+
+    '
+  investigation_priors:
+    opening_move: 'Data first. Build the comparison before watching a single session.
+      One segment for users who did NOT engage with the interaction point; one for
+      users who DID. Compute how differently the two populations move through the
+      downstream funnel step — this is the PM-portable evidence. Run the survivorship
+      check on the engaging segment before watching sessions. Only then move to session
+      replay to validate the causal reading.
+
+      '
+    mcp_sequence:
+    - discover_org_context(['[element or step name]']) — check for existing named
+      elements or segments tied to the interaction point
+    - 'build_segment: users who did NOT engage with the interaction point in the time
+      window — prefer existing segment IDs from org-foundation.md (or semantic-index.yaml
+      on an old layer)'
+    - 'build_segment: users who DID engage (comparison anchor)'
+    - 'compute_metric: conversion rate difference between the two segments through
+      the downstream funnel step (count + rate with denominator)'
+    - 'compute_metric: rage-click rate, dead-click rate, dwell-time on the interaction
+      point — for BOTH segments'
+    - 'SURVIVORSHIP CHECK: if engaging segment shows rage-click or dead-click on the
+      interaction point — that is the finding; surface it before watching sessions'
+    - get_sessions on the non-engaging segment — minimum 5 sessions
+    - session_open(session_id)
+    - session_view() — visual context for the interaction point and the surrounding
+      UI state
+    - session_close() — MANDATORY; pair every open with a close
+    - get_opportunities — scale validation; if empty or org not on Premium/Advanced,
+      run opportunities fallback chain from industry overlay before reporting no results
+    signal_order:
+    - dead-click
+    - rage-click
+    - cursor-thrash
+    - dwell-anomaly
+    - page-reload
+  presentation:
+    lead_with: 'The comparison — how the non-engaging and engaging populations differ
+      in conversion through the downstream step. Not a raw signal count. Data before
+      sessions, always.
+
+      '
+    include:
+    - 'segment comparison: non-engaging vs engaging conversion through the next funnel
+      step, with denominator'
+    - signal distribution on the interaction point for both populations
+    - survivorship finding if frustration signals appear in the completing/engaging
+      population
+    - one representative session showing the behavioral gap — median path, not most
+      dramatic
+    - 'a falsifiable hypothesis framed as a design-pattern observation: what the user
+      expected vs what they found'
+    suppress:
+    - raw signal counts without design interpretation ('18% rage click rate' alone)
+    - technical root cause detail — broken CSS selector, failed API, console errors
+    - session clips as the first output without a data anchor
+    - magnitude claims without denominator
+    vocabulary:
+      use:
+      - navigation looping
+      - false affordance
+      - undesigned click target
+      - expectation mismatch
+      - confusion zone
+      avoid:
+      - uncaught exception
+      - HTTP 500
+      - CSS selector
+      - API failure
+      - console error
+      - network error
+      frame_as: what the user expected to happen vs what they found; what the design
+        communicated vs what it delivered
+  asr: none
+  triggers:
+  - performance of our website over Labor Day
+  - where did people struggle over Labor Day
+  - task completion over the holiday
+  - did users struggle during Labor Day
+  - friction during holiday traffic
+- id: test_buyin_and_design
+  currency_code: KNW
+  currency: 'segment-level proof that a hypothesis warrants a testing slot — evidence
+    rigorous enough to justify the pod''s shared zero-sum time budget
+
+    '
+  currency_breadth: multi
+  spans:
+  - UTL
+  trigger: '"we need to justify testing this" or "we need to design the test so it
+    doesn''t come back non-determinate"
+
+    '
+  evidence_form: magnitude
+  asr: none
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: 'prioritization evidence — one micro-segment''s conversion visibly lagging
+      another''s on the specific interaction, stated with denominator so the PM can
+      evaluate ROI of the testing slot; plus a proposed test structure
+
+      '
+  - audience: engineering
+    form: 'test scope definition — which surface, which user segment, what behavioral
+      signal change confirms or refutes the hypothesis; no UX framing; build-cost
+      question only
+
+      '
+  stop_conditions:
+  - 'Segment comparison shows a clear lagging micro-segment (conversion gap with denominator)
+    tied to the specific interaction — hypothesis is evidenced. State the proposed
+    test design (which segment, which change, which metric confirms success) and stop.
+
+    '
+  - 'No detectable conversion gap exists between micro-segments on this interaction
+    — hypothesis is not evidenced at this level. Report honestly: "No segment-level
+    evidence for this hypothesis was found. Consider a qualitative research path rather
+    than a quantitative A/B test." Stop.
+
+    '
+  investigation_priors:
+    opening_move: 'Start with the downstream conversion metric as the anchor, then
+      identify the micro-segments. "Which micro-segment is lagging?" is the question
+      the PM needs answered to grant a testing slot. Candidate micro-segments: device
+      type, entry source (direct vs campaign vs organic), first-visit vs returning.
+      Build those segments and compute conversion through the interaction for each
+      before watching a single session.
+
+      '
+    mcp_sequence:
+    - 'build_segment: all users who encountered the interaction point in the time
+      window (overall population anchor)'
+    - 'compute_metric: overall conversion rate through the interaction — baseline
+      with denominator'
+    - 'build_segment: candidate micro-segments (by device, entry source, first-visit
+      vs returning) — prefer existing segment IDs from org-foundation.md (or semantic-index.yaml
+      on an old layer)'
+    - 'compute_metric: conversion rate for each micro-segment through the interaction
+      — identify the lagging one'
+    - 'compute_metric: rage-click rate, dead-click rate on the lagging micro-segment
+      specifically'
+    - get_sessions on the lagging micro-segment — minimum 5 sessions for pattern confirmation
+    - session_open(session_id)
+    - session_view()
+    - session_close() — MANDATORY
+    signal_order:
+    - conversion-gap
+    - dead-click
+    - rage-click
+    - dwell-anomaly
+  presentation:
+    lead_with: 'The lagging micro-segment — which group, how much lag, stated with
+      denominator. "Mobile-first visitors convert at X% on this step vs Y% for desktop
+      — that is approximately Z users per week missing the interaction."
+
+      '
+    include:
+    - overall conversion rate through the interaction (denominator anchor)
+    - micro-segment conversion comparison with denominators
+    - behavioral signals on the lagging segment with rates
+    - one representative session from the lagging segment
+    - 'proposed test structure: which segment, which intervention, which metric confirms
+      success'
+    suppress:
+    - site-wide averages without segment breakdown
+    - technical test implementation detail
+    - session clips before the data pattern is established
+    vocabulary:
+      use:
+      - testing slot
+      - micro-segment
+      - conversion lag
+      - test design
+      - hypothesis
+      frame_as: evidence for the hypothesis — not proof, not confirmation; the pod
+        validates via the test
+- id: nonlinear_surface_confidence
+  currency_code: KNW
+  currency: 'surface-specific calibration of whether time-on-task and confusion signals
+    are appropriate for this surface — the design confidence check for non-linear
+    surfaces where the same dwell-time number is good or bad depending on the surface
+    type
+
+    '
+  currency_breadth: single
+  spans: []
+  trigger: '"we want to understand whether users are confused or indecisive on [browsing
+    / selection / comparison / wagering] — especially whether the time they''re spending
+    and the hesitation signals we''re seeing are expected for this type of surface"
+
+    '
+  evidence_form: defensible_measurement
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: 'design decision framing — is time-on-task on this surface within expected
+      range for its type (sticky vs fast)? Stated as a design question: "this surface
+      is expected to hold attention / expected to be efficient — and here is whether
+      it is"
+
+      '
+  - audience: engineering
+    form: 'technical friction finding only — if confusion signals trace to a technical
+      failure (element not responding, slow load producing cursor thrash), route with:
+      surface + signal type + session clip; no design framing
+
+      '
+  stop_conditions:
+  - 'Time-on-task distribution (p50/p75/p95) is within expected range for this surface
+    type AND confusion signals are low — report the negative result explicitly: "This
+    surface is performing within expected engagement parameters for a [sticky/fast]
+    surface" and stop. A clean result is a finding.
+
+    '
+  - 'A confusion signal cluster locates on a specific interaction zone within the
+    surface (dead clicks, cursor thrash, or dwell anomaly concentrated in one area)
+    — state the location, the behavioral signal with rate and denominator, and stop.
+    The design interpretation is the finding; do not continue querying.
+
+    '
+  - 'All signals point to a technical cause (element not responding, slow load) —
+    route to engineering; UX analysis ends.
+
+    '
+  investigation_priors:
+    opening_move: 'Calibrate the surface type before measuring anything. Is this a
+      sticky surface (browsing, exploration, comparison — users are expected to spend
+      time here and high dwell is a good signal) or a fast surface (checkout step,
+      payment, account update — users should move through efficiently and high dwell
+      is a friction signal)? This calibration determines the valence of every subsequent
+      measurement. Only after calibrating: compute the time-on-task distribution,
+      then the confusion signals.
+
+      '
+    mcp_sequence:
+    - discover_org_context([surface-relevant terms]) — confirm which named elements
+      exist on this surface
+    - 'compute_metric: session-duration p50/p75/p95 for sessions that reached this
+      surface'
+    - 'compute_metric: dead-click rate on the surface with denominator (confusion
+      proxy)'
+    - 'compute_metric: cursor-thrash rate on the surface (uncertainty / scanning proxy)'
+    - 'compute_metric: rage-click rate on the surface with denominator'
+    - 'build_segment: sessions with dead-click + cursor-thrash co-occurrence on this
+      surface — if the combined signal exists, this is the primary confusion cluster'
+    - get_sessions on the confusion-cluster segment — minimum 5 sessions
+    - session_open(session_id)
+    - 'session_view() — visual context: where on the surface does confusion concentrate?'
+    - session_close() — MANDATORY
+    signal_order:
+    - cursor-thrash
+    - dead-click
+    - dwell-anomaly
+    - rage-click
+  presentation:
+    lead_with: 'The surface-type calibration first — "this is a sticky surface where
+      dwell is expected" or "this is an efficiency surface where dwell is a friction
+      signal" — then the time-on-task distribution (p50/p75/p95). Valence before numbers.
+
+      '
+    include:
+    - surface type classification (sticky vs fast) and its implication for dwell signals
+    - session-duration p50/p75/p95 on this surface
+    - confusion signal rates (dead-click, cursor-thrash) with denominators
+    - confusion zone location if signals concentrate in one interaction area
+    - one representative session showing the confusion pattern — median path, not
+      most dramatic
+    suppress:
+    - average session duration alone — always present as percentile distribution
+    - conversion framing — this is a design confidence check, not a funnel analysis
+    - technical root cause detail
+    - magnitude claims without denominator
+    vocabulary:
+      use:
+      - confusion zone
+      - expected dwell
+      - indecision signal
+      - scanning behavior
+      - sticky surface
+      - efficiency surface
+      frame_as: 'is the time users spend here appropriate for this type of surface,
+        and where within the surface does the confusion concentrate?
+
+        '
+  asr: none
+- id: ux-habit-and-mental-model-arc
+  trigger: 'A flow passed first-session usability, but qualitative or quantitative
+    signal suggests users still cannot form a stable model, abandon after onboarding,
+    or never graduate from the happy path.
+
+    '
+  currency_code: KNW
+  currency: how the experience holds or decays after the first successful session
+  currency_breadth: single
+  spans: []
+  evidence_form: mechanism
+  entry_altitude: arc
+  asr: required
+  routes_to:
+  - audience: product-trio
+    form: 'longitudinal experience brief: first-use vs. week-4 behavior, with session
+      evidence at each stage'
+  stop_conditions:
+  - the designer can point to the session-Nth failure mode, not only the session-1
+    failure mode
+  - a design change is justified by trajectory, not by a single usability clip
+  - session_close

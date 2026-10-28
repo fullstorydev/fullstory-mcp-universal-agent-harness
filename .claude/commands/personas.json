@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "note": "discovery_terms removed by W-38 — discovery vocabulary is now derived inline from currency-signals.yaml at session time. topics[] order is static (Wave 8-B baseline); replaced by derive.py output in I-04.",
+  "personas": {
+    "engineering": {
+      "focus": "Diagnosing technical friction, error rates, and performance issues that degrade user experience and create engineering remediation work.",
+      "topics": [
+        {
+          "id": 1,
+          "type": "signal_perf",
+          "type_this": "Show me which pages have the worst load performance and how it correlates with user drop-off.",
+          "expect": "A breakdown of pages by load time percentiles (p50, p75, p95) with session counts that exited after slow loads — gives you the engineering-prioritized list of where performance debt is costing real sessions."
+        },
+        {
+          "id": 2,
+          "type": "signal_error",
+          "type_this": "Find sessions where users encountered JavaScript errors or network failures and then left without completing their goal.",
+          "expect": "A segment of sessions with console errors or network errors followed by exits — the direct signal of where uncaught exceptions and API failures are creating user abandonment."
+        },
+        {
+          "id": 3,
+          "type": "signal_journey",
+          "type_this": "Show me the funnel through the most critical user flow and where the biggest drop-off points are.",
+          "expect": "A step-by-step conversion funnel with exit rates at each step — surfaces which transitions have the highest abandonment so engineering effort maps to the highest-impact fixes."
+        },
+        {
+          "id": 4,
+          "type": "signal_retention",
+          "type_this": "Find users who rage clicked or dead clicked in the last 30 days and where those interactions clustered.",
+          "expect": "A heatmap-level view of frustrated interaction patterns — rage clicks and dead clicks aggregated by page and element, showing where UI bugs and broken interactions are causing the most friction."
+        },
+        {
+          "id": 5,
+          "type": "signal_opportunity",
+          "type_this": "What are the top opportunities Fullstory has identified for improving the experience on this org?",
+          "expect": "Fullstory's ranked list of automatically detected friction opportunities — each backed by the session volume affected, so engineering can triage by impact rather than by loudest complaint."
+        }
+      ]
+    },
+    "product-management": {
+      "focus": "Understanding where users struggle in key flows, why retention drops, and which friction points have the highest impact on product goals.",
+      "topics": [
+        {
+          "id": 1,
+          "type": "signal_perf",
+          "type_this": "Show me the pages with the highest user engagement and where users drop off most unexpectedly.",
+          "expect": "A view of high-traffic pages alongside their exit rates — reveals which pages users expect to progress from but don't, distinguishing intentional exits from frustrated ones."
+        },
+        {
+          "id": 2,
+          "type": "signal_error",
+          "type_this": "Find the top user segments experiencing the most friction — rage clicks, errors, or repeated failed attempts.",
+          "expect": "Segmented friction signals by user cohort — shows which user groups are hitting the most walls, so product decisions can prioritize the highest-impact population."
+        },
+        {
+          "id": 3,
+          "type": "signal_journey",
+          "type_this": "Show me the funnel for our most important conversion flow — where users drop off and what they do instead.",
+          "expect": "Step-level conversion data with exit destinations — the product-level view of where the intended journey breaks and where users actually go when they leave the funnel."
+        },
+        {
+          "id": 4,
+          "type": "signal_retention",
+          "type_this": "Which features or flows do retained users engage with most, and which do churned users avoid?",
+          "expect": "A behavioral comparison between retained and churned users — surfaces which product surfaces correlate with long-term engagement versus early exit, grounding retention strategy in actual usage patterns."
+        },
+        {
+          "id": 5,
+          "type": "signal_opportunity",
+          "type_this": "What are the top experience opportunities Fullstory has surfaced for this org?",
+          "expect": "Ranked AI-detected opportunities with session volume impact — gives product a prioritized backlog of friction items ranked by user impact, not by engineering intuition."
+        }
+      ]
+    },
+    "ux": {
+      "focus": "Understanding how users actually interact with interfaces — where designs break down, where they hesitate, and where they succeed — to inform design decisions with behavioral evidence.",
+      "topics": [
+        {
+          "id": 1,
+          "type": "signal_perf",
+          "type_this": "Show me where users hesitate or move slowly through a key interaction — forms, multi-step flows, or navigation.",
+          "expect": "Dwell time and interaction timing data on high-stakes UI surfaces — shows where cognitive load is highest and where the design is creating uncertainty before users act."
+        },
+        {
+          "id": 2,
+          "type": "signal_error",
+          "type_this": "Find sessions where users encountered errors or dead clicks and what they did immediately after.",
+          "expect": "A behavioral trace of error states in context — shows whether users retry, abandon, or seek help after hitting friction, informing error state and recovery design decisions."
+        },
+        {
+          "id": 3,
+          "type": "signal_journey",
+          "type_this": "Walk me through the most common path users take through the onboarding or activation flow.",
+          "expect": "A journey map grounded in actual behavior — the real sequence users follow versus the designed sequence, with divergence points that reveal where the intended flow breaks."
+        },
+        {
+          "id": 4,
+          "type": "signal_retention",
+          "type_this": "Which parts of the interface do users interact with on return visits, and which do they skip?",
+          "expect": "Return-visit engagement patterns by UI surface — shows which features achieve habitual use versus which ones users discover and abandon, informing information architecture and feature placement."
+        },
+        {
+          "id": 5,
+          "type": "signal_opportunity",
+          "type_this": "What are the top UX friction points Fullstory has automatically surfaced for this org?",
+          "expect": "AI-ranked friction opportunities by affected user volume — gives the design team a prioritized list of places where real user behavior diverges from intended experience, each with session examples."
+        }
+      ]
+    },
+    "data": {
+      "focus": "Quantifying behavioral patterns, validating hypotheses, and building reproducible segment and metric definitions that can be used across analyses.",
+      "topics": [
+        {
+          "id": 1,
+          "type": "signal_perf",
+          "type_this": "Build a metric for the rate of sessions that experience page load times above 3 seconds and show me the trend over the last 30 days.",
+          "expect": "A computed metric with time-series output — gives you a reproducible definition of slow-load session rate that can be tracked over time and compared across segments or deploys."
+        },
+        {
+          "id": 2,
+          "type": "signal_error",
+          "type_this": "Create a segment of sessions with at least one rage click or console error and compare their conversion rate to the baseline.",
+          "expect": "Two computed segments with conversion metrics compared — the quantified behavioral penalty of error states, expressed as a conversion rate delta with user counts so the denominator is always visible."
+        },
+        {
+          "id": 3,
+          "type": "signal_journey",
+          "type_this": "Build a funnel for the primary conversion flow and compute the completion rate broken down by device type.",
+          "expect": "A segmented funnel with device-level completion rates — surfaces whether conversion gaps are platform-specific or universal, with the raw numbers needed to size the issue for prioritization."
+        },
+        {
+          "id": 4,
+          "type": "signal_retention",
+          "type_this": "Define a segment of users who returned within 7 days and compare their session depth and feature engagement to single-session users.",
+          "expect": "A cohort comparison grounded in behavioral definitions — the data-layer view of what distinguishes retained users from one-time users, with metrics that can be reproduced and tracked."
+        },
+        {
+          "id": 5,
+          "type": "signal_opportunity",
+          "type_this": "List the top opportunities Fullstory has detected and show me the session volume backing each one.",
+          "expect": "Ranked opportunities with population counts — the data team's entry point for validating AI-surfaced findings against independently built segments, confirming which opportunities hold up to quantitative scrutiny."
+        }
+      ]
+    },
+    "customer-support": {
+      "focus": "Understanding the most common user struggles, error patterns, and confusion points so support can diagnose issues faster and reduce repeat contact.",
+      "topics": [
+        {
+          "id": 1,
+          "type": "signal_perf",
+          "type_this": "Find sessions where users contacted support or used a help resource and what they were doing immediately before.",
+          "expect": "A behavioral trace of pre-support interactions — shows the specific friction moments that drove users to seek help, giving support teams the context they need to diagnose issues before reading the ticket."
+        },
+        {
+          "id": 2,
+          "type": "signal_error",
+          "type_this": "Show me the most common error states users encounter and the actions they take after hitting those errors.",
+          "expect": "An aggregated error-state map with post-error behavior — tells support which error messages are generating the most confused or frustrated responses and where users go when they can't recover on their own."
+        },
+        {
+          "id": 3,
+          "type": "signal_journey",
+          "type_this": "Show me where users get stuck or reverse in the most support-intensive flows.",
+          "expect": "A journey view of high-support-volume flows with reversal and exit points — shows support teams exactly where in the process users lose their way, so they can build better diagnostic scripts."
+        },
+        {
+          "id": 4,
+          "type": "signal_retention",
+          "type_this": "Find users who had a frustrating session (rage clicks or repeated errors) and then returned — what did they do differently?",
+          "expect": "A before-and-after behavioral comparison for users who recovered from a bad session — helps support understand successful recovery patterns to guide users back to a working path."
+        },
+        {
+          "id": 5,
+          "type": "signal_opportunity",
+          "type_this": "What are the top friction opportunities Fullstory has surfaced that align with common support ticket themes?",
+          "expect": "AI-detected opportunities ranked by user impact — support's view of which product problems are systemic enough to show up as both a behavioral signal and an AI-surfaced opportunity, making the case for product fixes."
+        }
+      ]
+    },
+    "customer-success": {
+      "focus": "Demonstrating value realized, identifying accounts at risk of churn, and finding expansion signals in behavioral data.",
+      "topics": [
+        {
+          "id": 1,
+          "type": "signal_perf",
+          "type_this": "Show me which features or flows have the highest engagement among users who are expanding their usage over time.",
+          "expect": "Engagement trends on high-value features with growth trajectory — the behavioral evidence of value realization, showing which parts of the product are driving the adoption that precedes expansion."
+        },
+        {
+          "id": 2,
+          "type": "signal_error",
+          "type_this": "Find users who have encountered repeated errors or frustration signals in the last 30 days — how many are they and what were they trying to do?",
+          "expect": "A friction-flagged user segment with the context of what they attempted — the at-risk signal list for CS, identifying accounts where poor experience may be building toward a churn conversation."
+        },
+        {
+          "id": 3,
+          "type": "signal_journey",
+          "type_this": "Show me the activation funnel — which steps do users complete in their first sessions versus which do they skip or abandon?",
+          "expect": "An activation-phase funnel with step-level completion rates — the early indicator of which users are on track for adoption versus which are stalling before they experience the product's core value."
+        },
+        {
+          "id": 4,
+          "type": "signal_retention",
+          "type_this": "Compare the session behavior of users who renewed or expanded against users who churned or contracted.",
+          "expect": "A behavioral cohort comparison between outcomes — the CS team's evidence layer for what healthy versus unhealthy account engagement looks like in the data, usable in renewal conversations."
+        },
+        {
+          "id": 5,
+          "type": "signal_opportunity",
+          "type_this": "What are the top experience opportunities Fullstory has detected for this account?",
+          "expect": "Ranked AI-detected opportunities with impact sizing — the CS-to-product feedback loop, showing which friction points are large enough to affect adoption metrics and warrant escalation."
+        }
+      ]
+    },
+    "sales": {
+      "focus": "Identifying high-intent behavioral signals, quantifying conversion friction, and surfacing evidence that supports the business case for product investment.",
+      "topics": [
+        {
+          "id": 1,
+          "type": "signal_perf",
+          "type_this": "Show me where users with high purchase or conversion intent are dropping off in the critical path.",
+          "expect": "A conversion funnel filtered to high-intent sessions with exit rates at each step — the sales-layer view of how many potential conversions are being lost to experience friction before they reach a decision."
+        },
+        {
+          "id": 2,
+          "type": "signal_error",
+          "type_this": "Find sessions where users encountered errors during checkout or a high-value flow and what percentage of those users did not return.",
+          "expect": "An error-impact segment with return rate — quantifies the revenue exposure of error states in the conversion path, giving sales a defensible number for the cost of poor experience."
+        },
+        {
+          "id": 3,
+          "type": "signal_journey",
+          "type_this": "Show me the full conversion funnel from first visit to completed transaction and the drop-off at each stage.",
+          "expect": "An end-to-end funnel with step-level drop-off rates — the complete picture of conversion friction from acquisition to close, sized by user volume so the business case for improvement is concrete."
+        },
+        {
+          "id": 4,
+          "type": "signal_retention",
+          "type_this": "Which user cohorts show the strongest return and re-engagement patterns, and what did they do in their first session?",
+          "expect": "A first-session behavioral profile of high-retention users — shows sales which early behaviors predict long-term engagement, usable as a proxy for customer fit signals in acquisition targeting."
+        },
+        {
+          "id": 5,
+          "type": "signal_opportunity",
+          "type_this": "What are the top opportunities Fullstory has surfaced for improving conversion on this org?",
+          "expect": "AI-ranked conversion opportunities with user volume — the sales team's evidence layer for which friction points are costing the most potential revenue, ranked so prioritization conversations start from data."
+        }
+      ]
+    },
+    "marketing": {
+      "focus": "Understanding how acquisition traffic behaves on the site, which campaigns and channels drive quality engagement, and where marketing-influenced users convert or exit.",
+      "topics": [
+        {
+          "id": 1,
+          "type": "signal_perf",
+          "type_this": "Show me how users arriving from different traffic sources behave on the landing page — engagement depth, time on page, and exit rates.",
+          "expect": "A channel-level behavioral comparison on the landing experience — shows marketing which acquisition sources are sending users who engage versus users who bounce, so spend decisions are informed by post-click behavior."
+        },
+        {
+          "id": 2,
+          "type": "signal_error",
+          "type_this": "Find sessions where marketing-influenced users (first visit or campaign-tagged) encountered friction and left before converting.",
+          "expect": "A friction segment filtered to new or campaign-tagged users — quantifies how much acquisition investment is being lost to experience problems rather than intent gaps, separating marketing efficiency from product friction."
+        },
+        {
+          "id": 3,
+          "type": "signal_journey",
+          "type_this": "Show me the path marketing-driven users take from their first page to conversion or exit — where does the intended journey break?",
+          "expect": "A journey map for acquisition-sourced sessions — shows marketing where the designed post-click path diverges from the actual path, surfacing where campaign landing pages fail to guide users toward conversion."
+        },
+        {
+          "id": 4,
+          "type": "signal_retention",
+          "type_this": "Which users acquired from marketing campaigns return within 30 days and what do they engage with on return visits?",
+          "expect": "A retention cohort for marketing-acquired users with return-visit engagement data — the post-acquisition view of which campaigns bring users who find lasting value versus one-time visitors."
+        },
+        {
+          "id": 5,
+          "type": "signal_opportunity",
+          "type_this": "What experience friction points has Fullstory surfaced that are most likely affecting marketing-driven conversion rates?",
+          "expect": "AI-detected opportunities with population impact — marketing's view of which product friction points are large enough to meaningfully affect campaign ROI, making the case for cross-functional remediation."
+        }
+      ]
+    }
+  }
+}

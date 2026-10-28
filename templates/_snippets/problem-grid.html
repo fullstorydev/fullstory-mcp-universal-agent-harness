@@ -1,0 +1,33 @@
+<!-- PROBLEM GRID — 2-COL COMPARISON
+     Use: side-by-side "what they lack / what Fullstory has" or any binary contrast.
+     Exactly two .problem-cell columns. Do not add a third — use .compare-table for 3+ columns.
+     .signal-list variants inside cells: .limited (orange), .missing (red/pink), .full (green), .present (green faint)
+     .problem-cell-label: uppercase label at the top of each cell.
+     The grid is responsive — cells stack vertically on small screens.
+-->
+<div class="problem-grid">
+  <div class="problem-cell">
+    <div class="problem-cell-label" style="color:var(--fs-pink);">Without Fullstory</div>
+    <ul class="signal-list missing">
+      <li>First gap or limitation — what the team cannot do today.</li>
+      <li>Second gap — where blind spots exist in the current setup.</li>
+      <li>Third gap — reactive rather than proactive posture.</li>
+    </ul>
+    <ul class="signal-list limited">
+      <li>Partial capability — exists but incomplete or manual.</li>
+      <li>Coverage gap — only works in specific conditions.</li>
+    </ul>
+  </div>
+  <div class="problem-cell">
+    <div class="problem-cell-label" style="color:var(--fs-green);">With Fullstory</div>
+    <ul class="signal-list full">
+      <li>First capability — what this enables directly.</li>
+      <li>Second capability — how retroactive querying changes the equation.</li>
+      <li>Third capability — what teams can do that they couldn't before.</li>
+    </ul>
+    <ul class="signal-list present">
+      <li>Supporting capability — always-on, no configuration required.</li>
+      <li>Scale advantage — works across 100% of sessions, not a sample.</li>
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,478 @@
+# GENERATED — do not edit manually
+# rail-format-version: 1.0
+# Generated: 2026-10-28
+audience: acct-mgmt
+industry: fintech
+entry_altitude: arc
+tempo: slow
+truncation: 6
+currency_mix:
+- TRS
+- UTL
+- KNW
+- ACQ
+exec_rollup: false
+signals:
+- signal: session_depth_decline
+  currency: TRS
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: detect behavioral withdrawal patterns in an account
+- signal: feature_abandonment_trend
+  currency: TRS
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: detect behavioral withdrawal patterns in an account
+- signal: post_incident_depth_drop
+  currency: TRS
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: confirm trust actually recovered after a fix
+- signal: cautious_return_dead_click
+  currency: TRS
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: confirm trust actually recovered after a fix
+- signal: session_recurrence_on_error
+  currency: TRS
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: identify systemic failure behind repeat contacts
+- signal: reload_surge_post_error
+  currency: TRS
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: identify systemic failure behind repeat contacts
+generation_meta:
+  pattern_signals_excluded: 0
+  missing_benchmark_count: 28
+  derive_version: '1.0'
+
+# ── Jobs (appended by compose_cells_for_oss) ──
+jobs:
+- id: account-dossier
+  currency_code: UTL
+  currency: account intelligence — a picture of behavioral state the AM can use to
+    open an expansion conversation with confidence
+  currency_breadth: multi
+  spans:
+  - ACQ
+  description: 'Proactive account intelligence. The AM wants to know whether this
+    account''s behavior supports an expansion conversation. Uses the behavioral dossier
+    mechanism: identify the account''s user cohort → analyze behavioral pattern across
+    surfaces → produce a narrative picture of account state. The dossier IS the output
+    — it routes back to the AM as a conversation-prep artifact, unless a health concern
+    is found (which routes to CX). The three spans above are the parts of the ask
+    "how is this account doing?" — name all three before measuring any of them (ask
+    breadth rule).
+
+    '
+  evidence_form: artifact
+  measure_resolution: distribution_shape
+  entry_altitude: cohort
+  triggers:
+  - how is [account] doing
+  - catch me up on [account]
+  - what's this account's usage look like
+  - is [account] a good candidate for expansion
+  - do they look warm
+  - any expansion signals
+  - what should I know before my call with [account]
+  - their renewal is coming up
+  - thinking about expanding with [account]
+  - is [account] healthy
+  investigation_priors:
+    surface_order:
+    - account
+    - checkout
+    - entry
+    - support
+    signal_order:
+    - session-count
+    - surface-breadth
+    - conversion-rate
+    - rage-click
+    - dead-click
+    - support-page-visits
+    opening_move: 'Start with discover_org_context to confirm the account''s user
+      identifier pattern (email domain or explicit account ID from FS.identify). Prefer
+      an existing segment from methodology.yaml if one covers this account cohort
+      — do not rebuild what is already saved. Compute session count and active user
+      count first (adoption breadth). Then move to surface-breadth: how many distinct
+      surfaces did this account''s users reach? Then conversion: are they completing
+      the primary journey? Close with one focused session clip showing a representative
+      active user on the account. Use get_opportunities to scale-validate any friction
+      finding — StoryAI confirmation is especially valuable in account conversations
+      because it signals independent verification.
+
+      '
+    mcp_sequence:
+    - discover_org_context — confirm user identifier pattern for this account (email
+      domain or account ID)
+    - check methodology.yaml — use existing account cohort segment if present; skip
+      build_segment if found
+    - 'build_segment: users from this account (email domain or explicit account ID)
+      — 30-day window'
+    - 'compute: session count and active user count for the account cohort over last
+      30 days'
+    - 'compute: surface-breadth — how many distinct surfaces did this account''s users
+      reach?'
+    - 'compute: conversion rate on the account''s primary journey surface (industry
+      overlay sets which surface)'
+    - 'build_segment: rage-click OR dead-click for this account''s cohort — check
+      for friction clusters'
+    - get_sessions(account_cohort_segment, limit=3) — pick one representative active
+      session for the dossier
+    - session_open(session_id)
+    - session_view() — confirm the behavioral picture visually; look for utilization
+      depth or friction
+    - session_close() — MANDATORY
+    - get_opportunities — scale-validate any friction finding; StoryAI confirmation
+      adds independent weight
+    stop_conditions:
+    - Utilization is high and conversion is healthy — account is warm. Produce the
+      dossier with expansion framing and stop. Three to five behavioral facts plus
+      one representative session clip is sufficient.
+    - A health concern is found (friction concentration, declining sessions, support
+      volume spike) — route the concern to customer-experience with session evidence
+      and stop investigating. Do not both dossier and health-check in the same pass.
+    - Account cohort is too small to reach conclusions (fewer than 10 active users
+      in 30 days) — state the sample limit explicitly; do not extrapolate from thin
+      data.
+    - Dossier is complete with enough to have a conversation — stop. Do not over-refine.
+      The AM needs something interesting to say, not a complete audit.
+  presentation:
+    lead_with: 'Account health verdict first: warm / neutral / at-risk. Then the three
+      to five facts that support it.'
+    include:
+    - active user count with trend direction (is the account growing, stable, or shrinking?)
+    - adoption depth — which surfaces are they reaching? Which are they not?
+    - one friction signal if present — named in plain business language, never as
+      a technical error
+    - one representative session clip — the most typical active session, not the most
+      dramatic
+    - expansion signal if present — behavioral evidence that the platform is embedded
+      in a critical flow
+    suppress:
+    - raw selectors, segment IDs, methodology detail — invisible infrastructure
+    - statistical methodology or p-values
+    - anything that reads as 'Fullstory did not work' — surface to internal teams
+      only, never in account output
+    - more than five findings — the AM needs a conversation opener, not a report
+    - long technical explanations — one sentence per finding maximum
+    vocabulary:
+      warm: Behavioral signal supports an expansion conversation — the platform is
+        active and embedded.
+      neutral: Usage is steady but not growing — no clear expansion signal, no clear
+        risk signal.
+      at_risk: Usage is declining, friction is rising, or support signals are increasing
+        — route to CX.
+    evidence_bar: 'Low by design. The AM does not need statistical proof to open a
+      conversation. A directional finding with a compelling session clip is sufficient.
+      If the data is thin, say so and stop — do not fill gaps with speculation.
+
+      '
+  routes_to:
+  - audience: acct-mgmt
+    form: account dossier — warm/neutral/at-risk verdict with three to five behavioral
+      facts and one representative session clip
+  - audience: customer-experience
+    form: health concern handoff — declining usage, friction concentration, or support
+      spike with session evidence and the account cohort segment ID
+  asr: none
+- id: account-health-check
+  currency_code: KNW
+  currency: a plausible explanation for the concern — a behavioral signal or absence
+    of one that lets the AM decide whether to route to CX or stand down
+  currency_breadth: single
+  spans: []
+  description: 'Reactive health investigation triggered by a specific concern: the
+    account went quiet, a champion left, support volume spiked, or the last call felt
+    off. Goal is a plausible explanation for the signal — not a full dossier. Uses
+    the behavioral dossier mechanism in focused mode: look at the account''s recent
+    sessions (past 7–14 days), not a full 30-day review. Routes to CX if a health
+    concern is confirmed. Routes to support in the rare case a specific technical
+    error cluster is found.
+
+    '
+  evidence_form: defensible_trend
+  entry_altitude: cohort
+  triggers:
+  - this account went quiet
+  - haven't heard from them
+  - their champion left
+  - got a bad vibe on the last call
+  - support spiked for this account
+  - I'm worried about this account
+  - something feels off
+  - might be at risk
+  - account is silent
+  - dropped off
+  investigation_priors:
+    surface_order:
+    - support
+    - checkout
+    - account
+    - entry
+    signal_order:
+    - session-count
+    - support-page-visits
+    - rage-click
+    - page-reload
+    - error-click
+    opening_move: 'Compare this account''s session count over the past 7 days against
+      the prior 14. If sessions are declining, drill into which surfaces dropped first
+      — that is the concern to name. Check support-surface visit rate as a secondary
+      signal. One focused session clip showing the concern is sufficient output. If
+      the signal is not visible in behavioral data, say so explicitly — the concern
+      may be relationship-level, not a platform-instrumented behavior. Do not fabricate
+      a finding to match the AM''s worry.
+
+      '
+    mcp_sequence:
+    - check methodology.yaml — use existing account cohort segment if present
+    - 'build_segment: this account''s users — 7-day window'
+    - 'compute: session count for this account cohort, last 7 days vs prior 14 days'
+    - 'compute: support-surface visit rate, last 7 days vs prior 14 days'
+    - 'compute: rage-click rate, last 7 days vs prior 14 days'
+    - get_sessions(declining_signal_segment, limit=3) — look at the most recent sessions
+      for this account
+    - session_open(session_id)
+    - session_view() — confirm whether behavioral concern is visible
+    - session_close() — MANDATORY
+    stop_conditions:
+    - Concern is confirmed by behavioral data (declining sessions, rising friction)
+      — route to customer-experience with the specific signal, the trend delta, and
+      session evidence. Stop investigating.
+    - A specific technical error cluster is found for this account — route to support
+      with the error chain and one representative session. Stop.
+    - 'No behavioral signal found for the concern — state this explicitly: ''The behavioral
+      data does not reflect the concern you described. This may be a relationship-level
+      issue rather than a platform issue. No Fullstory finding to surface.'' Do not
+      hunt for a signal that is not there.'
+    - Account activity is too low (fewer than 5 sessions in 7 days) — state the limit;
+      do not conclude from thin data.
+  presentation:
+    lead_with: Is the concern visible in behavioral data? Confirmed / Not visible
+      / Data too thin to conclude.
+    include:
+    - session-count trend over the past two weeks (direction and delta)
+    - one behavioral signal confirming or disconfirming the concern
+    - one representative session clip if concern is confirmed — the session that most
+      clearly shows the issue
+    suppress:
+    - false reassurance — if the data is thin, say it is thin and stop
+    - any finding that requires more than one sentence to explain to the AM
+    - speculation about relationship dynamics — stay inside what behavioral data can
+      show
+    evidence_bar: 'A directional signal is enough to route to CX. If the behavioral
+      data is clean, say so and stop — do not hunt for a concern that is not there.
+      Disconfirmation (''the data does not show what you expected'') is a valid and
+      honest output.
+
+      '
+  routes_to:
+  - audience: customer-experience
+    form: health concern handoff — declining sessions, friction spike, or support
+      volume increase with trend delta and account cohort segment ID
+  - audience: support
+    form: technical error cluster for this account — error chain (type, URL, console
+      message), affected session count, one representative session; only when a specific
+      error is found
+  asr: optional
+- id: ebr-prep
+  currency_code: UTL
+  currency: EBR-ready talking points — behavioral wins backed by data and a trend
+    direction the AM can present confidently to an exec audience
+  currency_breadth: multi
+  spans:
+  - KNW
+  description: 'Deliverable-mode job. The AM has a quarterly business review, EBR,
+    or renewal meeting in the next one to two weeks and needs narrative content. Output
+    is conversation-ready talking points: two or three platform wins backed by behavioral
+    evidence, one risk signal if present (framed as an opportunity), and a trend direction
+    over the quarter. Uses the behavioral dossier mechanism extended to a 90-day window
+    with comparison against the prior 90 days.
+
+    '
+  evidence_form: artifact
+  measure_resolution: direction_rate
+  entry_altitude: cohort
+  triggers:
+  - EBR
+  - QBR
+  - executive business review
+  - quarterly business review
+  - renewal meeting
+  - renewal prep
+  - what story do I tell
+  - I have a call with their exec team
+  - need to show value
+  - business review
+  - preparing for renewal
+  investigation_priors:
+    surface_order:
+    - checkout
+    - account
+    - entry
+    - support
+    signal_order:
+    - conversion-rate
+    - session-count
+    - surface-breadth
+    - rage-click
+    - storyai-opportunities
+    opening_move: 'Set the window to 90 days with comparison against the prior 90
+      days. Prefer existing methodology.yaml entries for this account''s cohort —
+      use saved segment and metric IDs before building new ones. Start with wins:
+      compute conversion rate on the primary journey surface and check for improvement.
+      Compute session volume trend. Compute surface-breadth trend (is adoption expanding?).
+      Then risk: are there any friction signals that have worsened? Run get_opportunities
+      last — StoryAI confirmation is especially high-value in EBR context because
+      it gives the AM a finding that is independently validated, not just ''our tool
+      found this.''
+
+      '
+    mcp_sequence:
+    - check methodology.yaml — use existing account cohort segment and metric IDs
+      if present
+    - 'build_segment: this account''s users (email domain or account ID) — if not
+      in methodology.yaml'
+    - 'compute: conversion rate on primary journey surface — current 90 days vs prior
+      90 days'
+    - 'compute: session count — current 90 days vs prior 90 days'
+    - 'compute: surface-breadth — current 90 days vs prior 90 days'
+    - 'compute: rage-click rate — current 90 days vs prior 90 days (risk signal)'
+    - get_opportunities — wins and risk signals with StoryAI confirmation
+    - get_sessions(wins_segment, limit=2) — two representative sessions for the 'platform
+      value' story
+    - session_open(session_id)
+    - session_view() — confirm the win is visible in the user experience
+    - session_close() — MANDATORY
+    stop_conditions:
+    - Two to three wins identified with behavioral evidence and trend direction known
+      — EBR narrative is sufficient. Stop. Do not add more wins; the room cannot absorb
+      more than three.
+    - 'No wins visible in the data — state this honestly: ''The behavioral data does
+      not show clear improvement over this window. Recommend a separate conversation
+      with the customer before the EBR.'' Do not fabricate wins.'
+    - 90-day window is too short (account is new, data window under 90 days) — state
+      the limit, narrow the comparison to what is available, and note the constraint
+      in the output.
+    - Risk signal found — include it once in the EBR narrative as 'an opportunity
+      we are actively tracking,' framed forward-looking. Do not omit it and do not
+      feature it above the wins.
+  presentation:
+    lead_with: Wins first. Risk second. Trend direction last.
+    include:
+    - two to three wins with behavioral evidence — 'Users completing checkout increased
+      by X% vs last quarter, representing ~N users/week'
+    - trend direction (improving / stable / declining) with a named comparison window
+    - one risk signal if present — framed as a forward-looking opportunity, never
+      as a current failure
+    - StoryAI-confirmed findings flagged as independently validated — this framing
+      is the strongest credibility signal available in a customer conversation
+    suppress:
+    - raw technical findings — every finding is reframed as a business outcome before
+      it reaches the AM
+    - anything that undermines confidence in the platform — surface separately to
+      internal teams only
+    - more than three wins — the room cannot absorb more
+    - statistical methodology, p-values, or confidence intervals
+    - single-period numbers without a comparison — a number without a 'vs prior quarter'
+      is not a win, it is just a number
+    vocabulary:
+      wins: Behavioral evidence that the platform is working for this account's users
+        — trend improvement, adoption growth, conversion increase.
+      risk: A signal worth monitoring — always framed forward-looking in EBR; never
+        framed as a current failure in the customer conversation.
+    evidence_bar: 'Wins must be backed by behavioral data and a trend comparison (current
+      vs. prior period). A directional trend is sufficient — statistical significance
+      is not required. If the only available evidence is a single-period number, label
+      it as a data point rather than a trend.
+
+      '
+  routes_to:
+  - audience: acct-mgmt
+    form: EBR narrative — wins with trend evidence, one risk signal framed forward-looking,
+      overall trend direction; conversation-ready talking points
+  asr: none
+- id: portfolio-health-review
+  currency_code: KNW
+  description: 'Evaluating an account''s behavioral arc across the renewal cycle —
+    a multi-week or multi-quarter view of how the account''s engagement trajectory
+    is moving. The AM is not investigating a single session but the shape of engagement
+    over time: growing, plateauing, or declining. Evidence at this altitude informs
+    renewal risk assessment and expansion qualification. The output is a behavioral
+    narrative the AM takes into a renewal or EBR conversation.
+
+    '
+  triggers:
+  - Renewal date is within 90 days and the AM needs a behavioral evidence baseline
+  - Account was flagged by CX as at-risk; AM needs to assess from an expansion angle
+  - QBR prep requires a longitudinal behavioral narrative, not a point-in-time snapshot
+  evidence_form: defensible_trend
+  entry_altitude: arc
+  asr: optional
+  routes_to:
+  - audience: customer-experience
+    form: 'account health finding: is this behavioral arc consistent with healthy
+      vs. at-risk?'
+  - audience: exec
+    form: 'account behavioral summary: arc trend over the renewal window'
+  stop_conditions:
+  - If the arc window spans fewer than 4 weeks of behavioral data — state the gap
+    and proceed with the available range
+  - If the account cohort has fewer than 3 distinct users — flag as low-signal and
+    treat conclusions as directional
+- id: am-expansion-readiness-arc
+  trigger: 'Usage is growing or hitting plan limits, and the AM needs behavioral proof
+    that expansion is earned rather than hoped.
+
+    '
+  currency_code: INF
+  currency: evidence that will move the economic buyer toward expansion rather than
+    a courtesy QBR
+  currency_breadth: multi
+  spans: []
+  evidence_form: magnitude
+  entry_altitude: arc
+  asr: none
+  routes_to:
+  - audience: economic-buyer
+    form: value-realized narrative with adoption breadth/depth over the contract window
+  stop_conditions:
+  - expansion is either qualified with behavioral proof or explicitly deferred
+- id: am-account-health-trajectory
+  trigger: 'An account is approaching renewal, expansion conversation, or a suspected
+    silent-risk period, and login or ticket snapshots are not enough to call health.
+
+    '
+  currency_code: TRS
+  currency: a trajectory of realized value inside the account that can support a save,
+    hold, or expand motion
+  currency_breadth: multi
+  spans: []
+  evidence_form: defensible_trend
+  entry_altitude: arc
+  asr: optional
+  routes_to:
+  - audience: customer-success-leadership
+    form: 'health brief: usage trajectory, champion continuity risk, friction themes,
+      recommended motion'
+  - audience: product-mgmt
+    form: account-clustered behavioral blockers that are costing renewals
+  stop_conditions:
+  - feature adoption depth or session frequency is stated as a trend over a named
+    window (30, 60, or 90 days) compared to the prior equivalent window — direction
+    (up / flat / declining) named explicitly
+  - the behavioral proxy (key action, feature session, breadth metric) is named, not
+    implied by login count alone
+  - a save/hold/expand motion is chosen and dated, with the behavioral evidence that
+    drove the choice stated

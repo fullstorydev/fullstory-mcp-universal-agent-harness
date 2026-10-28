@@ -1,0 +1,359 @@
+schema_version: 2
+audience: product-mgmt
+evidence:
+  sources: []
+  independence: authored_no_interview
+  header_notice: 'No interview exists. Built from design brief and agent review. Every
+    job in this file is a reasoned estimate, not an evidenced finding. The first real
+    PM interview should be used to validate or replace this file.
+
+    '
+job_discriminator:
+  rule: 'Is this happening now and time-bound? → incident-framing (scope, not root
+    cause). Is an issue being weighed against others? → prioritization. Was a test
+    run with a control group, or was a ship annotated? → experiment-readout. Is a
+    test being designed or a hypothesis being formed? → experiment-hypothesis. Was
+    something shipped and needs active monitoring? → launch-watch. Is output destined
+    for exec review or QBR? → quarterly-narrative.
+
+    '
+  routing_note: 'A PM who asks "what broke after the release?" wants incident-framing
+    for scope — not root cause. The PM''s job is blast radius and handoff payload
+    for engineering, not the error chain.
+
+    '
+session_opening:
+  deployment:
+  - harness
+  template: 'A few things I can dig into:
+
+
+    - **Prioritize** — rank an issue or scan the field for unknown problems by user
+    impact × conversion weight
+
+    - **Scope an incident** — blast radius, time window, and the sentence you can
+    say to a VP
+
+    - **Hypothesis** — find the behavioral pattern and frame a testable explanation
+
+    - **Experiment readout** — evaluate a test result or annotated ship with a defensible
+    claim
+
+    - **Watch a launch** — check for regressions and early adoption signals after
+    a ship or campaign
+
+    - **Quarterly narrative** — build the trend with before/after for the work you
+    shipped
+
+
+    Persuasion framing (clips for stakeholder communication) is available after data
+    is in hand —
+
+    it is not a starting point.
+
+
+    Where do you want to start?
+
+    '
+jobs:
+- id: prioritization
+  trigger: 'broad ranking or scanning ask — "how bad is this?" / "is this worth fixing?"
+    / "where does this rank?" / "what don''t we know about?" / "what''s costing us
+    money that''s not in Jira?" — any ask that requires sizing an issue or surfacing
+    unknown issues by user impact × surface weight; the ask typically spans three
+    analyses in one sentence
+
+    '
+  currency_code: KNW
+  currency: certainty about what to fix next, priced in user count and conversion
+    weight
+  currency_breadth: multi
+  spans:
+  - UTL
+  evidence_form: magnitude
+  asr: none
+  entry_altitude: population
+  routes_to:
+  - audience: engineering
+    form: ranked recommendation with magnitude and surface context — not root cause;
+      engineering resolves the cause
+  - audience: product-mgmt
+    form: backlog-ready ranked list with denominator on each item and trend direction
+  stop_conditions:
+  - issue ranked with magnitude estimate, trend direction, and surface weight — output
+    is a recommendation with numbers; stop
+  - three or more issues tie on magnitude — present the top three and ask which the
+    PM wants to go deep on; stop broadening
+- id: incident-framing
+  trigger: 'escalation language ("something is broken," "customers are calling in,"
+    "VP is asking") or time-pressure language ("right now," "live issue," "it''s still
+    happening") or scope question ("how bad is this," "how many users," "is it still
+    going") — the PM needs blast radius and a stakeholder sentence, not root cause
+
+    '
+  currency_code: UTL
+  currency: scope fast — the number I can say to my VP in the next five minutes
+  currency_breadth: single
+  spans: []
+  evidence_form: scope
+  entry_altitude: population
+  routes_to:
+  - audience: engineering
+    form: handoff payload — surface, time window, affected user count, still-happening
+      status, one representative session URL; no stack trace, no selector archaeology
+  - audience: product-mgmt
+    form: stakeholder framing — X users could not complete Y during window Z
+  stop_conditions:
+  - 'scope established: who, how many, when, which surface, still happening or resolved
+    — handoff payload ready; stop'
+  - incident already resolved and affected fewer than 1% of sessions — state that
+    explicitly and stop; do not continue building evidence for a closed incident
+  asr: none
+- id: experiment-hypothesis
+  trigger: '"why are users dropping off?" / "what should we test?" / "help me design
+    a test" / "does the data support X?" when confirmed that no test is live or annotated
+    yet — PM needs 1–3 testable claims grounded in behavioral patterns, not a proof
+    or a solution
+
+    '
+  currency_code: KNW
+  currency: a mechanism I can turn into a test — pattern plus explanation, not a feature
+    idea
+  currency_breadth: multi
+  spans:
+  - ACQ
+  evidence_form: mechanism
+  measure_resolution: distribution_shape
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: ranked hypothesis list — pattern with denominator, named mechanism, predicted
+      primary metric, named guardrail; max 3
+  - audience: ux-design
+    form: behavioral pattern with named mechanism — for user research validation of
+      the underlying explanation
+  stop_conditions:
+  - 1–3 competing testable explanations produced with named mechanisms — stop when
+    there are hypotheses, not when there is a list of ideas
+  - no pattern clears N >= 100 on any surface — state 'insufficient signal for hypothesis
+    generation; directional only' and stop
+  asr: none
+- id: experiment-readout
+  trigger: '"we just shipped X, did it work?" / "what did the test show?" / "evaluate
+    the result" / "was there a lift?" — a test has run or a ship was annotated; PM
+    needs a defensible claim about what moved, for whom, with guardrails
+
+    '
+  currency_code: KNW
+  currency: a causal claim the room can accept or reject, paired with named guardrails
+  currency_breadth: single
+  spans: []
+  evidence_form: causal_claim
+  entry_altitude: cohort
+  routes_to:
+  - audience: product-mgmt
+    form: primary metric movement with denominator, guardrails checked, segment heterogeneity
+      noted — roadmap decision input
+  - audience: engineering
+    form: guardrail breach if detected — regression handoff with surface, time window,
+      metric delta
+  stop_conditions:
+  - primary metric stated with denominator, guardrails checked, segment heterogeneity
+    noted — that is a causal claim the room can accept or reject; stop
+  - sample inadequate (N < 100 per variant, or test ran under 2 weeks) — state 'insufficient
+    sample for a defensible claim; directional only' and stop
+  asr: none
+- id: launch-watch
+  trigger: '"we just shipped" / "we launched" / "the feature went out today" / "the
+    promo is live" / "keep an eye on it" / "is anything breaking?" — active monitoring
+    after a ship or campaign; no control group, not a causal claim; a verdict is the
+    output
+
+    '
+  currency_code: KNW
+  currency: a verdict — working, broken, or not yet knowable — stated against a baseline
+  currency_breadth: single
+  spans: []
+  evidence_form: magnitude
+  asr: none
+  entry_altitude: population
+  routes_to:
+  - audience: engineering
+    form: regression handoff — surface, time window, signal delta, one representative
+      session; only if a breaking signal is detected
+  - audience: product-mgmt
+    form: minor regression added to prioritization backlog with launch context and
+      baseline
+  stop_conditions:
+  - verdict issued — working / broken / not yet knowable — with the baseline it was
+    measured against and the adjacent-surface regression check result; stop
+  - '''not yet knowable'' is a first-class terminal state — state it with the sample
+    or time threshold that would change the verdict, then stop; do not continue querying'
+  - breaking regression detected — graduate to incident-framing; launch-watch ends
+    at graduation
+  triggers:
+  - "performance of our website over Labor Day"
+  - "how did [funnel] perform over Labor Day"
+  - "holiday window funnel performance"
+  - "did the funnel hold over [period]"
+  - "performance on my funnel"
+- id: quarterly-narrative
+  trigger: '"QBR" / "quarterly review" / "exec presentation" / "board update" / "show
+    the impact of what we shipped" / "make the case for the roadmap" / "last quarter"
+    / "Q3" / "this year vs. last year" — any ask for a trend the room can accept over
+    a multi-week or multi-quarter window; this ask spans several analyses wearing
+    one sentence
+
+    '
+  currency_code: KNW
+  currency: a trend the room accepts — direction, rate of change, before/after attribution,
+    benchmark comparison
+  currency_breadth: multi
+  spans:
+  - UTL
+  evidence_form: defensible_trend
+  entry_altitude: population
+  routes_to:
+  - audience: exec
+    form: trend line with direction, rate, benchmark context, and before/after — exec-ready;
+      no operational detail
+  - audience: product-mgmt
+    form: roadmap justification package — impact attribution per shipped item, ranked
+      by conversion effect
+  stop_conditions:
+  - trend established with direction, rate, benchmark comparison with stated source
+    and slice, and before/after attribution — ready for exec presentation; stop
+  - shipped work fewer than 4 weeks old — flag as 'insufficient trend window; directional
+    only' and stop
+  asr: optional
+- id: pm-feature-adoption-trajectory
+  trigger: 'A shipped feature or outcome has been live long enough that single-session
+    conversion can no longer answer whether the bet is working, or a planning cycle
+    needs a 30/90-day readout before the next roadmap commit.
+
+    '
+  currency_code: KNW
+  currency: a defensible adoption-and-outcome trajectory the PM can hold in discovery
+    and planning
+  currency_breadth: single
+  spans: []
+  evidence_form: defensible_trend
+  entry_altitude: arc
+  asr: optional
+  routes_to:
+  - audience: product-leadership
+    form: outcome readout with cohort curves and a keep/iterate/kill recommendation
+  - audience: engineering
+    form: which behaviors moved, which did not, and where friction persists
+  stop_conditions:
+  - 30-day and 90-day adoption, retention, or outcome deltas are measured against
+    the pre-commit success criteria
+  - the trio can name the next opportunity without re-litigating whether the last
+    ship worked
+- id: pm-retention-opportunity-scan
+  trigger: 'Activation is acceptable but week-4 or week-12 retention is soft, or a
+    segment that should have formed a habit is flattening, and the opportunity solution
+    tree needs a behavior-backed opportunity rather than a feature idea.
+
+    '
+  currency_code: KNW
+  currency: the mechanism of drop-off across the habit window, not a single-session
+    funnel miss
+  currency_breadth: single
+  spans: []
+  evidence_form: mechanism
+  entry_altitude: arc
+  asr: required
+  routes_to:
+  - audience: product-trio
+    form: 'opportunity brief: who falls off, after which sessions, around which behaviors'
+  stop_conditions:
+  - the drop-off is located in a named window (activation, week-2-6 adoption, expansion)
+    with behavioral evidence
+  - at least one testable opportunity is written that does not require a new feature
+    as its premise
+  - session_close
+- id: pm-stakeholder-outcome-commit
+  trigger: 'Leadership or a partner team is asking the PM to commit a roadmap slice
+    and the PM must move that stance with behavioral evidence rather than output promises.
+
+    '
+  currency_code: INF
+  currency: stakeholder willingness to fund an outcome instead of a feature list
+  currency_breadth: multi
+  spans: []
+  evidence_form: causal_claim
+  entry_altitude: arc
+  asr: optional
+  routes_to:
+  - audience: exec-stakeholders
+    form: 'short causal narrative: this behavior change, over this window, is the
+      bet'
+  stop_conditions:
+  - the commit is framed as an outcome with a review date, not as a feature-and-date
+accepts:
+- banded substrate information ('LCP is in the Needs Improvement band') — never raw
+  milliseconds alone
+- population-level counts with mandatory denominators ('12% = ~1,400 users/week')
+- trend direction and rate of change over a named window with a stated prior period
+- benchmark comparison with dated source, report name, and matching slice (web-only
+  / mobile-only / global blended — never compare mobile against a blended baseline)
+- conversion and revenue framing when a revenue event is instrumented in the semantic
+  layer
+- surface severity applied explicitly to ranking — state the weight; do not apply
+  it silently
+- mobile vs. desktop split on any top-level finding — mandatory, not optional
+rejects:
+- raw milliseconds or percentile latency breakdown without a named band label
+- session-level detail outside of experiment-hypothesis mechanism naming
+- technical root cause — scope is the PM's job; cause is engineering's
+- selector-level evidence, network error details, or stack traces
+- session clips — suppressed except when backing data is in hand for stakeholder framing
+- magnitude without denominator — never cite a percentage without a population
+- '''things look better'' or ''sessions look better'' without a named metric'
+- site-wide averages that hide a device split or segment concentration
+volunteers:
+- mobile vs. desktop split after any aggregate finding — a site-wide number that hides
+  a mobile bleed is analyst-shaped output, not PM-shaped
+- trend direction on any static metric — 'is this getting worse, stable, or improving?'
+- adjacent-surface regression check after any launch signal
+- benchmark comparison with dated source when the industry file provides one — cite
+  the slice that matches the measurement
+declines:
+- root cause investigation — offer the scope and handoff payload; redirect cause to
+  engineering
+- persuasion framing (clips for stakeholder communication) before backing data is
+  in hand — run the relevant job first, then surface clips
+- statistical significance testing or p-value calculation — out of scope; state directional
+  confidence in plain language
+- minimum detectable effect or sample size calculation — out of scope
+- feature design or UX recommendation — not an output of this profile
+tempo: slow
+room: 'Findings typically land in a product review, QBR prep, or planning session.
+  The PM is often presenting to peers or upward — a VP, a chief product officer, or
+  cross-functional stakeholders including engineering leads. Numbers must survive
+  the scrutiny of an informed room. Session-level drama is not persuasion here — a
+  PM who defends a finding without population numbers will lose the argument. The
+  PM is the intermediary who translates finding to backlog or roadmap item; the output
+  is not acted on by the PM alone but by a team that will question it. # Authored
+  from design reasoning — no interview evidence.
+
+  '
+maturity_signals:
+- PMs with an analytics background accept benchmark deviation framing faster and need
+  less explanation of the comparison slice
+- PMs in high-cadence orgs (weekly shipping cycles) weight launch-watch and experiment-readout
+  over quarterly narrative
+- PMs in compliance-heavy verticals (fintech) apply a higher bar for causal claims
+  before acting on experiment-readout findings
+- PMs who came from engineering are more likely to ask for root cause — redirect to
+  incident-framing scope + handoff payload
+industry_variance:
+- 'fintech: compliance sensitivity raises the burden for causal claims; PM is more
+  likely to involve legal or compliance before acting on experiment-readout output'
+- 'gaming: PM attention splits between monetization (IAP, wager revenue) and retention;
+  a quarterly narrative may need both tracks presented separately, not blended'
+- 'saas: the primary metric is recurring value delivery, not transaction conversion;
+  ''quarterly narrative'' skews toward engagement depth and churn prevention rather
+  than ACQ funnel metrics'
+not_applicable_industries: []

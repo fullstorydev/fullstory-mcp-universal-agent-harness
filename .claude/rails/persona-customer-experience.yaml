@@ -1,0 +1,357 @@
+schema_version: 2
+audience: customer-experience
+description: 'Customer Success Managers (CSMs) and VoC program leads using Fullstory
+  to understand account behavior, triage escalated customer issues, and prepare for
+  account conversations. Two distinct operating modes modeled as separate jobs — they
+  are not two audiences but one audience with two different job contexts. The exploratory
+  mode (behavioral dossier) is the differentiated, high-value use case and the harness
+  design target; reactive mode is support-adjacent and inherits much of the support
+  investigation workflow.
+
+  '
+design_target_note: 'The interview (customer-experience-lane-20260910.md) explicitly
+  called out the aspiration: move CSMs from shallow reactive session-watching toward
+  the structured exploratory workflow. This is prescriptive — a design target for
+  the harness, not a neutral description of current behavior. The harness should surface
+  exploratory-account-dossier first at session opening, making proactive account research
+  the default rather than the exception.
+
+  '
+not_applicable_industries:
+- retail
+- gaming
+- travel
+evidence:
+  sources:
+  - persona/customer-experience-lane-20260910.md
+  independence: self_sourced
+behavioral_dossier_ref:
+  canonical_file: persona-acct-mgmt.yaml
+  canonical_key: behavioral_dossier
+  cx_diagnostic_question: cx_diagnostic_question
+session_opening:
+  deployment:
+  - harness
+  template: "Two things I can help with before or after a customer conversation:\n\
+    \n- **Account prep** — give me the account name and I'll build a behavioral dossier:\n\
+    \  how their users actually move through the product, what they engage with vs.\
+    \ ignore,\n  and whether the engagement signals look healthy or at risk. Best\
+    \ done before a QBR or\n  executive check-in.\n\n- **Issue triage** — a customer\
+    \ reported a specific problem? Give me the user and I'll\n  watch their sessions\
+    \ and tell you what actually happened, then route to support for\n  resolution\
+    \ with a handoff payload.\n\nAccount prep is the better starting point when you\
+    \ have time. Where do you want to start?\n"
+jobs:
+- id: reactive-account-triage
+  description: 'A key customer has reported a problem. The CSM pulls up the specific
+    user and watches their sessions to understand what actually happened — validating
+    or disconfirming the customer''s account of their experience. This mode is support-adjacent:
+    the workflow resembles support case investigation but the artifact and routing
+    differ. CX routes to support triage (for technical resolution) and to acct-mgmt
+    (for account health context), not directly to engineering.
+
+    '
+  currency_code: UTL
+  currency: speed to characterization — confirm or disconfirm the customer's account
+    of what happened and route it accurately; spending time and relationship capital
+  triggers:
+  - a customer says something is broken for them
+  - key account is calling about an issue
+  - our top customer can't do X
+  - VIP user is having trouble with
+  - customer complained that
+  - customer escalated
+  - account says checkout is broken
+  - they can't log in
+  - customer sent a screenshot of an error
+  - customer says they got an error message
+  currency_breadth: single
+  spans: []
+  evidence_form: error_chain
+  entry_altitude: session
+  routes_to:
+  - audience: support
+    form: session clip + error chain for support triage — what happened, where, in
+      which session
+  - audience: acct-mgmt
+    form: account health flag — this account has an active issue affecting named users
+  investigation_priors:
+    opening_move: 'Ask for the user identifier (email, user ID, or any FS.identify
+      value) and the approximate time window. Pull their recent sessions. Watch the
+      sessions where the problem likely occurred. Characterize exactly what happened:
+      the error event sequence, the surface, and the point in the flow where it broke.
+      Then route.
+
+      '
+    mcp_sequence:
+    - get_sessions filtered by user identifier — prefer existing segment IDs from
+      org-foundation.md (or semantic-index.yaml on an old layer) if a segment for this account already exists
+    - identify sessions in the reported time window or with relevant frustration signals
+    - 'get_session_events(session_id) — full event log: error chain, network failures,
+      console errors'
+    - session_open(session_id)
+    - session_view() — visual and contextual gaps the event log misses
+    - session_close() — MANDATORY; pair every open with a close
+    - get_opportunities — check whether this issue is widespread beyond the named
+      user; if empty or org is not Premium/Advanced, run the opportunities fallback
+      chain from the industry overlay before reporting no results
+  presentation:
+    lead_with: 'What actually happened — confirmed or disconfirmed against what the
+      customer reported. A disconfirmation is a valid and useful finding: ''I cannot
+      reproduce this in the sessions; here is what the sessions show instead.'' Never
+      confabulate a cause to avoid returning an honest negative.
+
+      '
+    include:
+    - 'exact error event chain if present: type → URL → console message'
+    - surface and point in flow where the issue occurred
+    - whether the issue is isolated to this user or broader (get_opportunities scale
+      check)
+    - 'what to say to the customer: plain-language characterization of what happened'
+    - 'handoff payload for support: session ID, error chain, surface, time window'
+    suppress:
+    - statistical significance analysis — this is one customer account, not a population
+      study
+    - p95 latency breakdowns unless the complaint was specifically about speed
+    - magnitude framing without stating whether the issue is user-specific or widespread
+  stop_conditions:
+  - Session evidence confirms or disconfirms what the customer reported — issue characterized;
+    handoff payload for support ready; stop.
+  - Issue is not visible in the named user's sessions — state explicitly ('I cannot
+    reproduce this in [user]'s sessions in the reported window; the account of what
+    happened may differ from what Fullstory recorded'); stop and ask whether to broaden
+    to similar users.
+  - Issue is widespread (get_opportunities confirms at scale) — escalate to acct-mgmt
+    with 'this is broader than one user'; stop the single-user investigation and graduate
+    to exploratory-account-dossier or a population-level analysis.
+  asr: none
+- id: exploratory-account-dossier
+  description: 'Pre-meeting account research. Build a behavioral dossier of the account''s
+    users before a business conversation — so the CSM arrives knowing how this account''s
+    team actually uses the product, what they engage with vs. ignore, and whether
+    behavioral signals look healthy or at risk. This is the high-value CX job: proactive,
+    cohort-level (one account''s users), and produces a tangible artifact. The interpretive
+    question is: ''Is this account healthy, at risk, or churning?'' See behavioral_dossier
+    in persona-acct-mgmt.yaml for the canonical shared mechanism (W-43).
+
+    '
+  currency_code: UTL
+  currency: a behavioral dossier — a structured account picture the CSM can walk into
+    a conversation with; spending preparation time to arrive knowing more than the
+    customer
+  triggers:
+  - I have a meeting with this account next week
+  - preparing for a QBR with
+  - account review with
+  - I want to understand how this customer uses the product
+  - can you tell me about this account's behavior
+  - health check on this account
+  - is this account at risk
+  - what does this account actually do in the product
+  - need to prep for
+  - renewal is coming up
+  - not sure how engaged they are
+  currency_breadth: multi
+  spans:
+  - KNW
+  evidence_form: artifact
+  measure_resolution: direction_rate
+  entry_altitude: cohort
+  routes_to:
+  - audience: acct-mgmt
+    form: behavioral dossier — shared interpretive artifact; CX reads for churn signals,
+      AM reads for expansion signals
+  investigation_priors:
+    opening_move: 'Ask for the account name and any known user identifiers (email
+      domain, company attribute, Salesforce account ID if available). Build a cohort
+      of this account''s users using FS.identify attribute data. Then examine their
+      journeys, feature engagement breadth, and engagement trend across the last 30–90
+      days. Interpret against the health question: is this account actively expanding
+      use, stable, or showing attrition signals?
+
+      '
+    mcp_sequence:
+    - 'build_segment: users identified as belonging to this account (by email domain,
+      company attribute, or user property) — prefer existing segment IDs from org-foundation.md (or semantic-index.yaml on an old layer)
+      if a segment for this account exists'
+    - 'compute_metric: active user count for this account, last 30d and last 90d with
+      compare_to_previous=true — direction is the primary health signal'
+    - 'build_journey: common paths this account''s users take through the product'
+    - 'compute_journey: identify the 2–3 most-traveled paths; these reveal what this
+      account actually uses vs. what they were sold'
+    - 'build_segment from journey result: users on the primary path vs. users who
+      are diffuse or absent'
+    - 'compute_metric: session depth proxy — interactions per session, this account
+      vs. org-wide baseline'
+    - 'compute_metric: support-surface dwell — high dwell on the support surface signals
+      friction or unresolved issues'
+    - 'compute_metric: trend direction on active users using compare_to_previous=true'
+    - get_opportunities filtered to this account's segment — does StoryAI flag anything
+      for this account? (global fallback chain applies if empty or org is not Premium/Advanced)
+    - get_sessions on 3–5 representative sessions from this account — session_open
+      → session_view → session_close — to name the behavioral personas the data reveals
+  output_structure:
+    section_1: Account snapshot — active users (30d and 90d) with trend direction
+    section_2: What they actually use — top 2–3 journeys with user count and % of
+      account
+    section_3: What they avoid — surfaces in scope but with near-zero account engagement
+    section_4: Health signals — active-user trend, support dwell, any StoryAI-flagged
+      issues
+    section_5: Behavioral personas — 2–3 user types named from the session sample
+      (descriptive, not generic)
+    section_6: Interpretive verdict — healthy / stable / at-risk / churning, with
+      the evidence that drove it
+    section_7: Conversation hooks — 3 observations the account likely does not know
+      Fullstory can see
+  prescriptive_note: 'Interview flag: the exploratory dossier workflow is aspirational,
+    not universal. Most CSMs today open sessions reactively. The harness is designed
+    to change that default — but treat the output_structure as a target state, and
+    be ready to truncate to sections 1, 4, and 6 if the CSM has limited prep time.
+
+    '
+  stop_conditions:
+  - All seven dossier sections populated with account-specific evidence; interpretive
+    verdict stated with supporting signals; stop.
+  - Account has fewer than 10 identified users in Fullstory — state this limit explicitly
+    ('fewer than 10 identified users; dossier is directional only; session sample
+    may not be representative of the full account'); produce what is available and
+    stop.
+  - Account has no identified users at all — state that FS.identify is not implemented
+    for this account and a behavioral dossier is not possible; offer reactive-account-triage
+    as the alternative; stop.
+  asr: none
+- id: voc-journey-mapping
+  currency_code: TRS
+  currency: a trust-state verdict about a named account relationship — behavioral
+    evidence that the account is healthy, stable, or eroding, so that a recovery or
+    hold motion can be grounded in data
+  currency_breadth: single
+  spans: []
+  evidence_form: defensible_trend
+  asr: optional
+  description: 'Tracing the customer satisfaction arc across the full account lifecycle
+    — onboarding through active use through renewal risk — using Fullstory behavioral
+    data as a proxy for VoC signals. The CX analyst maps the trajectory of an account''s
+    platform engagement over weeks or months, looking for the behavioral signature
+    of a customer heading toward churn vs. one deepening their relationship with the
+    product. This is not a single-session investigation but a multi-session arc-altitude
+    analysis of account health.
+
+    '
+  triggers:
+  - Account escalated by renewal team; CX needs to build a behavioral health narrative
+  - VoC program quarterly review requires evidence-backed account trajectory mapping
+  - New CSM onboarding to an account needs a longitudinal behavioral orientation
+  entry_altitude: arc
+  routes_to:
+  - audience: acct-mgmt
+    form: 'renewal risk signal: does this behavioral arc suggest the account is warm
+      or at-risk?'
+  - audience: exec
+    form: 'account health arc: longitudinal behavioral trajectory for a named account'
+  stop_conditions:
+  - If the behavioral arc spans fewer than 8 weeks — note the limited window and treat
+    conclusions as directional
+  - If the account is in retail, gaming, or travel — redirect to acct-mgmt or support
+    per not_applicable_industries declaration in this profile
+- id: cx-voc-theme-arc
+  trigger: 'A voice-of-customer theme has appeared more than once, or a single dramatic
+    session is being treated as representative, and CX must decide whether the organization
+    should treat it as a pattern.
+
+    '
+  currency_code: KNW
+  currency: confirmed knowledge that this VoC theme is a real behavioral pattern —
+    prevalence and trajectory established across behavioral data, not carried by one
+    anecdote
+  currency_breadth: multi
+  spans: []
+  evidence_form: magnitude
+  entry_altitude: arc
+  asr: none
+  routes_to:
+  - audience: product-mgmt
+    form: VoC theme with prevalence, trajectory, and linked sessions
+  - audience: acct-mgmt
+    form: which named accounts sit inside the theme
+  stop_conditions:
+  - the theme is scoped (who, how often, over what window) rather than carried by
+    one anecdote
+accepts:
+- account-specific session replays (named user or account cohort)
+- cohort behavioral summaries filtered to one account
+- journey maps of how this account's users navigate the product
+- engagement trend metrics with 30d/90d comparison and direction
+- support-surface dwell as an account health proxy
+- small-n session samples (3–5) for behavioral persona naming
+rejects:
+- site-wide aggregate statistics without account-level filtering — CX needs account-level,
+  not org-wide
+- technical root cause detail without a customer-impact framing — what does this mean
+  for the relationship?
+- p95 latency tables without a plain-language account impact statement
+- priority scores or severity weights without connecting them to account health or
+  renewal risk
+- magnitude-only analysis without a directional health verdict
+volunteers:
+- 'After any reactive triage: ''Want me to run a quick health check on this account
+  while I have the sessions open? Takes 5 minutes and gives you context before you
+  call them back.''
+
+  '
+- 'After any analysis revealing low engagement or support-surface dwell spikes: the
+  interpretive verdict from the dossier frame — ''at-risk'' or ''churning'' with the
+  signals that drove it, unprompted.
+
+  '
+- 'When an account''s active-user trend is declining: flag to acct-mgmt via routes_to,
+  since declining accounts are both a churn risk (CX) and an expansion-risk signal
+  (AM).
+
+  '
+declines:
+- requests to estimate revenue impact of retaining vs. losing an account — that is
+  acct-mgmt or finance territory
+- requests to build product roadmap items from customer feedback — route to product-mgmt
+- requests to generate customer-facing deliverables — the dossier is internal; customer-facing
+  output uses /build-* skills
+tempo: slow
+room: 'CSMs operate in account review meetings, QBRs, executive business reviews,
+  and one-on-one check-in calls with champions and buyers. The audience in the room
+  is mixed: a champion who lives in the product daily and a VP who opens it monthly.
+  The CSM is the translator — they hold behavioral data from Fullstory and must make
+  it land for both. Framing matters: ''your team mainly uses X and ignores Y, and
+  that''s changed in the last 90 days'' is more useful than a funnel chart. The political
+  dimension is always present — the CSM is balancing the customer''s narrative of
+  their own experience against what Fullstory actually shows. Disconfirmation is valuable
+  and must be delivered with care, not buried.
+
+  '
+maturity_signals:
+- reactive-only CSM — engages Fullstory only when a customer escalates; never researches
+  an account before a meeting
+- proactive CSM — pulls a dossier before any substantive account meeting; treats behavioral
+  data as standard prep work
+- advanced CSM — monitors account health signals across their full book; surfaces
+  renewal risk before the customer mentions it
+industry_variance:
+- industry: saas
+  note: 'Primary home for this audience. SaaS invented the CSM function; the audience
+    profile is authored against SaaS norms. Account health maps directly to subscription
+    renewal; the dossier''s churn signals are behavioral evidence for a renewal conversation.
+    The harness design target (moving CSMs from reactive to exploratory) is most relevant
+    here — SaaS CSMs typically have the largest book and the strongest incentive to
+    scale pre-meeting research.
+
+    '
+- industry: fintech
+  note: 'CSM function exists in B2B fintech but is often titled relationship manager,
+    client success manager, or implementation manager. The workflow is largely the
+    same — dossier before a review, reactive triage when a client escalates — but
+    the account health stakes are higher: a fintech client migration is more costly
+    to reverse than a SaaS churn event. Regulatory context may constrain how behavioral
+    data is discussed with the client; surface the interpretive verdict internally
+    but confirm with the CSM before sharing session-level data in a customer-facing
+    meeting.
+
+    '

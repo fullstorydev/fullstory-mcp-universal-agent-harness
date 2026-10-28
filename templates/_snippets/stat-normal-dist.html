@@ -1,0 +1,52 @@
+<!-- STAT — NORMAL DISTRIBUTION CURVE
+     Routing gate: use ONLY when the question is "is this normally distributed?" or
+     "where does this value fall relative to the population?" Do not use for general trends.
+     CSS below: merge into your report's <style> block (do not add a second <style> tag).
+     Replace histogram bar heights and bell curve polyline points with real computed values.
+     μ line goes at the center (mean). Shade 1σ and 2σ regions for context.
+     MANDATORY: a .stat-narrative block must immediately follow this component.
+-->
+<style>
+.normal-dist { background:rgba(0,0,0,.18); border:1px solid var(--border); border-radius:12px; padding:20px; overflow:hidden; }
+.stat-narrative { background:rgba(7,199,153,.04); border:1px solid rgba(7,199,153,.15); border-left:3px solid var(--fs-green); border-radius:0 10px 10px 0; padding:16px 20px; margin-top:16px; }
+.stat-narrative-header { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--fs-green); margin-bottom:6px; }
+.stat-narrative-text { font-size:14px; color:var(--text-md); line-height:1.65; }
+</style>
+
+<div class="normal-dist">
+  <svg viewBox="0 0 400 160" width="100%" style="display:block;">
+    <!-- 2σ shaded region -->
+    <rect x="90" y="20" width="220" height="122" fill="rgba(7,199,153,.04)" rx="2"/>
+    <!-- 1σ shaded region -->
+    <rect x="145" y="20" width="110" height="122" fill="rgba(7,199,153,.06)" rx="2"/>
+    <!-- Histogram bars -->
+    <rect x="28" y="128" width="42" height="14" fill="rgba(7,199,153,.2)" rx="2"/>
+    <rect x="78" y="104" width="42" height="38" fill="rgba(7,199,153,.25)" rx="2"/>
+    <rect x="128" y="68" width="42" height="74" fill="rgba(7,199,153,.3)" rx="2"/>
+    <rect x="178" y="44" width="42" height="98" fill="rgba(7,199,153,.35)" rx="2"/>
+    <rect x="228" y="68" width="42" height="74" fill="rgba(7,199,153,.3)" rx="2"/>
+    <rect x="278" y="104" width="42" height="38" fill="rgba(7,199,153,.25)" rx="2"/>
+    <rect x="328" y="128" width="42" height="14" fill="rgba(7,199,153,.2)" rx="2"/>
+    <!-- Bell curve -->
+    <polyline points="18,144 49,130 99,105 149,69 199,44 249,69 299,105 349,130 381,144" fill="none" stroke="var(--fs-green)" stroke-width="2" stroke-linejoin="round"/>
+    <!-- μ center line -->
+    <line x1="199" y1="20" x2="199" y2="142" stroke="rgba(7,199,153,.7)" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <!-- σ boundary lines -->
+    <line x1="149" y1="100" x2="149" y2="142" stroke="rgba(7,199,153,.3)" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="249" y1="100" x2="249" y2="142" stroke="rgba(7,199,153,.3)" stroke-width="1" stroke-dasharray="3,3"/>
+    <!-- Axis labels -->
+    <text x="90" y="155" font-size="8" fill="rgba(255,255,255,.3)" text-anchor="middle" font-family="monospace">−2σ</text>
+    <text x="149" y="155" font-size="8" fill="rgba(255,255,255,.4)" text-anchor="middle" font-family="monospace">−1σ</text>
+    <text x="199" y="155" font-size="8" fill="rgba(7,199,153,.9)" text-anchor="middle" font-family="monospace">μ</text>
+    <text x="249" y="155" font-size="8" fill="rgba(255,255,255,.4)" text-anchor="middle" font-family="monospace">+1σ</text>
+    <text x="310" y="155" font-size="8" fill="rgba(255,255,255,.3)" text-anchor="middle" font-family="monospace">+2σ</text>
+  </svg>
+</div>
+
+<div class="stat-narrative">
+  <div class="stat-narrative-header">Statistical Finding</div>
+  <div class="stat-narrative-text">
+    <strong>Why this chart:</strong> Distribution shape was relevant here because the question was not just "what is the average?" but "what is the typical user actually experiencing?" — and whether high/low values are symmetric or skewed.<br><br>
+    <strong>Finding:</strong> The distribution approximates normal with μ = [N] and σ = [N]. [~68% of users / sessions] fall within one standard deviation of the mean. [If skewed: note the skew direction and what it means for the user population.] This confirms that [finding] is a population-wide pattern, not driven by a tail of extreme sessions.
+  </div>
+</div>

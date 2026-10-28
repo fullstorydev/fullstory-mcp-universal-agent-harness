@@ -1,0 +1,431 @@
+schema_version: 2
+# .claude/rails/industry-saas.yaml
+# Layer 2 industry profile — saas
+# Derivation engine Wave 3 / W-09
+#
+# ROLLBACK: rm .claude/rails/industry-saas.yaml
+#
+# This file is a parameter overlay. It carries no job definitions.
+# It is composed into audience profiles at runtime by the derivation engine (W-20).
+# Flat file — flat naming convention: industry-saas.yaml.
+
+industry: saas
+
+evidence:
+  sources:
+    - "industry/saas-lane-20260910.md"
+    - "intersection/engineering-x-saas-tim-20260909.md"
+  independence: self_sourced
+  notice: >
+    Primary industry source is Lane Greer (self-sourced) — the same person building this system.
+    The intersection interview (engineering-x-saas-tim-20260909.md) is from Tim, an Engineering
+    Manager with ~10 SaaS companies and 15 years of experience — an independent source outside
+    this team. Tim's interview provides independent corroboration for specific structural findings
+    (diffuse_journeys, instrumentation complexity, valence ambiguity in long sessions)
+    but is scoped to the engineering audience, not the industry at large. Overall independence is
+    self_sourced because the primary industry-level source is a single informant (Lane). Tim's
+    intersection interview is cited as independent corroboration only for the structural claims it
+    directly speaks to. Treat all authored values as hypotheses bounded by a single industry-level
+    informant.
+
+# ── END-USER CURRENCIES ───────────────────────────────────────────────────────
+# N-1 MANDATORY: derivation field is present. The currency mix cannot be measured
+# through the Fullstory MCP — no tool exposes time-per-behavior-category or intent
+# classification. This ranked list is an informed hypothesis, not a measurement.
+# Source: saas-lane-20260910.md — "Core currency is attention, full stop."
+# Build plan confirms: UTL primary, KNW secondary.
+
+end_user_currencies:
+  derivation: authored_pending_capability   # GUARD N-1 — mandatory; do not remove
+  ranked:
+    - UTL   # primary — Task Accomplishment & Management. "SaaS users come to USE the product."
+            # Spends: time, effort. Seeks: completed task, control over own state.
+    - KNW   # secondary — Information Seeking & Learning. Learning features, finding functionality,
+            # understanding how to use the product, interpreting its output.
+  toll: NAV  # wayfinding overhead is high in complex SaaS products with many micro-flows;
+             # NAV never appears in ranked[]; NAV is overhead on the real UTL/KNW exchange
+  minor: [INF, ACQ]
+  # INF (minor): in-app feedback, NPS widgets, changelog engagement are real and relevant;
+  #   broken INF (rage on feedback widget, unanswered survey) can precede churn.
+  #   Demoted, not absent — demote instructs calibration; absent would suppress detection.
+  # ACQ (minor): trial-to-paid conversion behavior is present in the behavioral layer
+  #   (pricing page visits, upgrade CTA engagement, plan comparison). The CONVERSION MOMENT
+  #   itself is a business-layer event not directly visible to Fullstory. Behavioral signals
+  #   that predict ACQ exist; the exchange itself does not appear in session data.
+  #   Demoted, not absent — keeps detection active for upgrade-path signals.
+  absent: [ENJ, BEL]
+  # ENJ: SaaS users are professionals interrupted by the product, not seekers who chose to
+  #   engage. Attention is scarce and task-focused. ENJ is not the mode in B2B SaaS.
+  # BEL: Community and social participation exist in some SaaS products (collaboration
+  #   features, community forums) but are not a universal SaaS end-user currency. Absent
+  #   at the industry level; can be added per-org through semantic layer annotation.
+
+  intents:
+    UTL:
+      - "complete a workflow or structured task"       # derivation: authored_pending_prototype
+      - "manage settings or configuration"             # derivation: authored_pending_prototype
+      - "retrieve or update a record"                  # derivation: authored_pending_prototype
+      - "monitor status or outcome"                    # derivation: authored_pending_prototype
+    KNW:
+      - "learn how to use a feature"                   # derivation: authored_pending_prototype
+      - "find a specific product capability"           # derivation: authored_pending_prototype
+      - "understand product output or report"          # derivation: authored_pending_prototype
+      - "locate documentation or help content"         # derivation: authored_pending_prototype
+
+  currency_note: >
+    CRITICAL CONSTRAINT — valence ambiguity on session duration. Long sessions in SaaS are not
+    inherently positive or negative. Two distinct states look identical in duration alone:
+    (1) Long session + high active_time + downstream task completion = deep engagement (UTL success).
+    (2) Long session + low active_time + no task completion = stuck (UTL failure).
+    Software has the highest session duration of all industries in the Fullstory benchmark set
+    (2,085 sec). Never report session duration for a SaaS org without corroborating active_time.
+    Source: benchmark-corpus.yaml industry_calibration_notes.saas — "Software has the strongest
+    session-duration valence ambiguity."
+
+    ACQ INVERSION — the trial-to-paid conversion is a business event, not a behavioral event.
+    What Fullstory captures is the behavioral evidence BEFORE this event: feature adoption
+    breadth, usage depth, return frequency. These are the behavioral predictors of conversion.
+    North Star metric design is the mechanism for bridging this gap — it must be defined per org,
+    not inherited from a retail or generic SaaS template.
+    Source: saas-lane-20260910.md.
+
+# ── FLOW SHAPE ────────────────────────────────────────────────────────────────
+# No single conversion path. The product is the loop. Value delivery is recurring, not
+# transactional. North Star metric is SaaS-specific and does not map to checkout-style
+# ACQ funnels. Both sources confirm: many discrete micro-flows, no dominant acquisition path.
+# Source: saas-lane-20260910.md; engineering-x-saas-tim-20260909.md (independent).
+
+flow_shape: diffuse_journeys
+
+# ── SURFACE CLASSES ───────────────────────────────────────────────────────────
+# Three functional stages for SaaS. MANIFEST surfaces used: entry, auth, search, account,
+# support, content — all valid N-5 keys. Product micro-flows (feature workflows) are not
+# represented in MANIFEST surface keys; they bind per org through semantic-layer surface-map.yaml.
+
+surface_classes:
+  - name: onboarding_and_identity
+    surfaces: [entry, auth]
+    purpose: "Entry gate and identity establishment. UTL: users need to get in, not be obstructed."
+    note: >
+      Auth is the onboarding entry point in SaaS. Failure here blocks everything downstream.
+      Bounce at auth is almost certainly failure — there is no browsing alternative in a SaaS
+      auth screen. Rage clicks on login or registration are UTL exchange failures with churn
+      adjacency: a user who cannot access the product cannot be retained.
+      Severity weight: auth failure blocks the entire product surface.
+
+  - name: product_surface
+    surfaces: [search, account]
+    purpose: "Core product interaction — UTL dominant. Finding features, completing tasks, managing state."
+    note: >
+      SaaS product surfaces are highly org-specific and do not map cleanly to MANIFEST surface
+      keys. 'search' covers in-app search and record lookup (UTL); 'account' covers settings,
+      team management, and billing (UTL). The actual product micro-flows (feature workflows)
+      are not represented in MANIFEST surface keys — they bind through semantic-layer
+      surface-map.yaml per org. An unbound surface degrades to org-wide signal order; state
+      this out loud, never silently.
+      Dead clicks on product surfaces carry elevated weight in SaaS (618.2/1k — highest of all
+      industries). Before escalating, verify the element is instrumented.
+
+  - name: help_and_retention
+    surfaces: [support, content]
+    purpose: "INF and KNW exchange — user seeking resolution or learning. High churn-adjacency."
+    note: >
+      Support surfaces carry higher stakes in SaaS than in retail: a broken support experience
+      can directly precede churn. Rage clicks on contact forms or help widgets signal failed INF
+      exchange. Long dwell on content/docs is usually KNW success (learning) — unlike retail,
+      where long content sessions are ambiguous. But repeated return to the same doc with no
+      downstream task completion is a KNW→UTL handoff failure: the user found the information
+      but could not apply it in the product.
+
+# ── SEVERITY ORDER ────────────────────────────────────────────────────────────
+# Descending stakes — where a failure costs the most.
+# All values must be MANIFEST surface keys (N-5).
+# In SaaS, auth failure is the highest-stakes failure: it blocks product access entirely.
+# Checkout, cart, confirmation, pdp, plp are not applicable — not in severity_order.
+
+severity_order: [auth, account, support, search, entry, content]
+# auth: failure blocks product access entirely; direct churn risk
+# account: billing and settings failures have direct churn risk; users expect control
+# support: broken support experience precedes churn in SaaS
+# search: UTL failure on record/feature lookup blocks task completion
+# entry: first impression, onboarding; lower stakes than in-product failures
+# content: KNW surface; lower stakes unless repeated return without task resolution
+
+# ── REFERENCE POINT ───────────────────────────────────────────────────────────
+# How benchmarks are framed for SaaS customers.
+# Source: engineering-x-saas-tim-20260909.md (independent) — comparison is internally
+# constructed per feature. Source: saas-lane-20260910.md — own historical baseline.
+
+reference_point: "own historical baseline with per-feature construction"
+reference_point_note: >
+  SaaS benchmark comparison is feature-specific and internally constructed, not cross-org.
+  For product launch evaluation, the reference is: does this feature's retention, adoption
+  breadth, and return frequency meet the expectation constructed for this feature at ship time?
+  No external benchmarks were cited by Tim — reference points are defined per feature by the
+  team. Source: engineering-x-saas-tim-20260909.md (independent) — "Comparison is internally
+  constructed per feature. No external benchmarks mentioned."
+
+  For signal-level metrics (dead clicks, rage clicks, session duration), the reference point
+  is the org's own historical baseline. Cross-industry benchmarks (e.g., Software dead clicks
+  at 618.2/1k — highest of all industries) provide orientation but cannot substitute for
+  org-specific baselines: what's normal for a complex IDE differs fundamentally from a simple
+  scheduling tool. Source: saas-lane-20260910.md.
+
+  Industry benchmarks (Fullstory 2026 Benchmark Report, benchmark-corpus.yaml) are a valid
+  secondary frame — use them to contextualize a finding or answer "is this normal for SaaS?"
+  Never as the primary comparison axis. Never represent cross-org Fullstory data as customer-
+  specific; cite the published report by name.
+
+# ── SUBSTRATE TOLERANCE ───────────────────────────────────────────────────────
+# CWV bands sourced from Google Core Web Vitals specification.
+# Literal numeric values are legal under the unified N-2/N-4 rule: they cite an external
+# published standard (Google) that does not vary by org.
+
+substrate_tolerance:
+  lcp_alert_boundary: needs_improvement
+  lcp_alert_ms: 2500
+  source: "Google Core Web Vitals specification — Needs Improvement boundary, web.dev/vitals"
+  rationale: >
+    SaaS professionals arrive with task intent, not browsing tolerance. A professional who loses
+    their task context mid-flow due to slow load is more likely to abandon or file a complaint
+    than a retail browser who can scroll elsewhere. The UTL exchange cannot wait for a Poor LCP
+    rating (4000ms). Alert at the Needs Improvement boundary (2500ms) — the same boundary as
+    retail, but for a different reason: UTL flow interruption, not ACQ abandonment.
+    Source of rationale: saas-lane-20260910.md — "Attention is scarce in B2B SaaS: users are
+    professionals interrupted by the product, not seekers who chose to engage."
+
+  cwv_reference:
+    LCP:  { good_ms: 2500, ni_ms: 4000, measure: p75, source: "Google Core Web Vitals specification" }
+    INP:  { good_ms: 200,  ni_ms: 500,  measure: p75, source: "Google Core Web Vitals specification" }
+    CLS:  { good: 0.10,    ni: 0.25,    measure: p75, source: "Google Core Web Vitals specification" }
+    FCP:  { good_ms: 1800, ni_ms: 3000, measure: p75, source: "Google Core Web Vitals specification" }
+    TTFB: { good_ms: 800,  ni_ms: 1800, measure: p75, source: "Google Core Web Vitals specification" }
+    deprecated: "FID — replaced by INP March 2024. Never reference FID in any profile or deliverable."
+
+# ── LEXICON ───────────────────────────────────────────────────────────────────
+# Industry-specific interpretations. Maps terms to their meaning in SaaS context.
+# These are authored disambiguation rules, not a term dictionary.
+# Sources: saas-lane-20260910.md, engineering-x-saas-tim-20260909.md.
+
+lexicon:
+  churn: >
+    Behavioral data contains no churn signal. A churning user looks behaviorally identical to
+    a user on vacation or on leave. There is no exit event to instrument, no behavioral farewell.
+    Absence is the signal — and absence requires temporal context (arc-altitude analysis, not
+    session or cohort) to distinguish intended non-use from departure. Do not claim churn
+    detection from session-level behavioral data. Churn prediction in SaaS requires arc-altitude
+    cross-session analysis of usage absence patterns over time.
+    Source: saas-lane-20260910.md — "There's no natural churn signal — a retail customer fades
+    out over months or years, but SaaS actively tracks recurring engagement so absence is
+    immediately visible."
+
+  north_star_metric: >
+    A single behavioral proxy metric that predicts long-term retention for THIS specific product.
+    Not a generic metric — it must be defined per org, not inherited. Canonical example: Facebook's
+    "7 friends in 7 days" predicted an 85%+ chance of becoming a weekly active user. The North Star
+    metric is a SaaS-only mechanism; retail and travel have no structural equivalent because their
+    business models are transactional rather than recurring. When building analysis for a SaaS org,
+    ask: "Has this org defined their North Star metric?" If not, use behavioral breadth × depth ×
+    return-frequency as the working proxy. Do not assume any generic metric (session count, page
+    views, time on site) is the North Star without org confirmation.
+    Source: saas-lane-20260910.md — "A single behavioral proxy metric that predicts long-term
+    retention. Retail and travel don't have an equivalent — their business models don't require one.
+    This is a genuine SaaS-only mechanism, not a generic success metric with a SaaS flavor."
+
+  trial_to_paid: >
+    The ACQ exchange moment in SaaS is the trial-to-paid (or freemium-to-paid) conversion. This
+    is a business-layer event — it occurs in a CRM, billing system, or payment provider, not in
+    the product's behavioral session data. What Fullstory captures is the behavioral evidence
+    BEFORE this event: feature adoption breadth (how many distinct workflows the user has engaged),
+    usage depth (session frequency, active time), return frequency. Design analysis around the
+    behavioral predictors; do not claim to observe the ACQ conversion directly.
+    Source: saas-lane-20260910.md.
+
+  long_session: >
+    Valence is ambiguous — never report in isolation.
+    (1) Long session + high active_time + downstream task completion = deep engagement (UTL success).
+    (2) Long session + low active_time + no task completion = stuck (UTL failure).
+    Software has the highest session duration of all industries in the benchmark set (2,085 sec).
+    Discrimination: high scroll_depth (SaaS benchmark: 84%) corroborates active engagement.
+    Low scroll_depth + low active_time + no completion = stuck. Always corroborate before
+    presenting session duration as a finding.
+    Source: benchmark-corpus.yaml — "Software has the strongest session-duration valence ambiguity."
+
+  bounce: >
+    In SaaS, bounce is almost certainly failure. Unlike retail (where a visitor may arrive with
+    brand-curiosity intent and complete a valid ENJ exchange), SaaS users arrive with task intent.
+    A user who bounces from a SaaS product did not accomplish their task. There is no browsing
+    alternative. Do not normalize SaaS bounce rates without investigating what task failed.
+    Source: saas-lane-20260910.md.
+
+  dead_click: >
+    SaaS has the highest dead click rate of all industries (618.2/1k sessions — Fullstory 2026
+    Benchmark Report). Dead clicks in SaaS concentrate on product UI controls: settings interfaces,
+    wizard steps, multi-step forms, navigation elements. Two failure shapes:
+    (1) Instrumentation gap — the element is a custom component without a data-testid attribute;
+    Fullstory cannot identify it, but the click still registers as dead.
+    (2) Genuine breakage — a UI state the component cannot handle (race condition, modal sequence,
+    wizard step out of order). Verify instrumentation coverage before escalating as breakage.
+    Source: benchmark-corpus.yaml — "highest_dead_clicks: 618.2/1k."
+    Source: engineering-x-saas-tim-20260909.md (independent) — data-testid approach as mitigation.
+
+  active_usage: >
+    DAU/WAU/MAU framework and active/idle time split are the standard SaaS engagement model.
+    Unlike retail (episodic, absence expected), SaaS expects recurring engagement — absence is
+    immediately visible. Active usage breadth (how many distinct workflows a user touches) predicts
+    retention better than raw session count. Users who adopt more features churn less. Absence
+    patterns are the leading churn signal; they require arc-altitude analysis to distinguish from
+    legitimate non-use (leave, seasonal variation, planned downtime).
+    Source: saas-lane-20260910.md.
+
+  micro_flow: >
+    A discrete, self-contained workflow within a SaaS product — creating a contact, generating a
+    report, setting up an integration, inviting a teammate, configuring a rule. SaaS products have
+    many micro-flows rather than one key funnel. Instrumentation must be deliberate: automatic
+    tracking cannot cover every flow, so engineering teams make intentional choices about what to
+    measure. A SaaS analysis that assumes a single primary funnel has imported a retail mental model
+    incorrectly — and may be optimizing a funnel that does not reflect how users actually extract
+    value from the product.
+    Source: engineering-x-saas-tim-20260909.md (independent).
+    Source: saas-lane-20260910.md — "Friction matters across the entire product surface."
+
+  feature_adoption: >
+    The behavioral proxy for ACQ in SaaS. Breadth (number of distinct features engaged) × depth
+    (frequency and time spent per feature) × return frequency is the standard triangulation for
+    predicting trial-to-paid conversion and retention. Feature adoption is not directly measurable
+    through the Fullstory MCP as a single metric — it requires segment construction targeting users
+    who have engaged with specific elements across multiple sessions. Arc-altitude analysis is
+    required: a single session does not capture adoption trajectory.
+    Source: saas-lane-20260910.md; engineering-x-saas-tim-20260909.md (independent).
+
+# ── BLIND SPOTS ───────────────────────────────────────────────────────────────
+# Systematic things SaaS orgs miss or under-instrument.
+# Sources: saas-lane-20260910.md, engineering-x-saas-tim-20260909.md.
+
+blind_spot:
+  - >
+    Churn is invisible at session and cohort altitude: a churning user and a user on leave look
+    behaviorally identical. Absence is the signal — but absence requires arc-altitude analysis
+    across time windows to distinguish from legitimate non-use. Never claim churn detection from
+    session-level or cohort-level data without temporal arc analysis.
+    Source: saas-lane-20260910.md.
+
+  - >
+    Checkout funnel does not exist in SaaS: analysts trained on retail look for a primary
+    conversion funnel to optimize. SaaS has no checkout-equivalent. The diffuse_journeys
+    finding is structural, not a measurement gap. Building analysis around a single conversion funnel
+    misrepresents how SaaS value delivery works — recurring use is the model, one-time transaction is not.
+    Source: engineering-x-saas-tim-20260909.md (independent); saas-lane-20260910.md.
+
+  - >
+    Session duration reported without active_time corroboration: Software has the highest session
+    duration of all industries (2,085 sec). Long sessions are ambiguous. Any session duration
+    finding that does not corroborate with active_time is potentially misleading.
+    Source: benchmark-corpus.yaml industry_calibration_notes.saas.
+
+  - >
+    North Star metric assumed to be generic: a SaaS org that has not defined its own North Star
+    metric cannot be analyzed for "product success" with off-the-shelf metrics. Before drawing
+    retention or adoption conclusions, confirm whether the org has a defined North Star metric —
+    or establish feature adoption breadth × depth × return frequency as the working proxy.
+    Source: saas-lane-20260910.md.
+
+  - >
+    Bounce treated as indecision: unlike retail, SaaS bounces are almost always failure. A user
+    who bounced had task intent and did not complete it. Do not normalize SaaS bounce rates without
+    investigating what task failed.
+    Source: saas-lane-20260910.md.
+
+  - >
+    Dead clicks escalated without instrumentation check: SaaS dead clicks at 618.2/1k are the
+    highest of any industry. Before escalating a dead-click finding, verify that the element is
+    properly instrumented (data-testid or named in the semantic layer). Uninstrumented custom
+    components are a leading cause; this is an engineering concern, not a UX problem.
+    Source: engineering-x-saas-tim-20260909.md (independent); benchmark-corpus.yaml.
+
+  - >
+    Error rates treated as standalone churn signals: engineering teams in SaaS care about error
+    rates because they correlate with churn prediction. However, the correlation between individual
+    session errors and churn requires arc-altitude longitudinal analysis to establish. A single
+    session's errors do not predict churn; patterns across sessions and across a user's arc do.
+    Do not claim error → churn causality from session-level data.
+    Source: engineering-x-saas-tim-20260909.md (independent) — PM gets friction findings, EM gets
+    errors; PM/EM routing is internal signal, not churn attribution.
+
+# ── DEFAULT SPLITS ────────────────────────────────────────────────────────────
+# Dimensions to always apply when analyzing SaaS data.
+
+default_splits:
+  always_apply: [new_vs_returning]
+  new_vs_returning_note: >
+    In SaaS, new vs. returning closely maps to onboarding vs. retained. New users are in KNW
+    mode (learning the product, finding features); returning users are in UTL mode (using the
+    product to accomplish tasks). Behavioral patterns differ: new users show higher scroll depth
+    and longer time on content/onboarding surfaces; returning users show faster navigation and
+    higher dead-click rates on known workflows. Always segment SaaS findings by new vs. returning
+    before attributing any metric to product friction vs. onboarding friction.
+  optional: [plan_tier, device, user_segment]
+  plan_tier_note: >
+    Free, trial, paid, and enterprise users have distinct behavioral profiles in SaaS. A dead-click
+    rate on a premium feature surface may indicate paid-tier usability failure OR a free-tier
+    paywall encounter — these require different responses. Segment by plan tier before attributing
+    findings to UX problems. Plan-tier segmentation is only available when the org has configured
+    custom attributes in Fullstory; verify in the semantic layer before attempting this split.
+  device_note: >
+    SaaS is primarily desktop. Mobile findings often represent a distinct user mode (monitoring
+    dashboards, approval flows, quick lookups) rather than a mobile-optimized product surface.
+    Report mobile findings separately; do not blend with desktop. Mobile SaaS rage click rates
+    may not carry the same severity weight as mobile retail — the user mode is different.
+  suppress_when: "cell n < 100 — matches CLAUDE.md small-sample rule; do not split when n starves the cell"
+
+# ── DX DIMENSIONS ─────────────────────────────────────────────────────────────
+# Signal-level benchmarks for SaaS/Software from the Fullstory 2026 Benchmark Report.
+# Note: DX Score dimension bands (forms_and_checkouts, call_to_action, etc.) are not
+# available per industry in the current benchmark data — those bands apply to the retail
+# profile where DX Score dimension data is available. The figures below are signal-level
+# industry benchmarks from benchmark-corpus.yaml industry_calibration_notes.saas.
+# These are reference points, not runtime thresholds (N-4).
+# Format uses `reference` (single-point) rather than `band` (range) because
+# industry-level benchmark data for SaaS surfaces at single-point figures, not ranges.
+
+dx_dimensions:
+  - name: dead_click_rate
+    reference: 618.2
+    unit: "per_1k_sessions"
+    interpretation: "highest of all industries"
+    note: >
+      Dead clicks in SaaS concentrate on product UI controls: settings interfaces, wizard steps,
+      navigation elements. Two causes: (1) uninstrumented custom components, (2) genuine UI
+      breakage in complex state sequences. Verify instrumentation before escalating as breakage.
+      Engineering-audience finding: data-testid coverage directly reduces the dead-click
+      diagnostic burden.
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+
+  - name: session_duration
+    reference: 2085
+    unit: "seconds"
+    valence: ambiguous
+    interpretation: "highest of all industries"
+    note: >
+      Ambiguous signal. Long session + high active_time = engaged (UTL success).
+      Long session + low active_time + no task completion = stuck (UTL failure).
+      Never report this figure without active_time corroboration. Scroll depth (84%) is the
+      primary secondary signal: high scroll + high duration suggests genuine engagement.
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+
+  - name: scroll_depth
+    reference: 84
+    unit: "percent"
+    interpretation: "highest of all industries"
+    note: >
+      SaaS users will work hard to find information. High scroll depth combined with low downstream
+      task completion is a KNW→UTL handoff failure: the user found the information but could not
+      apply it in the product. High scroll depth alone is a positive signal; it degrades when
+      combined with no-task-completion and repeated return to the same surface.
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+
+# ── QUESTIONS ─────────────────────────────────────────────────────────────────
+# Empty stub — schema matches industry-gaming.yaml segments.igaming.questions.
+# Fill after an SME interview produces saas-specific analytical questions.
+# Item schema: id, tag (generalizable | gambling_specific), ask, maps_to_persona
+questions: []

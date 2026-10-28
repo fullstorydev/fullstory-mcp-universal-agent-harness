@@ -1,0 +1,236 @@
+# GENERATED — do not edit manually
+# rail-format-version: 1.0
+# Generated: 2026-10-28
+audience: support
+industry: gaming
+entry_altitude: arc
+tempo: fast
+truncation: 3
+currency_mix:
+- TRS
+- ENJ
+- BEL
+- ACQ
+exec_rollup: false
+signals:
+- signal: post_incident_depth_drop
+  currency: TRS
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: confirm trust actually recovered after a fix
+- signal: cautious_return_dead_click
+  currency: TRS
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: confirm trust actually recovered after a fix
+- signal: session_recurrence_on_error
+  currency: TRS
+  class: exchange
+  requires_segment: true
+  benchmark_deviation: null
+  intent: identify systemic failure behind repeat contacts
+generation_meta:
+  pattern_signals_excluded: 0
+  missing_benchmark_count: 18
+  derive_version: '1.0'
+
+# ── Jobs (appended by compose_cells_for_oss) ──
+jobs:
+- id: self_service_gap_review
+  source: prior-corpus, not kelsey-20260915
+  trigger: 'A pattern of inbound tickets suggests users attempted self-service before
+    reaching support — they searched help content, scanned FAQ pages, or navigated
+    to documentation and still submitted a case. The support agent needs to understand
+    whether the knowledge base is failing a cohort of users at a specific step, not
+    just a single caller.
+
+    '
+  currency_code: KNW
+  currency: time and effort spent seeking the right information to resolve a question
+    independently (KNW)
+  currency_breadth: cohort
+  spans: []
+  evidence_form: pattern
+  measure_resolution: count_rate
+  entry_altitude: cohort
+  presentation:
+    lead_with: 'The cohort definition and its size. Engineering and content teams
+      need a reproducible group definition, not a single session reference.
+
+      '
+    include:
+    - 'cohort definition: the signal pattern that identifies users who searched-and-failed'
+    - 'count + rate: how many users hit this pattern in the relevant window'
+    - knowledge surface where the gap concentrates
+    suppress:
+    - proactive recommendations outside the ticket-driven scope
+    - individual session narratives
+  asr: none
+- id: initial_triage
+  source: kelsey-20260915
+  trigger: what the heck is the customer talking about?
+  currency_code: UTL
+  currency: time and effort spent understanding what actually happened before routing
+  currency_breadth: single
+  spans: []
+  evidence_form: artifact
+  entry_altitude: session
+  form: description-first; located replay only if the description does not resolve
+    it
+  asr: optional
+  presentation:
+    lead_with: A text description of what the customer ran into.
+    include:
+    - description of what actually happened
+    - session replay link only if the text description does not resolve the question
+    suppress:
+    - raw replay dump as the first artifact — do not lead with a session link
+    - long-form session narratives
+    - meeting-shaped readout
+  stop_conditions:
+  - routed to expectation_mismatch_cya
+  - routed to bug_scope_check
+  - '"refresh and retry" if clearly a one-off with no pattern'
+  rejects:
+  - a long session recording with no located moment to watch
+- id: expectation_mismatch_cya
+  source: kelsey-20260915
+  trigger: is the customer telling the truth or did they mis-remember?
+  currency_code: UTL
+  currency: evidentiary artifact that determines whether the UI was genuinely unclear
+    or the customer is mistaken
+  currency_breadth: single
+  spans: []
+  evidence_form: artifact
+  entry_altitude: session
+  form: screenshot + exact copy (evidentiary artifact, not a metric)
+  asr: required
+  presentation:
+    lead_with: The screenshot and exact copy the customer was shown at that moment.
+    include:
+    - screenshot of the UI at the relevant moment (ASR)
+    - exact copy shown to the customer at that moment
+    suppress:
+    - metrics or benchmarks — this is a direct evidentiary check, not a comparison
+    - climbing to population on branch A (customer at fault)
+    - anything short of the screenshot — copy alone is not enough
+  stop_conditions:
+  - 'branch A — customer at fault: screenshot is enough to push back if they complain'
+  - 'branch B — UI genuinely confusing: not done until count of people who saw that
+    UI plus ticketing-system corroboration sufficient to argue for a product change'
+  - session_close
+  rejects:
+  - anything short of the screenshot — copy alone is not sufficient
+- id: bug_scope_check
+  source: kelsey-20260915
+  triggers:
+  - who else is impacted by this bug?
+  - what is the scope of people impacted?
+  - which of our largest customers impacted?
+  currency_code: UTL
+  currency: scope definition and account impact sufficient for an engineering ticket
+  currency_breadth: population
+  spans: []
+  evidence_form: pattern
+  entry_altitude: cohort
+  form: eng-ticket-ready writeup — affected conditions/segments, percentage of total
+    customers with denominator, named high-paying/VIP accounts
+  asr: optional
+  required_output_fields:
+  - segment definition (affected conditions/segments — e.g. old IE version, beta flag)
+  - count + rate with denominator
+  - named high-value accounts (from support.vip_definition when present; if property
+    is missing, state so and still give percentage — do not invent account names)
+  reference_point: 'No fixed baseline — judged on absolute magnitude (0.2% vs. 20%)
+    AND whether it skews to high-value accounts. [seen/principle/support-saas]
+
+    '
+  presentation:
+    lead_with: Scope — which accounts are impacted, what percentage, and whether high-value
+      accounts are among them.
+    include:
+    - segment definition with affected conditions (re-runnable by engineering)
+    - count + rate with denominator
+    - named high-value accounts from support.vip_definition
+    - note when vip_definition is absent — give percentage, do not invent account
+      names
+    - technical detail (selector, failed request) visible — both support leaders and
+      ICs review the eng ticket before it goes out
+    suppress:
+    - error message alone without scope — directional but not trustworthy
+    - magnitude-only without segment definition
+  stop_conditions:
+  - enough to send a customer response and file a ticket that engineering will not
+    bounce back asking for more
+  rejects:
+  - a specific error message with no scope attached — interesting and directional
+    but not enough on its own
+- id: pre_training_call_prep
+  source: kelsey-20260915
+  trigger: how familiar with our product is this team I'm about to meet?
+  currency_code: KNW
+  currency: per-invitee usage profile skimmable before a training call
+  currency_breadth: cohort
+  spans: []
+  evidence_form: pattern
+  entry_altitude: cohort
+  form: skimmable in ~30 seconds, directional only — supplements live questions on
+    the call, does not replace asking them
+  asr: none
+  needs:
+  - time in product (per invitee, attending or not)
+  - help articles read recently (if visible in Fullstory)
+  - first-session recency (tenure signal)
+  - top features used
+  - 'job titles: out of band (LinkedIn). Do not pretend MCP has job titles.'
+  stop_conditions:
+  - a quick skim is sufficient; no deeper digging needed before the call
+  rejects: []
+- id: support-repeat-contact-and-known-issue-arc
+  source: prior-corpus, not kelsey-20260915
+  trigger: 'The same issue is generating contacts across days or customers, or one
+    customer is returning after a supposedly closed ticket, and FCR metrics no longer
+    describe the problem.
+
+    '
+  currency_code: TRS
+  currency: evidence that the failure is a pattern, so recovery can be systemic rather
+    than one-ticket
+  currency_breadth: single
+  spans: []
+  evidence_form: magnitude
+  entry_altitude: arc
+  asr: none
+  routes_to:
+  - audience: product-mgmt
+    form: known-issue brief with volume, recurrence window, and session evidence
+  - audience: customer-experience
+    form: which customers are in a broken recovery journey
+  stop_conditions:
+  - the issue is scoped as isolated vs. recurring vs. systemic
+  - a recovery owner exists outside the original ticket
+- id: support-trust-recovery-followthrough
+  source: prior-corpus, not kelsey-20260915
+  trigger: 'A severe or public failure has been ''fixed'' in the product but the affected
+    customers'' subsequent sessions still show hesitation, workaround, or abandonment.
+
+    '
+  currency_code: TRS
+  currency: whether trust actually returned after the fix, not whether the ticket
+    closed
+  currency_breadth: single
+  spans: []
+  evidence_form: mechanism
+  entry_altitude: arc
+  asr: required
+  routes_to:
+  - audience: customer-experience
+    form: post-recovery behavior of the affected cohort vs. a matched cohort
+  stop_conditions:
+  - frustration signals (rage click, error click, reload) on the affected surface
+    return to ≤ pre-incident 28-day baseline AND hold for 7 days post-fix
+  - the original incident event type is absent from the affected cohort's return sessions
+  - a further recovery action is either justified or explicitly closed
+  - session_close

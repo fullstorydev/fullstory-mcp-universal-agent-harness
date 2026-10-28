@@ -1,0 +1,50 @@
+<!-- FUNNEL — VERTICAL BAR CHART
+     Use: headline funnel. One per report. Full-width section, never inside a tile.
+     Color: entry/convert = green | walls = var(--fs-pink) | survive = var(--fs-orange)
+     data-drop-type: "loss" → red badge | "pass" → orange badge
+     Bar heights are CSS-driven; min-heights: wall2=24px, survive=32px, convert=16px
+     Last .vbar-col (convert) carries no data-drop attributes.
+-->
+<div class="vbar-chart">
+  <div class="vbar-col" data-drop="−62%" data-drop-type="loss">
+    <div class="vbar-spacer"></div>
+    <div class="vbar-bar entry">
+      <div class="vbar-val">24,800</div>
+      <div class="vbar-pct">users</div>
+    </div>
+  </div>
+  <div class="vbar-col" data-drop="3.2%" data-drop-type="pass">
+    <div class="vbar-spacer"></div>
+    <div class="vbar-bar wall1">
+      <div class="vbar-val">15,380</div>
+      <div class="vbar-pct">blocked</div>
+    </div>
+  </div>
+  <div class="vbar-col" data-drop="−71%" data-drop-type="loss">
+    <div class="vbar-spacer"></div>
+    <div class="vbar-bar survive">
+      <div class="vbar-val">~793</div>
+      <div class="vbar-pct">3.2%</div>
+    </div>
+  </div>
+  <div class="vbar-col" data-drop="&lt;1%" data-drop-type="pass">
+    <div class="vbar-spacer"></div>
+    <div class="vbar-bar wall2">
+      <div class="vbar-val">~228</div>
+      <div class="vbar-pct">blocked</div>
+    </div>
+  </div>
+  <div class="vbar-col">
+    <div class="vbar-spacer"></div>
+    <div class="vbar-bar convert">
+      <div class="vbar-val">&lt;100</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;">
+  <div class="vbar-label" style="flex:1"><strong>Entry</strong>Funnel Start</div>
+  <div class="vbar-label" style="flex:1;color:var(--fs-pink);"><strong style="color:var(--fs-pink);">Wall 1</strong>Step Name</div>
+  <div class="vbar-label" style="flex:1;color:var(--fs-orange);"><strong style="color:var(--fs-orange);">Survivors</strong>~3.2%</div>
+  <div class="vbar-label" style="flex:1;color:var(--fs-pink);"><strong style="color:var(--fs-pink);">Wall 2</strong>Step Name</div>
+  <div class="vbar-label" style="flex:1;color:var(--fs-green);"><strong style="color:var(--fs-green);">Converted</strong>&lt;1%</div>
+</div>

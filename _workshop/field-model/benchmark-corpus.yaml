@@ -1,0 +1,973 @@
+schema_version: 1
+# _workshop/field-model/benchmark-corpus.yaml
+# Metric × slice × currency benchmark table for the derivation engine.
+#
+# Used in derivation rule R1, Step 2: benchmark deviation ranking.
+# A candidate signal's value is compared against the applicable slice + industry cell
+# to determine how far the org deviates from the reference point.
+#
+# ROLLBACK: rm _workshop/field-model/benchmark-corpus.yaml
+#
+# ── PROVENANCE ───────────────────────────────────────────────────────────────
+# Source: Fullstory 2026 Benchmark Report, CY2025
+# Scale: 2,600+ orgs, 18.7B sessions
+# Publisher: Fullstory (internal product benchmarks team)
+# Publication type: First-party aggregate report, publicly released
+#
+# N-2 RULING: Every literal number in this file carries an implicit source that
+# resolves to the corpus-wide source declared above. Explicit per-entry source
+# fields are omitted for readability; "benchmark-corpus.yaml" is the declared
+# source for all downstream citations. Any profile file that cites a literal
+# from this file should write: source: "Fullstory 2026 Benchmark Report,
+# CY2025 — see benchmark-corpus.yaml for full table"
+#
+# N-3 RULING: These figures are anonymized, aggregated cross-org population
+# statistics published by Fullstory. They do not attribute any individual
+# customer's data. N-3 guard ("no cross-org data attributed to Fullstory") is
+# satisfied: these are Fullstory's own published figures, not a disclosure of
+# one customer's data presented as if it were Fullstory's internal benchmark.
+#
+# THIRD-PARTY PROVENANCE NOTE: This is not third-party by strict definition —
+# Fullstory published it. It is classified here as a Fullstory-published aggregate
+# benchmark report. It satisfies N-3's spirit (individual orgs are not identifiable).
+# Per industry-retail.yaml precedent: this source is already cited in existing
+# production files. See benchmark-corpus.yaml provenance decision, 2026-09-10.
+#
+# ── INDUSTRY → RAILS MAPPING ─────────────────────────────────────────────────
+# Benchmark columns use the following mapping to MANIFEST.yaml industries:
+# Retail     → retail
+# Finance    → fintech  (banking, insurance, investment — includes fintech)
+# Travel     → travel   (travel & hospitality)
+# Software   → saas     (B2B software / SaaS)
+# Gaming     → gaming   (includes gambling, sports betting)
+# Food&Bev   → (no matching rail; closest: retail or travel by model)
+# Business   → (no matching rail; closest: saas for B2B context)
+#
+# Source: benchmarks-distilled.md — Industry → Rails Mapping section
+
+corpus_source:
+  report: "Fullstory 2026 Benchmark Report"
+  period: "CY2025"
+  orgs: "2600+"
+  sessions: "18.7B"
+  publisher: "Fullstory"
+  publisher_type: "first_party_aggregate"
+  n2_status: "every literal number in this file satisfies N-2 via this corpus-level source"
+  n3_status: "anonymized aggregate — no individual org is identifiable"
+
+industry_to_rails_mapping:
+  Retail: retail
+  Finance: fintech
+  Travel: travel
+  Software: saas
+  Gaming: gaming
+  Food&Bev: null  # no matching rail; closest: retail or travel
+  Business: null  # no matching rail; closest: saas
+
+# ── METRIC DEFINITIONS ───────────────────────────────────────────────────────
+# Each metric lists its unit, direction, signal class, and currency mapping.
+# These mirror the metric index in benchmarks-distilled.md.
+#
+# IMPORTANT — session_duration valence rule (Commitment 2):
+# Do not call a long session good or bad without knowing the exchange in play.
+# Long session + ENJ or KNW = likely success signal.
+# Long session + UTL + exit without completion = likely failure signal.
+# Requires session-level inspection to disambiguate. Never score duration alone.
+
+metrics:
+  rage_clicks:
+    label: "Rage Clicks"
+    unit: "per 1k sessions"
+    direction: lower_is_better
+    signal_class: frustration
+    currency_mapping: [ACQ, UTL, ENJ]
+    interpretation: >
+      User repeatedly clicked the same element — expected response, got none or wrong one.
+      Context-dependent: rage on a checkout button (ACQ), rage on a settings control (UTL),
+      rage on a media player (ENJ).
+    note_gaming_mobile: >
+      Gaming mobile is a wild outlier: 4,281/1k vs global mobile 589/1k.
+      Broken ENJ/BEL exchange is catastrophically personal when identity is invested.
+      Desktop gaming (148.6/1k) is actually low. Mobile is the problem surface.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  dead_clicks:
+    label: "Dead Clicks"
+    unit: "per 1k sessions"
+    direction: lower_is_better
+    signal_class: frustration
+    currency_mapping: [KNW, UTL, NAV]
+    interpretation: >
+      User clicked something that appeared clickable but produced no response.
+      Primary: KNW (user expects info to appear, nothing does) and UTL (control appears
+      interactive but isn't). Also prominent in NAV toll — user clicks what should be
+      a navigation element.
+    note_gaming_mobile: >
+      Gaming mobile dead clicks: 12,839/1k — approximately 25× the global mobile average.
+      This is the dominant signal on that surface.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  error_clicks:
+    label: "Error Clicks"
+    unit: "per 1k sessions"
+    direction: lower_is_better
+    signal_class: breakage
+    currency_mapping: [ACQ, UTL]
+    interpretation: >
+      User clicked an element that triggered a system error — form validation failure,
+      API error response, etc. Breakage at the moment of spend (ACQ) or task attempt (UTL).
+      Unlike frustration signals, breakage signals indicate a system failure, not a UX failure.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  post_error_exits:
+    label: "Post-Error Exits"
+    unit: "per 1k sessions"
+    direction: lower_is_better
+    signal_class: breakage
+    currency_mapping: [ACQ, UTL]
+    interpretation: >
+      User exited after encountering an error rather than recovering. The decisive exchange-failure
+      signal: the system broke AND the user gave up. Retail has the highest post-error exits
+      (170.6/1k global) — catastrophic when the broken moment is the checkout submission.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  session_duration:
+    label: "Session Duration"
+    unit: "seconds"
+    direction: neutral
+    signal_class: engagement
+    currency_mapping: [ENJ, KNW, UTL]
+    valence_warning: >
+      COMMITMENT 2 APPLIES. Long duration = ENJ/KNW success OR UTL failure. Do not report
+      session duration as a standalone metric without anchoring to the exchange in play.
+      Require active_time or exit-type corroboration before naming a direction.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  active_time:
+    label: "Active Time"
+    unit: "seconds"
+    direction: higher_is_better
+    signal_class: engagement
+    currency_mapping: [ENJ, KNW]
+    interpretation: >
+      Genuine interaction time vs. passive dwell. Higher active_time relative to session_duration
+      = user engaged, not idle. Used to distinguish ENJ/KNW success from passive-dwell patterns
+      that inflate session_duration without real engagement.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  bounce_rate:
+    label: "Bounce Rate"
+    unit: "percent"
+    direction: lower_is_better
+    signal_class: engagement
+    currency_mapping: [KNW, ENJ, NAV]
+    interpretation: >
+      Failed hook at entry: user arrived, found nothing that answered their currency intent, left.
+      KNW bounce = page did not contain the answer. ENJ bounce = content did not engage.
+      NAV bounce = couldn't find their way. Requires entry-page context to attribute.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  scroll_depth:
+    label: "Scroll Depth"
+    unit: "percent"
+    direction: higher_is_better
+    signal_class: engagement
+    currency_mapping: [ENJ, KNW]
+    availability: "web only — not captured in mobile data"
+    interpretation: >
+      Content reach. High scroll depth = user reached the content they came for.
+      Low scroll depth = either a quick exit (bounce) or content never surfaced
+      (layout/load issue). Pair with session_duration and active_time before concluding.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  thrashed_cursor:
+    label: "Thrashed Cursor"
+    unit: "per 1k sessions"
+    direction: lower_is_better
+    signal_class: frustration
+    currency_mapping: [NAV]
+    availability: "web only — not applicable on mobile"
+    interpretation: >
+      Cursor moving erratically across the page — scanning for something, unable to orient.
+      Primary NAV toll signal. Reports as context for the exchange that follows, not as a
+      headline finding. See nav_toll reporting_rule in currency-signals.yaml.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  suspicious_activity:
+    label: "Suspicious Activity"
+    unit: "per 100k sessions"
+    direction: lower_is_better
+    signal_class: traffic_quality
+    currency_mapping: []
+    currency_note: "Not currency-specific — synthetic traffic distorts all signals equally."
+    interpretation: >
+      Non-human sessions. High suspicious activity inflates or deflates all other metrics.
+      Always check before headlining any behavioral finding. Use build_segment with Suspicious
+      Activity Automation type before finalizing any report.
+    yoy_warning: >
+      Food&Bev +1,372,156% YoY and global +892% are largely attributable to AI crawlers
+      and agent traffic, not fraud. Treat as directional only — sparse, low-base signal.
+    source: "benchmarks-distilled.md — Metric Index"
+
+  pinch_events:
+    label: "Pinch Events"
+    unit: "per 1k sessions"
+    direction: neutral
+    signal_class: mobile
+    currency_mapping: [ENJ, KNW, UTL]
+    interpretation: >
+      User pinched to zoom — content was too small or dense to read at native scale.
+      A content legibility signal on mobile. Direction is neutral: occasional pinch is
+      expected; high frequency signals persistent legibility problems.
+    source: "benchmarks-distilled.md — Metric Index"
+
+# ── BENCHMARK DATA — FIVE SLICES ─────────────────────────────────────────────
+# Slices: global (blended web+mobile), web, mobile, nam, emea
+# Industries: All, Retail, Finance, Food&Bev, Travel, Software, Gaming, Business
+#
+# NOTE ON MOBILE VS BLENDED: Mobile and blended (global) slices are distinct.
+# Do not use global figures to anchor mobile-specific findings.
+# Gaming mobile is a documented outlier; treat separately from gaming global/web.
+#
+# Missing values: null. Metrics not captured for a platform are marked n/a.
+
+slices:
+
+  global:
+    label: "Global (Web + Mobile blended)"
+    period: CY2025
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 Global"
+    data:
+      rage_clicks:
+        unit: per_1k
+        All: 225.9
+        Retail: 192.4
+        Finance: 133.2
+        Food&Bev: 149.8
+        Travel: 130.4
+        Software: 235.9
+        Gaming: 453.8
+        Business: 366.9
+      dead_clicks:
+        unit: per_1k
+        All: 563.8
+        Retail: 441.1
+        Finance: 453.6
+        Food&Bev: 410.6
+        Travel: 344.6
+        Software: 618.2
+        Gaming: 1431.6
+        Business: 493.0
+      error_clicks:
+        unit: per_1k
+        All: 310.3
+        Retail: 299.2
+        Finance: 330.0
+        Food&Bev: 368.9
+        Travel: 256.4
+        Software: 316.3
+        Gaming: 369.5
+        Business: 243.8
+      post_error_exits:
+        unit: per_1k
+        All: 120.9
+        Retail: 170.6
+        Finance: 110.0
+        Food&Bev: 147.2
+        Travel: 123.2
+        Software: 108.5
+        Gaming: 155.9
+        Business: 88.0
+      session_duration:
+        unit: seconds
+        All: 1541
+        Retail: 1311
+        Finance: 1345
+        Food&Bev: 1007
+        Travel: 1160
+        Software: 2085
+        Gaming: 1131
+        Business: 1427
+      active_time:
+        unit: seconds
+        All: 112
+        Retail: 122
+        Finance: 90
+        Food&Bev: 87
+        Travel: 80
+        Software: 129
+        Gaming: 71
+        Business: 138
+      bounce_rate:
+        unit: percent
+        All: 46.9
+        Retail: 49.4
+        Finance: 46.3
+        Food&Bev: 45.2
+        Travel: 44.6
+        Software: 45.2
+        Gaming: 41.8
+        Business: 52.3
+      scroll_depth:
+        unit: percent
+        availability: web_only
+        All: 77.1
+        Retail: 66.8
+        Finance: 79.8
+        Food&Bev: 74.6
+        Travel: 72.3
+        Software: 84.0
+        Gaming: 60.7
+        Business: 77.8
+      thrashed_cursor:
+        unit: per_1k
+        availability: web_only
+        All: 23.8
+        Retail: 20.7
+        Finance: 23.2
+        Food&Bev: 9.2
+        Travel: 13.4
+        Software: 28.0
+        Gaming: 6.5
+        Business: 33.4
+      suspicious_activity:
+        unit: per_100k
+        All: 61.4
+        Retail: 15.5
+        Finance: 10.1
+        Food&Bev: 1125.2
+        Travel: 1.9
+        Software: 52.0
+        Gaming: 0.9
+        Business: 30.5
+      pinch_events:
+        unit: per_1k
+        All: 41.6
+        Retail: 63.4
+        Finance: 23.2
+        Food&Bev: 33.2
+        Travel: 39.7
+        Software: 42.3
+        Gaming: 36.6
+        Business: 56.5
+
+  web:
+    label: "Web Only"
+    period: CY2025
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 Web Only"
+    data:
+      rage_clicks:
+        unit: per_1k
+        All: 201.6
+        Retail: 198.5
+        Finance: 121.5
+        Food&Bev: 80.2
+        Travel: 168.1
+        Software: 228.4
+        Gaming: 148.6
+        Business: 363.8
+      dead_clicks:
+        unit: per_1k
+        All: 473.8
+        Retail: 407.1
+        Finance: 419.7
+        Food&Bev: 262.1
+        Travel: 399.0
+        Software: 594.4
+        Gaming: 409.2
+        Business: 485.3
+      error_clicks:
+        unit: per_1k
+        All: 321.6
+        Retail: 311.7
+        Finance: 344.0
+        Food&Bev: 466.2
+        Travel: 342.6
+        Software: 319.4
+        Gaming: 378.9
+        Business: 227.2
+      post_error_exits:
+        unit: per_1k
+        All: 124.6
+        Retail: 178.5
+        Finance: 116.0
+        Food&Bev: 170.9
+        Travel: 141.8
+        Software: 110.6
+        Gaming: 147.5
+        Business: 85.9
+      session_duration:
+        unit: seconds
+        All: 1552
+        Retail: 1324
+        Finance: 1342
+        Food&Bev: 873
+        Travel: 1148
+        Software: 2138
+        Gaming: 994
+        Business: 1448
+      active_time:
+        unit: seconds
+        All: 114
+        Retail: 126
+        Finance: 93
+        Food&Bev: 83
+        Travel: 82
+        Software: 131
+        Gaming: 67
+        Business: 140
+      bounce_rate:
+        unit: percent
+        All: 47.1
+        Retail: 50.0
+        Finance: 46.8
+        Food&Bev: 44.7
+        Travel: 47.0
+        Software: 44.9
+        Gaming: 41.7
+        Business: 52.6
+      scroll_depth:
+        unit: percent
+        All: 77.1
+        Retail: 66.8
+        Finance: 79.8
+        Food&Bev: 74.6
+        Travel: 72.3
+        Software: 84.0
+        Gaming: 60.7
+        Business: 77.8
+      thrashed_cursor:
+        unit: per_1k
+        All: 23.8
+        Retail: 20.7
+        Finance: 23.2
+        Food&Bev: 9.2
+        Travel: 13.4
+        Software: 28.0
+        Gaming: 6.5
+        Business: 33.4
+      suspicious_activity:
+        unit: per_100k
+        All: 61.4
+        Retail: 15.5
+        Finance: 10.1
+        Food&Bev: 1125.2
+        Travel: 1.9
+        Software: 52.0
+        Gaming: 0.9
+        Business: 30.5
+      pinch_events:
+        unit: per_1k
+        All: 53.3
+        Retail: 72.7
+        Finance: 26.1
+        Food&Bev: 42.9
+        Travel: 46.3
+        Software: 69.5
+        Gaming: 41.3
+        Business: 58.2
+
+  mobile:
+    label: "Mobile Only"
+    period: CY2025
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 Mobile Only"
+    mobile_outlier_warning: >
+      Gaming mobile is a documented outlier across all metrics (rage 4,281/1k, dead 12,839/1k).
+      Do not use Gaming mobile figures as a general mobile baseline. Analyze gaming mobile
+      separately from gaming global/web. Source: benchmarks-distilled.md — Gaming analysis.
+    missing_metrics_note: >
+      Scroll depth, thrashed cursor, suspicious activity, and pinch events are not captured
+      in the mobile table (web-only metrics). Use global or web slice for those.
+    data:
+      rage_clicks:
+        unit: per_1k
+        All: 589.2
+        Retail: 167.0
+        Finance: 209.1
+        Food&Bev: 304.2
+        Travel: 177.4
+        Software: 297.1
+        Gaming: 4281.1
+        Business: 402.0
+      dead_clicks:
+        unit: per_1k
+        All: 1799.4
+        Retail: 602.7
+        Finance: 708.7
+        Food&Bev: 1017.8
+        Travel: 729.2
+        Software: 862.2
+        Gaming: 12839.3
+        Business: 866.6
+      error_clicks:
+        unit: per_1k
+        All: 144.2
+        Retail: 108.4
+        Finance: 110.6
+        Food&Bev: 34.5
+        Travel: 131.7
+        Software: 171.6
+        Gaming: 257.1
+        Business: 287.0
+      post_error_exits:
+        unit: per_1k
+        All: 78.9
+        Retail: 82.3
+        Finance: 64.4
+        Food&Bev: 49.7
+        Travel: 84.9
+        Software: 50.5
+        Gaming: 210.2
+        Business: 83.2
+      session_duration:
+        unit: seconds
+        All: 1126
+        Retail: 1085
+        Finance: 1096
+        Food&Bev: 1198
+        Travel: 1211
+        Software: 1013
+        Gaming: 1643
+        Business: 902
+      active_time:
+        unit: seconds
+        All: 75
+        Retail: 82
+        Finance: 56
+        Food&Bev: 90
+        Travel: 72
+        Software: 81
+        Gaming: 115
+        Business: 64
+      bounce_rate:
+        unit: percent
+        All: 47.5
+        Retail: 43.0
+        Finance: 47.0
+        Food&Bev: 53.6
+        Travel: 33.1
+        Software: 54.0
+        Gaming: 49.5
+        Business: 47.7
+      scroll_depth: null  # web-only metric
+      thrashed_cursor: null  # web-only metric
+      suspicious_activity: null  # web-only metric
+      pinch_events: null  # web-only metric — pinch is inherent mobile gesture, not legibility signal here
+
+  nam:
+    label: "North America (NAM)"
+    period: CY2025
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 NAM"
+    data:
+      rage_clicks:
+        unit: per_1k
+        All: 230.9
+        Retail: 171.8
+        Finance: 134.3
+        Food&Bev: 156.4
+        Travel: 157.1
+        Software: 249.0
+        Gaming: 588.6
+        Business: 445.9
+      dead_clicks:
+        unit: per_1k
+        All: 546.2
+        Retail: 450.7
+        Finance: 466.9
+        Food&Bev: 466.3
+        Travel: 413.2
+        Software: 637.3
+        Gaming: 1848.4
+        Business: 532.5
+      error_clicks:
+        unit: per_1k
+        All: 334.4
+        Retail: 346.8
+        Finance: 383.4
+        Food&Bev: 415.8
+        Travel: 274.0
+        Software: 331.0
+        Gaming: 261.1
+        Business: 231.6
+      post_error_exits:
+        unit: per_1k
+        All: 123.5
+        Retail: 173.9
+        Finance: 119.9
+        Food&Bev: 160.2
+        Travel: 148.8
+        Software: 113.2
+        Gaming: 132.6
+        Business: 84.9
+      session_duration:
+        unit: seconds
+        All: 1692
+        Retail: 1423
+        Finance: 1437
+        Food&Bev: 1276
+        Travel: 1344
+        Software: 2180
+        Gaming: 1434
+        Business: 1558
+      active_time:
+        unit: seconds
+        All: 120
+        Retail: 112
+        Finance: 93
+        Food&Bev: 84
+        Travel: 79
+        Software: 136
+        Gaming: 97
+        Business: 162
+      bounce_rate:
+        unit: percent
+        All: 47.4
+        Retail: 49.0
+        Finance: 46.2
+        Food&Bev: 46.7
+        Travel: 44.1
+        Software: 45.7
+        Gaming: 57.3
+        Business: 51.5
+      scroll_depth:
+        unit: percent
+        All: 79.9
+        Retail: 68.8
+        Finance: 80.6
+        Food&Bev: 76.7
+        Travel: 74.8
+        Software: 84.7
+        Gaming: 71.2
+        Business: 81.7
+      thrashed_cursor:
+        unit: per_1k
+        All: 29.2
+        Retail: 20.1
+        Finance: 27.9
+        Food&Bev: 13.8
+        Travel: 15.5
+        Software: 31.6
+        Gaming: 13.5
+        Business: 42.0
+      suspicious_activity:
+        unit: per_100k
+        All: 71.5
+        Retail: 5.1
+        Finance: 13.0
+        Food&Bev: 1707.8
+        Travel: 3.0
+        Software: 64.4
+        Gaming: 0.9
+        Business: 7.9
+      pinch_events:
+        unit: per_1k
+        All: 43.0
+        Retail: 58.6
+        Finance: 22.1
+        Food&Bev: 26.1
+        Travel: 39.1
+        Software: 48.6
+        Gaming: 17.6
+        Business: 61.0
+
+  emea:
+    label: "EMEA"
+    period: CY2025
+    source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §CY2025 EMEA"
+    data:
+      rage_clicks:
+        unit: per_1k
+        All: 241.8
+        Retail: 351.7
+        Finance: 114.6
+        Food&Bev: 154.0
+        Travel: 90.9
+        Software: 212.8
+        Gaming: 444.4
+        Business: 159.1
+      dead_clicks:
+        unit: per_1k
+        All: 678.2
+        Retail: 593.1
+        Finance: 413.7
+        Food&Bev: 361.1
+        Travel: 332.2
+        Software: 595.5
+        Gaming: 1403.0
+        Business: 370.5
+      error_clicks:
+        unit: per_1k
+        All: 286.5
+        Retail: 215.2
+        Finance: 224.6
+        Food&Bev: 383.2
+        Travel: 293.6
+        Software: 282.8
+        Gaming: 393.2
+        Business: 252.2
+      post_error_exits:
+        unit: per_1k
+        All: 114.6
+        Retail: 126.3
+        Finance: 86.5
+        Food&Bev: 148.2
+        Travel: 134.1
+        Software: 91.1
+        Gaming: 158.0
+        Business: 106.0
+      session_duration:
+        unit: seconds
+        All: 1267
+        Retail: 1398
+        Finance: 1195
+        Food&Bev: 600
+        Travel: 769
+        Software: 1835
+        Gaming: 1006
+        Business: 987
+      active_time:
+        unit: seconds
+        All: 98
+        Retail: 191
+        Finance: 88
+        Food&Bev: 90
+        Travel: 78
+        Software: 109
+        Gaming: 66
+        Business: 68
+      bounce_rate:
+        unit: percent
+        All: 45.8
+        Retail: 51.1
+        Finance: 46.7
+        Food&Bev: 43.5
+        Travel: 47.0
+        Software: 43.8
+        Gaming: 39.4
+        Business: 55.6
+      scroll_depth:
+        unit: percent
+        All: 71.2
+        Retail: 66.2
+        Finance: 78.0
+        Food&Bev: 72.7
+        Travel: 72.2
+        Software: 80.1
+        Gaming: 59.2
+        Business: 64.4
+      thrashed_cursor:
+        unit: per_1k
+        All: 13.4
+        Retail: 35.3
+        Finance: 11.8
+        Food&Bev: 3.6
+        Travel: 8.5
+        Software: 17.3
+        Gaming: 5.5
+        Business: 8.0
+      suspicious_activity:
+        unit: per_100k
+        All: 31.0
+        Retail: 7.2
+        Finance: 2.4
+        Food&Bev: 592.7
+        Travel: 0.5
+        Software: 17.2
+        Gaming: 0.9
+        Business: 1.8
+      pinch_events:
+        unit: per_1k
+        All: 37.6
+        Retail: 72.0
+        Finance: 25.8
+        Food&Bev: 46.6
+        Travel: 34.9
+        Software: 24.5
+        Gaming: 39.2
+        Business: 49.1
+
+# ── YoY CHANGE TABLE — CY2024 to CY2025 ─────────────────────────────────────
+# Used in R1 trend modifier: if a metric is worsening YoY, score × 1.3.
+# These are directional signals for ranking — not absolute values.
+# Source: benchmarks-distilled.md §YoY Change
+
+yoy_change:
+  period: "CY2024 to CY2025"
+  slice: global
+  unit: "percent change"
+  source: "Fullstory 2026 Benchmark Report, CY2025 — benchmarks-distilled.md §YoY Change Global"
+  suspicious_activity_warning: >
+    Food&Bev suspicious activity +1,372,156% and global +892% are AI crawler / agent
+    traffic noise, not organic fraud. Treat as directional only — sparse, low-base signal.
+  data:
+    rage_clicks:
+      All: +77
+      Retail: +262
+      Finance: -10
+      Food&Bev: -34
+      Travel: -3
+      Software: +10
+      Gaming: +32
+      Business: +235
+    dead_clicks:
+      All: +35
+      Retail: +136
+      Finance: +12
+      Food&Bev: -19
+      Travel: -20
+      Software: -28
+      Gaming: +31
+      Business: +23
+    error_clicks:
+      All: -8
+      Retail: -7
+      Finance: +17
+      Food&Bev: -64
+      Travel: -21
+      Software: +16
+      Gaming: +32
+      Business: +81
+    post_error_exits:
+      All: -34
+      Retail: -31
+      Finance: +1
+      Food&Bev: -34
+      Travel: -41
+      Software: +8
+      Gaming: -24
+      Business: +12
+    session_duration:
+      All: +42
+      Retail: +56
+      Finance: +45
+      Food&Bev: -10
+      Travel: +62
+      Software: -4
+      Gaming: +38
+      Business: +24
+    active_time:
+      All: +7
+      Retail: +17
+      Finance: +18
+      Food&Bev: -10
+      Travel: -3
+      Software: -20
+      Gaming: -17
+      Business: +48
+    bounce_rate:
+      All: -3
+      Retail: -5
+      Finance: +0
+      Food&Bev: -6
+      Travel: +18
+      Software: -3
+      Gaming: +0
+      Business: -6
+    scroll_depth:
+      All: +16
+      Retail: +22
+      Finance: +21
+      Food&Bev: +61
+      Travel: +50
+      Software: +11
+      Gaming: +15
+      Business: +13
+    thrashed_cursor:
+      All: +69
+      Retail: +198
+      Finance: +62
+      Food&Bev: +279
+      Travel: +80
+      Software: -21
+      Gaming: +84
+      Business: +102
+    suspicious_activity:
+      All: +892
+      Retail: +2019
+      Finance: +629
+      Food&Bev: 1372156  # AI crawler noise — see warning above
+      Travel: +646
+      Software: +86
+      Gaming: +602
+      Business: +338
+    pinch_events:
+      All: -24
+      Retail: -15
+      Finance: -13
+      Food&Bev: -39
+      Travel: +48
+      Software: -19
+      Gaming: -19
+      Business: -14
+
+# ── INDUSTRY PATTERNS — FOR RAIL CALIBRATION ─────────────────────────────────
+# Key interpretive patterns per industry. Used to set substrate_tolerance and
+# reference_point in industry rail files. Each entry summarizes the benchmark
+# behavior that distinguishes this industry.
+# Source: benchmarks-distilled.md §Industry-Specific Benchmark Patterns
+
+industry_calibration_notes:
+
+  retail:
+    rails_slug: retail
+    primary_currency: ACQ
+    post_error_exits_note: >
+      Highest post-error exits of all industries (170.6/1k global). Errors at the moment
+      of purchase commitment are catastrophic — ACQ exchange fails irreversibly.
+    rage_trend: "YoY +262% — ACQ frustration is the growing problem, not breakage."
+    reference_point: "conversion benchmarks"
+    emea_anomaly: "EMEA retail rage: 351.7/1k — highest of any global region × industry combination."
+    source: "benchmarks-distilled.md §Retail"
+
+  fintech:
+    rails_slug: fintech
+    benchmark_industry: Finance
+    primary_currency: UTL
+    lowest_rage: "133.2/1k global — users accept deliberate, slow flows. Regulatory constraint suppresses speed expectations."
+    lowest_bounce: "46.3% global"
+    trend_note: >
+      YoY rage clicks improving (-10%) while error clicks rising (+17%). Breakage is the
+      growing problem for Finance, not frustration.
+    reference_point: "task completion and error recovery"
+    source: "benchmarks-distilled.md §Finance"
+
+  travel:
+    rails_slug: travel
+    primary_currencies: [KNW, ACQ]
+    lowest_dead_clicks: "344.6/1k — users find what they want."
+    session_duration_trend: "YoY +62% — longest-growing session duration of any industry. Research phase expanding."
+    catastrophic_moment: "Booking friction after long research — perceived value diverges from realized."
+    reference_point: "booking conversion after research phase"
+    source: "benchmarks-distilled.md §Travel"
+
+  saas:
+    rails_slug: saas
+    benchmark_industry: Software
+    primary_currency: UTL
+    highest_dead_clicks: "618.2/1k — users encounter controls that don't respond."
+    highest_session_duration: "2,085 sec — long sessions signal deep engagement OR inability to complete."
+    highest_scroll_depth: "84% — users are willing to work for the answer."
+    valence_ambiguity: >
+      Software has the strongest session-duration valence ambiguity. Long session +
+      high active_time = engaged. Long session + low active_time + no task completion = stuck.
+      Never report session duration for a Software org without active_time corroboration.
+    source: "benchmarks-distilled.md §Software"
+
+  gaming:
+    rails_slug: gaming
+    primary_currencies: [ENJ, BEL]
+    mobile_outlier: >
+      Mobile rage: 4,281/1k, dead clicks: 12,839/1k — 10–30× other industries.
+      Desktop rage: 148.6/1k (actually low). Mobile is the problem surface.
+    exchange_intensity: >
+      Broken ENJ/BEL exchange is catastrophically personal — user identity is invested
+      in the gaming context. Frustration reads as betrayal, not inconvenience.
+    source: "benchmarks-distilled.md §Gaming"
+
+  food_bev:
+    rails_slug: null  # no current rail — closest: retail or travel
+    primary_currency: UTL
+    shortest_session: "1,007 sec — users want to order fast, not browse."
+    interpretation: "Task-dominant: fast-order flow. Frustrated UTL = high post-error exits (147.2/1k)."
+    suspicious_activity_note: "Food&Bev has anomalous suspicious activity figures. Treat as noise."
+    source: "benchmarks-distilled.md §Food&Bev"

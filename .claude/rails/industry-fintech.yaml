@@ -1,0 +1,675 @@
+schema_version: 2
+# .claude/rails/industry-fintech.yaml
+# Layer 2 industry profile — fintech
+# Derivation engine Wave 3 / W-08
+#
+# ROLLBACK: rm .claude/rails/industry-fintech.yaml
+#           (new file; no prior version to restore)
+#
+# ADOPT: staged/industry-fintech.yaml was the pre-authored starting point.
+#        This file adopts its content, maps it to the current schema, and
+#        corrects N-5 violations (kyc, transaction-review in severity_order).
+#
+# This file is a parameter overlay. It carries no job definitions.
+# It is composed into audience profiles at runtime by the derivation engine (W-20).
+# Flat file — flat naming convention: industry-fintech.yaml.
+
+industry: fintech
+
+evidence:
+  sources:
+    - "industry/fintech-sekizui-20260907.md"
+    - "_workshop/_planning/on-rails-matrix-authoring-20260907/staged/industry-fintech.yaml"
+  independence: independent
+  # Two independent sources exist for fintech — the only industry in this engine at this tier.
+  # Sekizui is an external SME (10+ years in financial services, including tech lead at a fintech)
+  # who was not involved in authoring this system. The staged file reasoning is internally sourced,
+  # but the SME interview corroborates it independently on the highest-weight claims.
+  # Confidence is bounded by: n=1 SME, subsector not decomposed ("the whole mix"),
+  # no mid-session switching coverage (Q4 not asked), zero fintech-specific numbers.
+  header_notice: >
+    Highest evidence tier in this engine for all claims marked [SME-solid] in the source
+    interview. Claims marked [SME-inference] or [SME-partial] are still bounded by a
+    single informant and must be labeled directional where cited in deliverables.
+    Zero fintech-specific numeric thresholds were offered; all benchmark figures are from
+    the Fullstory 2026 Benchmark Report (CY2025) and must be cited with their source.
+
+# ── END-USER CURRENCIES ───────────────────────────────────────────────────────
+# N-1 MANDATORY: derivation field is present. The currency mix cannot be measured
+# through the Fullstory MCP — no tool exposes time-per-behavior-category or intent
+# classification. This ranked list is an informed hypothesis, not a measurement.
+# Source: behavioral-currency-taxonomy.md, fintech-sekizui-20260907.md,
+#         staged/industry-fintech.yaml.
+
+end_user_currencies:
+  derivation: authored_pending_capability   # GUARD N-1 — mandatory; do not remove
+
+  ranked:
+    - UTL   # primary — Task Accomplishment & Management. Post-login servicing is where fintech
+            # business value sits (SME-solid). Checking balances, reviewing statements, initiating
+            # transfers, managing accounts. No currency hump — servicing has no discrete commit
+            # moment to instrument (distinct from retail's ACQ commit at checkout).
+    - KNW   # secondary — Information Seeking & Learning. Pre-login shopping (mortgages, credit
+            # cards, rate comparison) plus post-login account understanding (reading statements,
+            # investment performance, insurance terms). Present in all three surface classes.
+    - ACQ   # third — Transaction & Acquisition. Real but tertiary. Pre-login account-opening,
+            # product purchase, bank-switching. NOT the primary business-value driver — post-login
+            # servicing quality determines retention more than acquisition funnel performance.
+            # (SME-solid: "Marketing sites do not drive the business profit as much as solidly
+            # built products.")
+
+  toll: NAV   # wayfinding overhead; NAV is never a headline finding (Commitment 3)
+              # Present in all three surface classes; highest in post-login servicing where
+              # feature discovery within account dashboards is a persistent NAV problem.
+
+  minor: [INF]   # complaint and feedback surfaces exist (support, error reporting, survey widgets);
+                 # broken INF exchange is relevant but not a primary fintech mode.
+                 # demoted, not absent — demote instructs calibration; absent suppresses detection.
+
+  absent: [ENJ, BEL]
+  # ENJ — Entertainment & Leisure. Nobody reviews a mortgage for pleasure (SME-inference).
+  # BEL — Communication & Community. Social participation is not a fintech exchange mode.
+  # Both are absent, not minor — these currencies are structurally unavailable in this vertical.
+
+  # Class-specific currency distribution (informational — supplements ranked above).
+  # The ranked list reflects overall primacy weighted by business impact (post_login highest).
+  # Source: fintech-sekizui-20260907.md §"What people come to these sites to do" (SME-solid).
+  by_class:
+    pre_login:   { primary: KNW, secondary: ACQ }    # shopping: mortgages, cards, accounts
+    post_login:  { primary: UTL }                     # servicing: balances, transfers, reviews
+    operational: { primary: UTL, secondary: KNW }     # KYC, transaction review, corporate admin
+
+  intents:
+    UTL:
+      - "check account balance or status"         # derivation: confirmed_prototype — currency-signals.yaml §check_status
+      - "complete a scheduled payment"            # derivation: SME-solid — post_login servicing surface
+      - "initiate a transfer"                     # derivation: SME-solid — post_login micro-funnel
+      - "review investment or insurance position" # derivation: SME-solid — post_login servicing context
+      - "manage account settings or preferences"  # derivation: authored_pending_prototype
+      - "complete a compliance task"              # derivation: SME-solid — operational context (KYC)
+    KNW:
+      - "compare mortgage or credit card rates"   # derivation: SME-solid — pre_login context
+      - "understand account statement or charge"  # derivation: SME-solid — post_login context
+      - "research switching options"              # derivation: SME-solid — pre_login context, national
+      - "find a process or instruction"           # derivation: confirmed_prototype — currency-signals.yaml §understand_process
+    ACQ:
+      - "open an account"                         # derivation: SME-solid — pre_login context
+      - "switch banks"                            # derivation: SME-solid — switching regime (HSBC / Starling)
+      - "apply for a loan or card"                # derivation: authored_pending_prototype
+
+  currency_note: >
+    CRITICAL FINTECH CONSTRAINT — "No currency hump" means fintech has no discrete
+    commit moment analogous to retail checkout. Servicing (the dominant mode) involves
+    completing micro-tasks with no single ACQ exchange event to instrument. Each post-login
+    session may complete multiple micro-funnels (view statement → initiate transfer →
+    update address) without any conversion event firing. Do NOT port retail's ACQ-primary
+    framing. A high-performing fintech org is one where post-login UTL exchanges succeed
+    repeatedly and entrench the user — not one with a high checkout conversion rate.
+    Source: staged/industry-fintech.yaml, fintech-sekizui-20260907.md (SME-solid).
+
+    CONTRAST WITH RETAIL: Retail is ACQ-primary with ENJ secondary and a clear currency
+    hump (KNW → ACQ transition). Fintech is UTL-primary post-login with ENJ absent. The
+    retail rule "a long session is ENJ unless proven otherwise" is invalid here and must
+    not be inherited. See lexicon.long_session below for the fintech disambiguation.
+
+# ── FLOW SHAPE ────────────────────────────────────────────────────────────────
+# Entry is nondeterministic — users arrive via app direct, email notification,
+# branch lookup, specific feature link, or web search. No canonical entry path.
+# Each servicing task is its own micro-funnel (pay bill, view statement, initiate
+# transfer); users complete multiple micro-funnels per session without a single
+# linear path. Source: build plan §7 W-08, staged/industry-fintech.yaml.
+
+flow_shape: parallel_journeys
+entry_nondeterministic: true
+
+# ── SURFACE CLASSES ───────────────────────────────────────────────────────────
+# Three functional contexts from fintech-sekizui-20260907.md (SME-solid:
+# "Three distinct contexts, not one list."). These are purpose-classes, not page types.
+# Fintech uses 6 of the 11 MANIFEST surface keys and omits retail-specific surfaces
+# entirely: plp, pdp, cart, checkout, confirmation are absent from fintech.
+# Any derivation rule keyed to `checkout` is retail-specific and must not be inherited.
+
+surface_classes:
+  - name: pre_login
+    surfaces: [entry, search, content]
+    purpose: "Marketing and shopping. Consumers comparing mortgages, credit cards, bank accounts, switching banks, investment vehicles."
+    primary_currency: KNW
+    business_weight: low
+    note: >
+      SME-solid: "Marketing sites do not drive the business profit as much as solidly
+      built products." Acquisition (account opening, product purchase) happens here but
+      it is not the primary value driver for the business. Do not lead with pre_login
+      findings in executive-facing deliverables — route them behind post_login findings.
+
+  - name: post_login
+    surfaces: [auth, account, support]
+    purpose: "Servicing. Reviewing investments, properties, insurance, credit cards, balances, upgrades and offers, mortgages."
+    primary_currency: UTL
+    business_weight: highest
+    note: >
+      SME-solid: "The logged-in state is where the business value sits — it's what
+      fintech businesses need in order to improve products, offerings and market
+      competitiveness." This is the single most load-bearing prior in this file.
+      Auth is included as the gate to post_login servicing, not as a pre_login surface.
+      Subsurfaces: investments, properties, insurance, credit-cards, balances,
+      offers-and-upgrades, mortgages.
+
+  - name: operational
+    surfaces: [account, support]
+    purpose: "B2B and internal operations. KYC, transaction review, mergers, corporate admin."
+    primary_currency: UTL
+    business_weight: high
+    # Custom surfaces KYC and transaction-review are named here for documentation.
+    # They are NOT MANIFEST surface keys and must not appear in severity_order.
+    custom_surfaces_note: "kyc and transaction-review are valid surface contexts; not MANIFEST keys — do not bind to surface_order rules."
+    note: "SME-solid: named as a distinct context, not a subset of servicing."
+
+  - name: embedded_invisible
+    status: "partial — offered as principle, no account named"
+    purpose: "Infrastructure fintech with no user-facing surface; success is being unseen."
+    business_weight: "not calibratable"
+    note: >
+      SME-partial: "True adoption comes from the fact that you are essential and sometimes
+      so powerful that no one knows you but you power everything." Not a basis for
+      calibration — recorded so it is not rediscovered in a second-pass interview.
+
+# ── SEVERITY ORDER ────────────────────────────────────────────────────────────
+# Descending stakes — where a failure costs the most.
+# All values must be MANIFEST surface keys (N-5 guard).
+# NOTE: kyc and transaction-review are operational contexts documented in surface_classes
+# but are NOT MANIFEST surface keys and are therefore excluded from severity_order.
+# Post-login surfaces are most severe; pre-login surfaces are least severe.
+# Basis: SME-solid "logged-in state is where the business value sits."
+
+severity_order: [account, auth, support, entry, search, content]
+
+# ── REFERENCE POINT ───────────────────────────────────────────────────────────
+# How benchmarks are framed for fintech customers.
+# Source: fintech-sekizui-20260907.md (SME-solid — named example, market-specific).
+# reference_point is deliberately free-form per build plan §4 and profile-schema.md.
+
+reference_point: "national switching cost for consumer; accuracy and reliability for corporate"
+reference_point_note: >
+  Fintech tolerates are not global and not cross-org. The load-bearing prior (SME-solid,
+  named, specific): HSBC ran poor mobile apps on a per-country basis. In the UK, Starling
+  and Monzo poached customers because the government's current account switch guarantee
+  made switching frictionless. In markets with high switching friction (sunk cost, account
+  portability barriers), tolerance is far higher. In frictionless markets, experience
+  quality is existential.
+
+  ESTABLISH SWITCHING REGIME BEFORE CALLING ANY TOLERANCE THRESHOLD. A 10% rage-click
+  increase is categorically different finding in the UK vs. a locked-in B2B banking
+  platform. Do not apply a single threshold across markets.
+
+  Consumer: experience quality = competitive moat or liability.
+  Corporate: accuracy and reliability outweigh polish. A slow, deliberate flow is not a
+  defect. Do not report polish deficits as findings for corporate segment without an
+  accuracy or reliability consequence attached.
+
+  Sub-national benchmark data does not exist in the CY2025 table. Regional tolerance
+  varies — note this gap rather than collapsing a multi-market org to a regional mean.
+  Source: fintech-sekizui-20260907.md §"What patience looks like here."
+
+# ── SUBSTRATE TOLERANCE ───────────────────────────────────────────────────────
+# CWV bands sourced from Google Core Web Vitals specification.
+# Literal numeric values are legal under the unified N-2/N-4 rule:
+# they cite an external published standard (Google) that does not vary by org.
+# FINTECH USES A HIGHER BOUNDARY THAN RETAIL.
+# Rationale: Fintech has no ACQ commit moment equivalent to retail checkout.
+# Servicing flows are legitimately deliberate and slow. Alerting at Needs Improvement
+# (2500ms) generates false positives on expected UTL servicing behavior. Alert at Poor
+# (4000ms) — the boundary at which task failure is structural, not stylistic.
+# This is a calibration decision, not a relaxed standard: regulatory complexity
+# and multi-step task flows make deliberate pace expected. Performance errors at the
+# Poor boundary still represent exchange failure for the UTL currency.
+# Source of rationale: staged/industry-fintech.yaml §performance_calibration,
+# fintech-sekizui-20260907.md §"What patience looks like here."
+
+substrate_tolerance:
+  lcp_alert_boundary: poor
+  lcp_alert_ms: 4000
+  source: "Google Core Web Vitals specification — Poor boundary, web.dev/vitals"
+  rationale: >
+    Fintech's dominant currency is UTL (servicing), not ACQ. Deliberate, slow flows
+    are expected and accepted by fintech users (SME-solid: "all of it" is what it costs
+    in the logged-in state — fintech is complex). The Needs Improvement boundary (2500ms)
+    is calibrated to retail's ACQ commit moment; fintech has no equivalent. Alerting at
+    Poor (4000ms LCP) surfaces structural performance failures without over-firing on
+    expected servicing deliberation. NEVER inherit retail's 2500ms boundary for fintech.
+
+  cwv_reference:
+    LCP:  { good_ms: 2500, ni_ms: 4000, measure: p75, source: "Google Core Web Vitals specification" }
+    INP:  { good_ms: 200,  ni_ms: 500,  measure: p75, source: "Google Core Web Vitals specification" }
+    CLS:  { good: 0.10,    ni: 0.25,    measure: p75, source: "Google Core Web Vitals specification" }
+    FCP:  { good_ms: 1800, ni_ms: 3000, measure: p75, source: "Google Core Web Vitals specification" }
+    TTFB: { good_ms: 800,  ni_ms: 1800, measure: p75, source: "Google Core Web Vitals specification" }
+    deprecated: "FID — replaced by INP March 2024. Never reference FID in any profile or deliverable."
+
+  fintech_alert_surface_priority: >
+    Prioritize performance alerts on post_login surfaces (account, auth) over pre_login
+    (entry, search, content). A slow auth gate fails the UTL exchange before it begins.
+    A slow account dashboard during a balance check or transfer is a UTL exchange failure.
+    A slow marketing page is a KNW/ACQ inconvenience — real, but lower stakes.
+
+# ── LEXICON ───────────────────────────────────────────────────────────────────
+# Industry-specific interpretations. Maps terms to their meaning in fintech context.
+# These are authored disambiguation rules, not a term dictionary.
+# Sources: fintech-sekizui-20260907.md, staged/industry-fintech.yaml.
+
+lexicon:
+  long_session: >
+    Valence is UNINFORMATIVE on its own in fintech (SME-gap — Q4 not asked). Do not apply
+    retail's "long session on the commit surface = failure" rule. Finance has the lowest
+    rage-click rate of any vertical (133.2/1k global vs 225.9 all-industry) and a
+    below-average bounce rate — users accept deliberate, slow flows. Absent specific
+    evidence, treat session length as uninformative and reach for entrenchment instead:
+    are users completing a growing breadth of tasks, or narrowing to bare-minimum use?
+    If disambiguation is required: high active_time + task completion signals within session
+    → UTL success. High active_time + no task completion → UTL blocked.
+    Source: staged/industry-fintech.yaml §l2_interpretation_rules.long_session,
+    benchmark-corpus.yaml (Finance global: 1345s session, 90s active — low active ratio).
+
+  entrenchment: >
+    SME-solid. The preferred success measure in fintech. "How entrenched your app is for
+    them, how much they do." Built as a composite: behavioural profiling + feature-adoption
+    flows + frustration signals, read together as population maturity. Not DAU or MAU.
+    Discriminator: "Do they classify their transactions because your budgeting tool is best
+    in class, or do they just log in to pay off cards?" Declining feature breadth with no
+    error signal and no abandonment is a pre-churn indicator that reads as a healthy
+    customer. Measure entrenchment, not login frequency.
+    Source: fintech-sekizui-20260907.md §"Numbers" (SME-solid).
+
+  silent_degradation: >
+    Users degrade to bare-minimum functionality over time when the product cannot do what
+    they want. CROSS-SESSION, not mid-session. Leaves no error, no funnel drop, no bug
+    report. Declining feature breadth is the only signal, and it reads as a healthy
+    customer in every single-session or aggregate-metric view. This is the pre-churn state.
+    Maps to GOODWILL DEBT in the value manifesto 2x2 — realized value low, perceived value
+    intact, survives every sentiment review, dies when procurement asks for a number.
+    Source: fintech-sekizui-20260907.md §"Signals that matter more than they look" (SME-solid).
+
+  post_login_servicing: >
+    The dominant mode. Reviewing investments, properties, insurance, credit cards, balances,
+    upgrades and offers, mortgages. Each task is a micro-funnel — self-contained, with no
+    single conversion event. Users may complete 3–5 micro-funnels in one session. There is
+    no "checkout" to instrument. A session that completes 4 micro-funnels is a success even
+    if every metric reads as "high session duration with no conversion." Do not apply
+    retail's conversion-funnel logic to post-login servicing.
+
+  platform: >
+    Web and mobile app are DISTINCT SURFACES, not interchangeable and not a device split.
+    Treat as separate products with separate baselines. SME-solid, and independently
+    corroborated by the benchmark table: Finance mobile rage clicks 209.1/1k vs web
+    121.5/1k (1.7× ratio); mobile dead clicks 708.7 vs web 419.7. Error clicks invert:
+    web 344.0/1k vs mobile 110.6/1k. Interview and benchmark table agree independently.
+    Always split by platform before citing any frustration signal for a fintech org.
+    Source: fintech-sekizui-20260907.md (SME-solid), benchmark-corpus.yaml §Finance mobile.
+
+  switching_regime: >
+    Consumer tolerance is governed by national switching friction, not global benchmarks.
+    Named example (SME-solid): HSBC poor mobile apps, UK market — Starling and Monzo
+    poached on mobile-native design because the government's current account switch
+    guarantee eliminated switching friction. In markets without that guarantee, the same
+    experience quality produces no churn. Establish which regime the org operates in
+    before naming any finding a "churn risk."
+    Source: fintech-sekizui-20260907.md §"What patience looks like here" (SME-solid, named).
+
+  seven_day_return: >
+    "As useful as a well maintained automatic door. Yes it makes entry easier but if your
+    restaurant sucks, people quickly leave." (SME-solid.) Useful hygiene metric — measures
+    the doorway, not the thing people came for. Necessary, not sufficient. Never lead with
+    7-day return-to-login as a headline finding. It is an activation floor, not an
+    entrenchment indicator.
+    Source: fintech-sekizui-20260907.md §"Numbers" (SME-solid).
+
+  error_trend_vs_frustration: >
+    YoY in Finance: rage clicks improving (-10%) while error clicks rising (+17%).
+    BREAKAGE is the growing problem in this vertical, not frustration. When triaging,
+    weight error and network signals above frustration signals (rage clicks, dead clicks).
+    Thrashed cursor +62% YoY against a low base (23.2/1k) — directional only.
+    Suspicious activity +629% YoY — check Synthetic Traffic Awareness rule before citing
+    any frustration delta (AI crawler traffic is a likely confound for the thrashed cursor spike).
+    Source: benchmark-corpus.yaml §fintech.trend_note (Fullstory 2026 Benchmark Report, CY2025).
+
+  kyc: >
+    KYC (Know Your Customer) is an operational surface context — compliance-driven
+    identity verification. Mentioned in the SME interview as a distinct context; not ruled
+    on as a metric target (application completion 40–60% and KYC drop-off were noted as
+    acquisition metrics that sit awkwardly against the post-login primacy finding).
+    If the org has KYC flows: treat as operational UTL exchange; do NOT apply
+    retail-style acquisition funnel analysis. KYC exit is not equivalent to cart abandonment.
+    Source: fintech-sekizui-20260907.md §"Numbers" [Didn't cover on the specific metrics].
+
+  output_framing_constraint: >
+    Fintech operates under regulatory and compliance context that shapes what can be
+    publicly disclosed in deliverables. Before stating a finding about user behavior,
+    error rates, or transaction flows in a customer-facing deliverable:
+    (1) Confirm the finding does not expose PII or individually identifiable transaction data.
+    (2) For corporate / operational contexts: findings about internal transaction review
+        or KYC flows may be subject to customer's own disclosure policies — ask before
+        publishing any finding referencing these surfaces.
+    (3) The "cost people's lives" claim (SME-partial, mechanism unknown) must not be cited
+        in any customer-facing deliverable. It is a research direction, not an evidenced claim.
+    This is an OUTPUT FRAMING constraint — it affects how findings are presented, not
+    whether they are investigated.
+
+# ── BLIND SPOTS ───────────────────────────────────────────────────────────────
+# Systematic things fintech orgs miss or under-instrument.
+# These are the interview's signature contribution. Two findings are unreachable through
+# query-driven analytics and must be named explicitly in any analysis of a fintech org.
+# Source: fintech-sekizui-20260907.md §"Signals that matter more than they look" (SME-solid).
+
+blind_spot:
+  - name: unbuilt_path
+    severity: highest
+    description: >
+      SME-solid: strongest single finding of the interview. A customer sees a competitor
+      do something seamlessly, tries it in your product, and fails — because THE PATH
+      DOES NOT EXIST. There is no error, no funnel drop, no bug filed, no instrument
+      trigger. You do not know the path exists, so there is nothing to track. The user
+      falls back to bare-minimum use, then switches. To your teams everything looked fine
+      until they left.
+    consequence_for_analysis: >
+      A clean dashboard is consistent with imminent churn. Absence of signal is not
+      evidence of health. Any analysis that produces "no significant findings" in fintech
+      must explicitly acknowledge this blind spot before stating a clean-bill-of-health
+      conclusion.
+    detection_requirement: >
+      Requires unsupervised, large-scale clustering over complete behavioural data. Cannot
+      be found through query-driven analytics at any level of effort — you must specify
+      what to look for, and you cannot specify a path you do not know exists. Do not
+      promise this finding to a customer from within an MCP-powered analysis.
+    escalation: "Lane's behavioural clustering prototype (not a product capability). Single-point dependency."
+
+  - name: hidden_powerusers
+    severity: high
+    description: >
+      SME-solid (as pattern). Found by divergence from the happy path — NOT by abandonment.
+      They have found a genuinely new way to use the product or some subset of features.
+      Their metrics read as "off" because they hit none of the established measures; only
+      deep analysis reveals they are more entrenched and better adapted than anyone else.
+    consequence_for_analysis: >
+      The best users are invisible to the benchmark set by construction. The closer an
+      analyst holds to standard metrics, the more reliably the poweruser cohort is excluded.
+      A session that looks "broken" (long duration, many actions, no completion of defined
+      flows) may be a poweruser completing an undocumented workflow.
+    stop_condition_warning: >
+      A stop condition of the form "one element accounts for >60% of the leading signal —
+      stop broadening" terminates precisely the investigation that would surface a poweruser
+      cohort. Stop conditions optimize for query efficiency and against discovery. Do not
+      fire one while a divergent-but-non-abandoning cohort is unexplained.
+    escalation: "Requires unsupervised behavioural clustering — same capability as unbuilt_path."
+
+  - name: cross_team_contradiction
+    severity: medium
+    description: >
+      SME-solid. Analytics says fine / growth says churn / engineering says no bugs —
+      "all can be true and the answer hides in the data." Each team's instruments are
+      working correctly and each is blind in a different direction. The gap between the
+      three readings is where the problem lives.
+    consequence_for_analysis: >
+      If stakeholders present conflicting narratives, do not resolve them by finding a
+      single correct reading. The contradiction itself is the finding — something is
+      happening that none of the current instruments can see. Say so.
+    note: "This is a multi-audience finding. Do not place audience-specific framing in this file."
+
+# ── DEFAULT SPLITS ─────────────────────────────────────────────────────────────
+# Dimensions to always apply when analyzing fintech data.
+# Stronger and differently shaped than retail's — three mandatory dimensions.
+# Source: fintech-sekizui-20260907.md (SME-solid on all three).
+
+default_splits:
+  mandatory: [platform, segment, country]
+  suppress_when: "cell n < 100 — matches CLAUDE.md small-sample rule; do not split when n starves the cell"
+
+  platform:
+    values: [web, mobile_app]
+    rule: >
+      Web and mobile app are DISTINCT SURFACES, not interchangeable, and not a device
+      split. Treat as separate products with separate baselines. Always report a mobile
+      finding against the mobile baseline and a web finding against the web baseline.
+      Never cite the global (all-platform) Finance figure for a platform-specific finding.
+    corroboration: >
+      SME-solid + benchmark-independent: Finance mobile rage 209.1/1k vs web 121.5/1k
+      (1.7×); mobile dead clicks 708.7 vs web 419.7; error clicks invert (web 344.0 vs
+      mobile 110.6). Interview and benchmark table agree independently, without prompting.
+
+  segment:
+    values: [consumer, corporate]
+    rule: >
+      SME-solid. Different reference points and different consequences of failure.
+      Consumer: switching friction governs; experience quality is existential where
+      switching is frictionless. Corporate: accuracy and reliability outweigh polish.
+      Never aggregate consumer and corporate into a single tolerance assessment.
+
+  country:
+    rule: >
+      SME-solid. NEW DIMENSION — absent from retail. Switching friction is national, so
+      tolerance is national. Split by country wherever the org operates in more than one
+      market. Never aggregate a multi-market org into a single tolerance number.
+    caveat: >
+      No sub-national benchmark data exists in the Fullstory 2026 Benchmark Report CY2025.
+      Regional slices (NAM, EMEA) exist and are documented in benchmark_references, but
+      the EMEA-vs-NAM split is too coarse for this vertical — the UK is unlike the rest
+      of EMEA on precisely the axis that matters (switching friction).
+      Source: staged/industry-fintech.yaml §default_splits.country (SME-solid).
+
+  optional: [kyc_vs_non_kyc, b2c_vs_b2b]
+  optional_note: >
+    kyc_vs_non_kyc: apply for orgs where operational surfaces are instrumented.
+    b2c_vs_b2b: useful where the org serves both segments and segment data is available.
+    Both require org-specific surface binding before application.
+
+# ── DX DIMENSIONS ─────────────────────────────────────────────────────────────
+# Benchmark ranges from Fullstory's DX Score dimensions.
+# Source: Fullstory 2026 Benchmark Report, CY2025 — ranges from the DX Score dimension
+# benchmarks. Bands are all-industry descriptive ranges; N-4 — band is reference data,
+# not a runtime threshold. Per-fintech relevance notes below distinguish which dimensions
+# carry the most weight for fintech post-login analysis vs. which are pre_login only.
+# Note: fintech-specific DX Score bands are not separately published in CY2025 data.
+# These bands are all-industry ranges used for directional orientation only.
+
+dx_dimensions:
+  - name: forms_and_checkouts
+    band: [45, 88]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    fintech_note: >
+      Scoped to pre_login only. Fintech has no checkout surface in the MANIFEST sense.
+      Apply to account-opening and application flows (loan, card, mortgage applications)
+      in the pre_login surface class. Do not apply to post_login servicing tasks — those
+      are micro-funnels with no single form completion event.
+
+  - name: call_to_action
+    band: [55, 90]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    fintech_note: >
+      Relevant for pre_login marketing surface (KNW → ACQ transition). Lower relevance
+      for post_login servicing where CTAs are task-completion controls, not conversion
+      actions. A dead click on a "Transfer Funds" button is a UTL exchange failure, not
+      a CTA conversion failure — route through frustration_satisfaction, not here.
+
+  - name: frustration_satisfaction
+    band: [50, 95]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    fintech_note: >
+      Primary DX dimension for fintech. Maps to the rage_click, dead_click, error_click,
+      post_error_exit signal cluster. Finance has the LOWEST rage-click rate of any
+      vertical (133.2/1k global, web 121.5/1k) — a baseline finding that changes
+      interpretation: in fintech, a rage-click signal stands out more than it would in
+      retail (where the base rate is 225.9/1k). YoY: error clicks rising +17% while rage
+      clicks fall. Prioritize error signal over frustration signal in fintech triage.
+      Always split by platform: mobile Finance rage 209.1/1k vs web 121.5/1k.
+
+  - name: navigation_design
+    band: [60, 92]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    fintech_note: >
+      High relevance across all three surface classes. NAV toll is a persistent problem
+      in post_login servicing where feature discovery within complex account dashboards
+      requires navigation. Dead clicks on post_login navigation elements signal UTL
+      exchange blocked by NAV toll. Wayfinding in fintech is more complex than retail
+      because product surfaces are not commodity (no standard category structure).
+
+  - name: personalization
+    band: [60, 95]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    fintech_note: >
+      High relevance. Personalization in fintech = entrenchment. The SME's preferred
+      success measure ("how much they do in the app") is fundamentally a personalization
+      depth question. An org where all users see the same generic dashboard regardless
+      of product usage is at entrenchment risk. Personalization failure in fintech is
+      a churn precursor, not a satisfaction dip.
+
+  - name: comprehension_accessibility
+    band: [55, 98]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    fintech_note: >
+      High relevance. Regulatory complexity makes comprehension critical — a user who
+      cannot understand a statement, a rate disclosure, or a compliance notice is in
+      a failed KNW exchange. Long dwell on regulatory or explanatory content is KNW
+      success (reading, learning) NOT a comprehension failure. Apply the Commitment 2
+      disambiguation before calling long-content dwell a problem.
+      Caution: this dimension has the widest band (55–98) — high variance means fintech
+      org scores will be harder to calibrate against. Prefer internal trend comparison.
+
+  - name: search_functionality
+    band: [65, 97]
+    source: "Fullstory 2026 Benchmark Report, CY2025 — see benchmark-corpus.yaml"
+    fintech_note: >
+      Relevant primarily for pre_login (KNW — rate comparison, product search) and
+      account search within post_login (finding a transaction, locating a statement).
+      Zero-result searches in pre_login are KNW failures with ACQ consequences.
+      Search within post_login account is a UTL failure if the user cannot find their
+      own data. Apply surface context before interpreting search signals.
+
+# ── BENCHMARK REFERENCES ──────────────────────────────────────────────────────
+# All figures from the Fullstory 2026 Benchmark Report, CY2025.
+# Source on every figure is MANDATORY per N-2. Never hardcode as targets.
+# Cite with date AND slice. Never compare a mobile measurement to the global figure.
+# Benchmark industry "Finance" maps to rails industry "fintech".
+
+benchmark_references:
+  source: "Fullstory 2026 Benchmark Report, CY2025, 2,600+ orgs, 18.7B sessions"
+  dated: "2026 — baseline, not current truth. Fetch current if available."
+  taxonomy_note: "Benchmark industry 'Finance' maps to rails industry 'fintech' (banking, insurance, investment)."
+  cite_rule: "Do not hardcode as targets. Cite with date AND slice. Never compare a mobile finding to the global figure."
+
+  global:
+    rage_clicks_per_1k: 133.2
+    dead_clicks_per_1k: 453.6
+    error_clicks_per_1k: 330.0
+    post_error_exits_per_1k: 110.0
+    session_duration_sec: 1345
+    active_time_sec: 90
+    bounce_rate_pct: 46.3
+    scroll_depth_pct: 79.8
+    thrashed_cursor_per_1k: 23.2
+    suspicious_activity_per_100k: 10.1
+    pinch_events_per_1k: 23.2
+    source: "Fullstory 2026 Benchmark Report, CY2025 — Finance global row"
+
+  web:
+    rage_clicks_per_1k: 121.5
+    dead_clicks_per_1k: 419.7
+    error_clicks_per_1k: 344.0
+    post_error_exits_per_1k: 116.0
+    session_duration_sec: 1342
+    active_time_sec: 93
+    bounce_rate_pct: 46.8
+    pinch_events_per_1k: 26.1
+    source: "Fullstory 2026 Benchmark Report, CY2025 — Finance web row"
+
+  mobile:
+    rage_clicks_per_1k: 209.1
+    dead_clicks_per_1k: 708.7
+    error_clicks_per_1k: 110.6
+    post_error_exits_per_1k: 64.4
+    session_duration_sec: 1096
+    active_time_sec: 56
+    bounce_rate_pct: 47.0
+    source: "Fullstory 2026 Benchmark Report, CY2025 — Finance mobile row"
+
+  nam:
+    rage_clicks_per_1k: 134.3
+    dead_clicks_per_1k: 466.9
+    error_clicks_per_1k: 383.4
+    post_error_exits_per_1k: 119.9
+    session_duration_sec: 1437
+    bounce_rate_pct: 46.2
+    suspicious_activity_per_100k: 13.0
+    source: "Fullstory 2026 Benchmark Report, CY2025 — Finance NAM row"
+
+  emea:
+    rage_clicks_per_1k: 114.6
+    dead_clicks_per_1k: 413.7
+    error_clicks_per_1k: 224.6
+    post_error_exits_per_1k: 86.5
+    session_duration_sec: 1195
+    bounce_rate_pct: 46.7
+    suspicious_activity_per_100k: 2.4
+    source: "Fullstory 2026 Benchmark Report, CY2025 — Finance EMEA row"
+    emea_caveat: >
+      EMEA-vs-NAM is too coarse a split for fintech — the UK is unlike the rest of EMEA
+      on switching friction (the axis that matters most). Use EMEA only as a directional
+      starting point; establish country-level context before interpreting EMEA signals.
+
+  interpretation:
+    - "Finance has the LOWEST rage clicks of any vertical (133.2/1k vs 225.9 all-industry). Users accept deliberate, slow flows. A rage-click signal in fintech stands out more than in retail. Source: Fullstory 2026 Benchmark Report, CY2025."
+    - "YoY: rage clicks improving (-10%) while error clicks rising (+17%). BREAKAGE is the growing problem in Finance, not frustration. Prioritize error and network signals over frustration signals. Source: Fullstory 2026 Benchmark Report, CY2025."
+    - "Thrashed cursor +62% YoY against a low base (23.2/1k). Directional only — small absolute delta. Source: Fullstory 2026 Benchmark Report, CY2025."
+    - "Suspicious activity +629% YoY (10.1/100k global). Check Synthetic Traffic Awareness rule before citing any frustration trend — AI crawler traffic is a likely confound. Source: Fullstory 2026 Benchmark Report, CY2025."
+    - "Mobile rage 209.1/1k vs web 121.5/1k (1.7×). Error clicks invert: web 344.0 vs mobile 110.6. Always split by platform. Source: Fullstory 2026 Benchmark Report, CY2025."
+
+  contested:
+    # Prior kit content that the SME's testimony cuts against but did not directly rule on.
+    # Do not delete. Do not lead with these as findings.
+    application_completion:
+      metric: "Application completion 40-60%"
+      status: "Flagged — not directly confirmed or denied"
+      note: "Acquisition metric. Sits awkwardly against SME's position that business value is post-login. If cited: frame as pre_login funnel metric, never as headline health indicator."
+    kyc_dropoff:
+      metric: "KYC drop-off"
+      status: "Flagged — not directly confirmed or denied"
+      note: "Same acquisition-metric tension. KYC is a valid operational surface; apply UTL framing, not ACQ funnel framing."
+
+# ── OPEN QUESTIONS ────────────────────────────────────────────────────────────
+# For a second interview pass. Do not fill by inference.
+
+open_questions:
+  - id: subsector_decomposition
+    ask: "Does the currency mix or reference point differ across neobank / lender / payments / wealth / insurtech / B2B rails?"
+    why: "'The whole mix' is the only coverage claim. Every prior here is stated at whole-vertical granularity."
+  - id: mid_session_switching
+    ask: "Q4 — what makes a fintech user change what they are trying to do mid-session, and what does it look like in the data?"
+    why: "The only wholly empty interpretation rule. Retail has this; fintech does not."
+  - id: fintech_thresholds
+    ask: "Any numeric prior at all — even ordinal — for servicing depth, feature adoption, or entrenchment?"
+    why: "Zero numbers exist from the SME. Ask for the shape of a good measure rather than a threshold."
+  - id: cold_open_surprise
+    ask: "Q5 — what surprises an analyst opening fintech data for the first time? Q11 — biggest first-timer mistake?"
+    why: "Field notes flag both as the thinnest part of the interview and worth a second pass."
+
+# ── CONTENT DELIBERATELY EXCLUDED ────────────────────────────────────────────
+# Recorded so it is not re-added by a later agent.
+
+excluded:
+  - item: "A named behavioural clustering outcome from a quick-service restaurant customer"
+    reason: "QSR/retail vertical, explicitly NOT fintech. SME-solid, named, attributed outcome — but the wrong vertical. Must not be written up as a fintech play."
+  - item: "Cross-team contradiction as a derivation rule in this file"
+    reason: "Multi-audience finding. Placed in blind_spots as a diagnostic orientation; not in lexicon as a derivation rule. See staged/industry-fintech.yaml §excluded_as_layer_1."
+  - item: "Buyer maturity / endemic data science gap"
+    reason: "Sales/CS concern and vertical inference, not an investigation prior. See staged/industry-fintech.yaml §excluded_as_layer_1."
+  - item: "Personas as outputs not inputs"
+    reason: "Architectural question for Lane — inverts the matrix's premise. Not a fintech prior. See staged/industry-fintech.yaml §excluded_as_layer_1."
+  - item: "'This can cost money but also people's lives'"
+    reason: "SME-partial, mechanism unknown, firsthand but unevidenced. Asked twice, no instance given. Not shippable as a claim in this state. Acknowledged in output_framing_constraint."
+  - item: "severity_weights with numeric values"
+    reason: "No numeric grounding exists from the interview. Would be invention. Ordinal ranking via surface_classes.business_weight is the correct fallback until evidenced."
+  - item: "kyc and transaction-review in severity_order"
+    reason: "N-5 violation — these are not MANIFEST surface keys. Documented in surface_classes.operational.custom_surfaces_note and lexicon.kyc."
+
+# ── QUESTIONS ─────────────────────────────────────────────────────────────────
+# Empty stub — schema matches industry-gaming.yaml segments.igaming.questions.
+# Fill after an SME interview produces fintech-specific analytical questions.
+# Item schema: id, tag (generalizable | gambling_specific), ask, maps_to_persona
+questions: []

@@ -1,0 +1,73 @@
+<!-- FUNNEL — MINI BAR IN METRIC TILE
+     Use: inside .metric-tile when the KPI number and funnel position both need to read at a glance.
+     Bar height: 40px (CSS-fixed). Same color semantics as full vbar.
+     Add colored border-top for severity signal: var(--fs-pink) for walls, var(--fs-orange) for survive tiles.
+     The .mini-bar-col classes always appear in order: entry wall1 survive wall2 convert.
+     No data attributes needed — color is driven by class name only.
+-->
+<div class="tile-row">
+  <div class="metric-tile" style="flex:1;min-width:160px;">
+    <div class="metric-tile-top">
+      <div class="metric-tile-label">Funnel Entrants</div>
+      <div class="metric-tile-badge badge-green">30d</div>
+    </div>
+    <div class="metric-tile-num" style="color:var(--fs-green);">24,800</div>
+    <div class="metric-tile-sub">users entered</div>
+    <div class="mini-bar">
+      <div class="mini-bar-col entry"></div>
+      <div class="mini-bar-col wall1"></div>
+      <div class="mini-bar-col survive"></div>
+      <div class="mini-bar-col wall2"></div>
+      <div class="mini-bar-col convert"></div>
+    </div>
+    <div class="metric-tile-footer">Full funnel — entry to conversion</div>
+  </div>
+  <div class="metric-tile" style="flex:1;min-width:160px;border-top:2px solid var(--fs-pink);">
+    <div class="metric-tile-top">
+      <div class="metric-tile-label">Wall 1 Drop Rate</div>
+      <div class="metric-tile-badge badge-red">Critical</div>
+    </div>
+    <div class="metric-tile-num" style="color:var(--fs-pink);">62%</div>
+    <div class="metric-tile-sub">blocked at step name</div>
+    <div class="mini-bar">
+      <div class="mini-bar-col entry"></div>
+      <div class="mini-bar-col wall1"></div>
+      <div class="mini-bar-col survive"></div>
+      <div class="mini-bar-col wall2"></div>
+      <div class="mini-bar-col convert"></div>
+    </div>
+    <div class="metric-tile-footer">15,380 of 24,800 entrants</div>
+  </div>
+  <div class="metric-tile" style="flex:1;min-width:160px;border-top:2px solid var(--fs-orange);">
+    <div class="metric-tile-top">
+      <div class="metric-tile-label">Pass-Through Rate</div>
+      <div class="metric-tile-badge badge-orange">Wall 1</div>
+    </div>
+    <div class="metric-tile-num" style="color:var(--fs-orange);">3.2%</div>
+    <div class="metric-tile-sub">reach next step</div>
+    <div class="mini-bar">
+      <div class="mini-bar-col entry"></div>
+      <div class="mini-bar-col wall1"></div>
+      <div class="mini-bar-col survive"></div>
+      <div class="mini-bar-col wall2"></div>
+      <div class="mini-bar-col convert"></div>
+    </div>
+    <div class="metric-tile-footer">~793 of 24,800 entrants</div>
+  </div>
+  <div class="metric-tile" style="flex:1;min-width:160px;border-top:2px solid var(--fs-pink);">
+    <div class="metric-tile-top">
+      <div class="metric-tile-label">Wall 2 Failure Rate</div>
+      <div class="metric-tile-badge badge-red">Critical</div>
+    </div>
+    <div class="metric-tile-num" style="color:var(--fs-pink);">71%</div>
+    <div class="metric-tile-sub">fail at final step</div>
+    <div class="mini-bar">
+      <div class="mini-bar-col entry"></div>
+      <div class="mini-bar-col wall1"></div>
+      <div class="mini-bar-col survive"></div>
+      <div class="mini-bar-col wall2"></div>
+      <div class="mini-bar-col convert"></div>
+    </div>
+    <div class="metric-tile-footer">~162 of ~228 survivors</div>
+  </div>
+</div>
