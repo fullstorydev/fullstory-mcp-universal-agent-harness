@@ -1,4 +1,4 @@
-# Fullstory AI Analyst Agent Harness — v4.2.2
+# Fullstory AI Analyst Agent Harness — v4.2.3
 
 ---
 

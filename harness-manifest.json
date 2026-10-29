@@ -1,7 +1,7 @@
 {
   "harness": {
     "name": "fs-universal-agent-harness",
-    "version": "4.2.2"
+    "version": "4.2.3"
   },
   "schema_version": 1,
   "capabilities": {
@@ -54,7 +54,7 @@
     },
     "cowork": {
       "verified": "untested",
-      "basis": "Cowork's runtime named AskUserQuestion in Lane's 2026-10-21 session and Lane watched it use three tools to read the instructions; no shipped file establishes any Cowork tool name, so every capability is unknown rather than absent; flips to tested when the SC-9 transcript is in the wave folder. mcp:fullstory is established by vendor documentation (Lane, 2026-10-22: documentation counts as evidence). Source: Claude Help Center, Get started with Claude Cowork: connectors are controlled via the Customize > Connectors page. The value is the documented way to connect an MCP server, not a tool this harness calls, and the documentation does not say the Fullstory server connects here. Detail and grades in runtime-research-20261022.md",
+      "basis": "One observed Cowork session on 2026-10-28 (setup run three times) showed the shell reaching local paths through device_bash, device_list_dir and device_request_folder_access, with the user granting access to each folder. That is one run, so the row stays untested. The picker (AskUserQuestion) was also used in that run, but one use does not establish it, so structured_picker stays unknown. mcp:fullstory is established by vendor documentation. Source: Claude Help Center, Get started with Claude Cowork: connectors are controlled via the Customize > Connectors page. The value is the documented way to connect an MCP server, not a tool this harness calls, and the documentation does not say the Fullstory server connects here. Detail and grades in runtime-research-20261022.md",
       "invocation": {
         "style": "read-file"
       },
@@ -62,13 +62,13 @@
         "structured_picker": "unknown",
         "file_read": "read from and write to local files (connected folders)",
         "file_write": "read from and write to local files (connected folders)",
-        "shell": "shell (runs on Anthropic servers, not the user machine)",
+        "shell": "shell on the user's machine through device_bash, inside folders the user has connected",
         "mcp:fullstory": "Customize > Connectors"
       },
       "basis_by_capability": {
         "file_read": "https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork (fetched 2026-10-22): \"On desktop, Claude can read from and write to your local files without manual uploads or downloads.\"",
         "file_write": "https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork (fetched 2026-10-22): \"On desktop, Claude can read from and write to your local files without manual uploads or downloads.\"",
-        "shell": "https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork (fetched 2026-10-22): \"Runs code and shell commands in an isolated environment on Anthropic's servers.\" Server-side: a command that reads or writes a path on the user's machine behaves differently here."
+        "shell": "Observed in one Cowork session on 2026-10-28: device_bash read and wrote files inside connected folders and device_request_folder_access was needed before it could reach a folder that was not connected. The earlier claim, from the vendor help page, that the shell runs only on vendor servers did not match what was observed."
       },
       "target": true,
       "status": {

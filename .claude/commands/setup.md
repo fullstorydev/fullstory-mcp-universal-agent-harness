@@ -38,6 +38,14 @@ Check which picker tool is available:
 
 All subsequent picker interactions use `PICKER`.
 
+Then detect the runtime once (`RUNTIME` applies for the rest of this skill):
+
+- If the `device_bash` tool is available → `RUNTIME = cowork`. Claude Cowork reaches the user's machine through `device_bash`, `device_list_dir` and `device_request_folder_access`. It can only see folders the user has connected, so ask for access with `device_request_folder_access` before reading or writing outside a connected folder.
+- Else → `RUNTIME = claude-code`.
+- This is a heuristic from one observed Cowork run, and the tool surface is only partly known. When unsure, behave as `claude-code`. Never refuse to run because of the runtime.
+- File read, file write and shell cannot degrade. If one is missing, say "unsupported here" and stop. Only the picker degrades, to the plain-text menu above. An unknown capability is not an unsupported one: try it before giving up.
+- This folder is the workspace in both runtimes. Give the user no instructions to leave this session or start another one. Analysis continues here.
+
 ---
 
 ## Step 2 — Read Industry from `harness.yaml`
