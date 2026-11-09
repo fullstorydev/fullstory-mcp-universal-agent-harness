@@ -1,6 +1,6 @@
 # GENERATED — do not edit manually
 # rail-format-version: 1.0
-# Generated: 2026-10-29
+# Generated: 2026-11-09
 audience: marketing
 industry: gaming
 entry_altitude: arc
@@ -137,9 +137,9 @@ jobs:
       event > 0 in prior window)'
     - 'compute_metric: greenfield vs. returning customer split per campaign source'
     - get_sessions on the highest-volume campaign segment — 3 to 5 sessions
-    - session_open(session_id)
-    - session_view() — confirm entry point, scroll depth, subsequent navigation
-    - session_close() — MANDATORY; pair every open with a close
+    - review-open
+    - review-snapshot() — confirm entry point, scroll depth, subsequent navigation
+    - review-close — MANDATORY; pair every open with a close
     - get_opportunities — cross-reference; if empty or non-Premium org, run the industry
       overlay's opportunities fallback chain before reporting no results
   stop_conditions:
@@ -244,7 +244,7 @@ jobs:
         visitors reach after landing?'
       - 'get_sessions: 3–5 representative engaged sessions from campaign cohort —
         NOT bounces'
-      - session_open → session_view → session_close — MANDATORY pair
+      - review-open → review-snapshot → review-close — MANDATORY pair
       part_2_comparison:
       - discover_org_context — find other active campaigns in the period
       - build_segment per other campaign sources in the window
@@ -333,7 +333,7 @@ jobs:
       layer'
     - 'get_sessions: 3 representative arcs — one short-path converter (p25 or below),
       one median-path converter, one long-path converter (p75 or above)'
-    - session_open → session_view → session_close — MANDATORY pair
+    - review-open → review-snapshot → review-close — MANDATORY pair
   stop_conditions:
   - p50/p75/p95 of session count and calendar days between transactions computed with
     denominator (users in analysis window) — that is the finding; stop
@@ -417,7 +417,7 @@ jobs:
       dead-click for engaged cohort'
     - 'get_sessions: 3–5 sessions from the ENGAGED cohort (bounces contain no useful
       behavioral signal)'
-    - session_open → session_view → session_close — MANDATORY pair
+    - review-open → review-snapshot → review-close — MANDATORY pair
     - get_opportunities — cross-reference any engagement blockers with StoryAI findings;
       if empty or non-Premium org run fallback chain
   stop_conditions:
@@ -499,9 +499,9 @@ jobs:
       layer)'
     - 'get_sessions: 3–5 sessions from the campaign cohort — prefer engaged non-converters
       over bounces'
-    - session_open(session_id)
-    - session_view() — observe landing, content interaction, navigation path, exit
-    - session_close() — MANDATORY pair
+    - review-open
+    - review-snapshot() — observe landing, content interaction, navigation path, exit
+    - review-close — MANDATORY pair
     - get_opportunities — cross-reference conversion blockers with StoryAI findings
   stop_conditions:
   - 'kill variant — bounce rate significantly above organic baseline AND engagement

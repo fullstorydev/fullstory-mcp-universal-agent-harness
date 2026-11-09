@@ -75,7 +75,7 @@ jobs_not_roles:
 # Every MCP sequence inherits these. Rails that skip them route around two mandatory kit gates.
 preconditions:
   semantic_layer: "An org foundation is a precondition for every MCP call (CLAUDE.md Org Foundation Gate). Prefer existing segment/metric/funnel IDs from org-foundation.md (or semantic-index.yaml on an old layer) over building new objects."
-  discipline: "Build → Confirm → Compute per fullstory-mcp-expert-guide. Source every ID from a tool response. Pair stateful operations: session_open → session_view/diff → session_close."
+  discipline: "Build → Confirm → Compute per fullstory-mcp-expert-guide. Source every ID from a tool response. Pair stateful operations: review-open → review-snapshot/diff → review-close."
   surface_binding: "Resolve every surface key through the org's semantic-layer/surface-map.yaml. An unbound surface degrades to org-wide signal order — say so out loud, never silently."
   logging: "Any segment or metric created during a run is appended to methodology.yaml per the Methodology Persistence Protocol."
 

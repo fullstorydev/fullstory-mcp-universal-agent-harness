@@ -1,6 +1,6 @@
 # GENERATED — do not edit manually
 # rail-format-version: 1.0
-# Generated: 2026-10-29
+# Generated: 2026-11-09
 audience: data
 industry: retail
 entry_altitude: arc
@@ -418,4 +418,4 @@ jobs:
   stop_conditions:
   - the output names the identification strategy or explicitly downgrades the claim
     to trend
-  - session_close
+  - review-close

@@ -474,7 +474,7 @@ jobs:
   stop_conditions:
   - the output names the identification strategy or explicitly downgrades the claim
     to trend
-  - session_close
+  - review-close
 accepts:
 - p50 / p75 / p95 for continuous metrics — the full distribution, not just one percentile
 - 'methodology notes alongside every finding: segment used, time window, MCP calls

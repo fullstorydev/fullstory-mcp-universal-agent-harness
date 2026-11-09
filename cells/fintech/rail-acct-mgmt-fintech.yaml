@@ -1,6 +1,6 @@
 # GENERATED — do not edit manually
 # rail-format-version: 1.0
-# Generated: 2026-10-29
+# Generated: 2026-11-09
 audience: acct-mgmt
 industry: fintech
 entry_altitude: arc
@@ -129,10 +129,10 @@ jobs:
       for friction clusters'
     - get_sessions(account_cohort_segment, limit=3) — pick one representative active
       session for the dossier
-    - session_open(session_id)
-    - session_view() — confirm the behavioral picture visually; look for utilization
+    - review-open
+    - review-snapshot() — confirm the behavioral picture visually; look for utilization
       depth or friction
-    - session_close() — MANDATORY
+    - review-close — MANDATORY
     - get_opportunities — scale-validate any friction finding; StoryAI confirmation
       adds independent weight
     stop_conditions:
@@ -243,9 +243,9 @@ jobs:
     - 'compute: rage-click rate, last 7 days vs prior 14 days'
     - get_sessions(declining_signal_segment, limit=3) — look at the most recent sessions
       for this account
-    - session_open(session_id)
-    - session_view() — confirm whether behavioral concern is visible
-    - session_close() — MANDATORY
+    - review-open
+    - review-snapshot() — confirm whether behavioral concern is visible
+    - review-close — MANDATORY
     stop_conditions:
     - Concern is confirmed by behavioral data (declining sessions, rising friction)
       — route to customer-experience with the specific signal, the trend delta, and
@@ -352,9 +352,9 @@ jobs:
     - get_opportunities — wins and risk signals with StoryAI confirmation
     - get_sessions(wins_segment, limit=2) — two representative sessions for the 'platform
       value' story
-    - session_open(session_id)
-    - session_view() — confirm the win is visible in the user experience
-    - session_close() — MANDATORY
+    - review-open
+    - review-snapshot() — confirm the win is visible in the user experience
+    - review-close — MANDATORY
     stop_conditions:
     - Two to three wins identified with behavioral evidence and trend direction known
       — EBR narrative is sufficient. Stop. Do not add more wins; the room cannot absorb

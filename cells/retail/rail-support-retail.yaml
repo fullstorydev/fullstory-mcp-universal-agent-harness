@@ -1,6 +1,6 @@
 # GENERATED — do not edit manually
 # rail-format-version: 1.0
-# Generated: 2026-10-29
+# Generated: 2026-11-09
 audience: support
 industry: retail
 entry_altitude: arc
@@ -120,7 +120,7 @@ jobs:
   - 'branch A — customer at fault: screenshot is enough to push back if they complain'
   - 'branch B — UI genuinely confusing: not done until count of people who saw that
     UI plus ticketing-system corroboration sufficient to argue for a product change'
-  - session_close
+  - review-close
   rejects:
   - anything short of the screenshot — copy alone is not sufficient
 - id: bug_scope_check
@@ -233,4 +233,4 @@ jobs:
     return to ≤ pre-incident 28-day baseline AND hold for 7 days post-fix
   - the original incident event type is absent from the affected cohort's return sessions
   - a further recovery action is either justified or explicitly closed
-  - session_close
+  - review-close

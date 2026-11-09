@@ -1,6 +1,6 @@
 # GENERATED — do not edit manually
 # rail-format-version: 1.0
-# Generated: 2026-10-29
+# Generated: 2026-11-09
 audience: product-mgmt
 industry: saas
 entry_altitude: arc
@@ -270,7 +270,7 @@ jobs:
     with behavioral evidence
   - at least one testable opportunity is written that does not require a new feature
     as its premise
-  - session_close
+  - review-close
 - id: pm-stakeholder-outcome-commit
   trigger: 'Leadership or a partner team is asking the PM to commit a roadmap slice
     and the PM must move that stance with behavioral evidence rather than output promises.

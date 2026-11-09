@@ -60,10 +60,10 @@ For each candidate session, perform this inspection sequence. This is an active 
 ### 2a. Open the session
 
 ```
-session_open(device_id, session_id)
+review-open(device_id, session_id)
 ```
 
-This returns a `client_id` and a summary of events with timestamps. Scan the event timeline to identify the **focus point** — the timestamp of the specific issue being analyzed (the dead click, rage click, error event, or drop-off moment).
+This returns a `client_id` and a session map: the span, the flow, per-scope counts, and a digest of events with timestamps. Scan the event timeline to identify the **focus point** — the timestamp of the specific issue being analyzed (the dead click, rage click, error event, or drop-off moment).
 
 If the focus point is unclear from the summary, call `get_session_events(session_id)` to get the full chronological event transcript.
 
@@ -81,8 +81,13 @@ Do not inspect only the moment of the event. User frustration and confusion buil
 At the focus point timestamp, call:
 
 ```
-session_get_a11y_tree(client_id, page_id, timestamp=focus_ts)
+review-snapshot(client_id, timestamp=focus_ts, include=["image", "tree"])
 ```
+
+One call returns both the rendered screen and the component tree. There is no `page_id`
+to supply: the foreground page is resolved from the timestamp, and the response opens
+with a `Rendered:` line naming the page it chose, so you can confirm it is the one you
+meant.
 
 Read the accessibility tree for the following signals:
 
@@ -117,7 +122,7 @@ Record for each session:
 Always close the session before moving to the next:
 
 ```
-session_close(client_id)
+review-close(client_id, use_case="bug_diagnosis", was_helpful=<true|false>)
 ```
 
 Treat `client_id` as a resource handle. Open and close are paired — skipping close depletes your concurrent-session budget and violates the lifecycle defined in `fullstory-mcp-expert-guide`.
@@ -245,7 +250,7 @@ Add a **Session Validation** section to the deliverable for every Critical Issue
 Before marking session validation complete and proceeding to the deliverable, confirm:
 
 - [ ] At least 5 sessions were fully inspected (open → a11y tree → diff → events → close), or all available sessions were reviewed if fewer than 5 existed
-- [ ] For error-type findings (console error, network error, uncaught exception): `session_screenshot` was called at the error timestamp for each accepted session, in addition to the a11y tree / session_diff step
+- [ ] For error-type findings (console error, network error, uncaught exception): `review-snapshot` was called at the error timestamp for each accepted session, in addition to the a11y tree / session_diff step
 - [ ] For error-type findings: all 5 sessions were drawn from the attached signal pool (co-occurrence of error AND frustration/exit/funnel signal) — not sampled from a raw error segment
 - [ ] Each session was assessed for representativeness before being accepted
 - [ ] Discarded sessions were replaced from the buffer until the minimum was met (or the buffer was exhausted)
@@ -254,7 +259,7 @@ Before marking session validation complete and proceeding to the deliverable, co
 - [ ] A root cause signal was synthesized across the 5 sessions
 - [ ] The Top 2 best sessions are identified and described with technical context (including any console/network signals observed)
 - [ ] The source object URL (`metric_url`, `segment_url`, or funnel URL) is present in the deliverable
-- [ ] Every `session_open` call was matched with a `session_close`
+- [ ] Every `review-open` call was matched with a `review-close`
 
 If any invariant is unmet, address it before presenting the deliverable.
 

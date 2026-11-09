@@ -83,8 +83,8 @@ Collaborative discovery. No deliverable target yet.
 
 **Compute check-in carve-outs** (do not count as check-ins; do not trigger Adaptive Guidance):
 - `build_segment`, `build_metric`, `build_funnel`, `build_journey`
-- `session_open`, `session_close`, `session_view`, `session_diff`, `session_screenshot`,
-  `session_get_a11y_tree`
+- `review-open`, `review-close`, `review-snapshot`, `session_diff`, `review-snapshot`,
+  `review-snapshot`
 - `discover_org_context`, `get_pages`, `get_managed_funnels`
 
 ---
@@ -350,7 +350,7 @@ On the first turn after compaction, before any MCP call:
 
 After any MCP tool call that produces a concrete finding — `compute_metric`, `compute_funnel`, `get_sessions`, `get_opportunities`, or equivalent — offer 2–3 calibrated follow-on prompts before moving on. This is advisory: the analyst can skip, reorder, or ignore entirely.
 
-**Do not fire after:** setup and authoring steps (`build_segment`, `build_metric`, `build_funnel`, `session_open`) — only after steps that produce findings.
+**Do not fire after:** setup and authoring steps (`build_segment`, `build_metric`, `build_funnel`, `review-open`) — only after steps that produce findings.
 
 **Compose suggestions from context already in session:**
 - The active persona's `investigation_priors` (loaded at Analysis Start Gate)

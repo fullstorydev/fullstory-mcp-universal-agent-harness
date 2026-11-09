@@ -240,10 +240,10 @@ Sample **≥5 sessions from the attached signal segment** — sessions where the
 
 For each session, run this sequence in order:
 
-1. `session_open(device_id, session_id)` — note the error timestamp from the event summary
-2. `session_screenshot(client_id, timestamp=error_ts)` — capture the UI state at the moment the error fires
-3. `session_get_a11y_tree(client_id, page_id, timestamp=error_ts)` and/or `session_diff(client_id, page_id, from_ts=error_ts, to_ts=error_ts+10000)` — confirm the UI actually failed or changed in response
-4. `session_close(client_id)`
+1. `review-open(device_id, session_id)` — note the error timestamp from the session map
+2. `review-snapshot(client_id, timestamp=error_ts, include=["image", "tree"])` — the rendered screen **and** the component tree at the moment the error fires, in one call. No `page_id`: the foreground page is resolved from the timestamp
+3. `review-zoom(client_id, t0_ms=error_ts-10000, t1_ms=error_ts+10000, resolution={"network": "detail", "error": "detail"})` — confirm what actually fired around it, and whether the UI responded
+4. `review-close(client_id, use_case="bug_diagnosis", was_helpful=<true|false>)`
 
 **If you cannot reach 5 sessions from the attached signal pool:** you do not have a validated insight for this error. Do not embellish. Classify as non-impactful and route to Engineering Notes.
 

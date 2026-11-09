@@ -59,10 +59,10 @@ L1_CODES: frozenset = frozenset({"TRS", "RSK"})
 # derive.py is a static engine and does not call these tools directly; the harness agent
 # layer executes the protocol when DeriveResult.asr_protocol == "required".
 ASR_PROTOCOL_STEPS: list = [
-    "get_session_events",
-    "session_open",
-    "session_screenshot | session_get_a11y_tree | session_diff",
-    "session_close",
+    "review-open",
+    "review-zoom",
+    "review-snapshot | session_diff",
+    "review-close",
 ]
 
 # Wave 6 Part B: signal keys that receive a ranking boost when session_mode == "tactical".

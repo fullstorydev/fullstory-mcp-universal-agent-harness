@@ -63,15 +63,15 @@ If behavior is the proof, continue.
 
 ## Phase 2 — Pull frames (event-anchored)
 
-1. `session_open` on the session.
+1. `review-open` on the session.
 2. `get_session_events` (or equivalent transcript) around the anchor.
 3. Build a pad window:
    - Center on the anchor timestamp (or the span between two close events).
    - Target ~3.75 seconds total at 4 fps = **15 frames max**.
    - Split pad before and after the anchor (approach + aftermath).
    - If the struggle is 10 seconds long, do **not** pull 40 frames. Cut to the moment.
-4. `session_screenshot` at each frame timestamp. Name files `frame_01.png` … sequentially.
-5. `session_close` when the pull is done.
+4. `review-snapshot` at each frame timestamp. Name files `frame_01.png` … sequentially.
+5. `review-close` when the pull is done.
 
 Do not time-walk a session hoping something looks dramatic. The event is the anchor; screenshots pad the event.
 

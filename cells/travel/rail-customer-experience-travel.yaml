@@ -1,6 +1,6 @@
 # GENERATED — do not edit manually
 # rail-format-version: 1.0
-# Generated: 2026-10-29
+# Generated: 2026-11-09
 audience: customer-experience
 industry: travel
 entry_altitude: arc
@@ -104,9 +104,9 @@ jobs:
     - identify sessions in the reported time window or with relevant frustration signals
     - 'get_session_events(session_id) — full event log: error chain, network failures,
       console errors'
-    - session_open(session_id)
-    - session_view() — visual and contextual gaps the event log misses
-    - session_close() — MANDATORY; pair every open with a close
+    - review-open
+    - review-snapshot() — visual and contextual gaps the event log misses
+    - review-close — MANDATORY; pair every open with a close
     - get_opportunities — check whether this issue is widespread beyond the named
       user; if empty or org is not Premium/Advanced, run the opportunities fallback
       chain from the industry overlay before reporting no results
@@ -203,8 +203,9 @@ jobs:
     - 'compute_metric: trend direction on active users using compare_to_previous=true'
     - get_opportunities filtered to this account's segment — does StoryAI flag anything
       for this account? (global fallback chain applies if empty or org is not Premium/Advanced)
-    - get_sessions on 3–5 representative sessions from this account — session_open
-      → session_view → session_close — to name the behavioral personas the data reveals
+    - get_sessions on 3–5 representative sessions from this account — review-open
+      → review-snapshot → review-close — to name the behavioral personas the data
+      reveals
   output_structure:
     section_1: Account snapshot — active users (30d and 90d) with trend direction
     section_2: What they actually use — top 2–3 journeys with user count and % of

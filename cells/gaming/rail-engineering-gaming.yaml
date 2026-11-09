@@ -1,6 +1,6 @@
 # GENERATED — do not edit manually
 # rail-format-version: 1.0
-# Generated: 2026-10-29
+# Generated: 2026-11-09
 audience: engineering
 industry: gaming
 entry_altitude: arc
@@ -96,7 +96,7 @@ jobs:
       session_sample_min: 5
       single_surface_concentration_pct: 60
     opening_move: 'If a session URL is provided: get_session_events first for the
-      full error chain, then session_open → session_view → session_close for visual
+      full error chain, then review-open → review-snapshot → review-close for visual
       context that the event log misses. If no URL: ask for the surface area, build
       a segment on the signal cluster, pull representative sessions, and watch the
       worst. Scale-validate with get_opportunities at the end of either branch; if
@@ -109,9 +109,9 @@ jobs:
         mcp_sequence:
         - 'get_session_events(session_id) — full event log: error chain, network failures,
           console errors'
-        - session_open(session_id)
-        - session_view() — visual and contextual gaps the event log misses
-        - session_close() — MANDATORY; pair every open with a close
+        - review-open
+        - review-snapshot() — visual and contextual gaps the event log misses
+        - review-close — MANDATORY; pair every open with a close
         - get_opportunities — scale validation; if empty or non-Premium org, run opportunities
           fallback chain from industry overlay before reporting no results
       no_session_url:
@@ -124,9 +124,9 @@ jobs:
           - get_sessions(segment_id, limit=5) — representative sessions across the
             cluster
           - get_session_events on the worst session — full error chain
-          - session_open(session_id)
-          - session_view() — visual context
-          - session_close() — MANDATORY
+          - review-open
+          - review-snapshot() — visual context
+          - review-close — MANDATORY
           - get_opportunities — scale validation; if empty or non-Premium org, run
             opportunities fallback chain from industry overlay
         if_no_surface:
@@ -259,9 +259,9 @@ jobs:
       duration is notably elevated relative to the org''s LCP p75 baseline on the
       same surface (not a hardcoded ms threshold)'
     - get_sessions on worst compound-signal segment — 3 to 5 sessions
-    - session_open(session_id)
-    - session_view() — confirm hydration state, layout shift, spinner persistence
-    - session_close() — MANDATORY
+    - review-open
+    - review-snapshot() — confirm hydration state, layout shift, spinner persistence
+    - review-close — MANDATORY
     loading_indicator:
       if_found:
         check: 'Compute p75 visible duration. Pull sessions where duration is notably
@@ -386,9 +386,9 @@ jobs:
         - compare pre vs post — flag signals that moved directionally in the wrong
           direction beyond pre-deploy variance (compare_to_previous=true on compute_metric)
         - get_sessions on worst post-annotation segment — 3 to 5 sessions
-        - session_open(session_id)
-        - session_view()
-        - session_close() — MANDATORY
+        - review-open
+        - review-snapshot()
+        - review-close — MANDATORY
       no_annotation_branch:
         condition: No annotations found or customer does not use Fullstory annotations
         first_question: Can you give me a date or describe the change that went out?
@@ -401,9 +401,9 @@ jobs:
         - compare pre vs post — flag signals that moved directionally in the wrong
           direction beyond pre-deploy variance (compare_to_previous=true on compute_metric)
         - get_sessions on worst post-deploy segment — 3 to 5 sessions
-        - session_open(session_id)
-        - session_view()
-        - session_close() — MANDATORY
+        - review-open
+        - review-snapshot()
+        - review-close — MANDATORY
         opportunity_note: 'Flag once: "If you start using Fullstory annotations for
           deploys, regression analysis can anchor automatically to deploy timestamps
           — no date lookup required."
@@ -506,9 +506,9 @@ jobs:
     - compute signal set on that segment (rage-click, error-click, network-error,
       dead-click, page-reload)
     - get_sessions on worst-signal sessions — 3 to 5
-    - session_open(session_id)
-    - session_view() — confirm what the exit pattern looks like
-    - session_close() — MANDATORY
+    - review-open
+    - review-snapshot() — confirm what the exit pattern looks like
+    - review-close — MANDATORY
   presentation:
     lead_with: Funnel drop-off rate by step with denominator — not session clips.
     include:
@@ -609,9 +609,9 @@ jobs:
     - 'compute: retention — unique users from week 1 who returned in week 2 (direction_rate)'
     - get_sessions on 3 to 5 sessions from the depth cohort — understand what power
       users do differently
-    - session_open(session_id)
-    - session_view() — confirm what feature engagement looks like in practice
-    - session_close() — MANDATORY
+    - review-open
+    - review-snapshot() — confirm what feature engagement looks like in practice
+    - review-close — MANDATORY
   presentation:
     lead_with: The adoption shape — wide / deep / mixed — before any individual metric.
     include:
@@ -660,4 +660,4 @@ jobs:
   - an explicit ship/fix/freeze recommendation is on the table with a review date
   - exception fingerprint named, baseline window stated (default 7 days), comparison
     operator applied (rate ≤ pre-incident baseline)
-  - session_close
+  - review-close

@@ -1,6 +1,6 @@
 # GENERATED — do not edit manually
 # rail-format-version: 1.0
-# Generated: 2026-10-29
+# Generated: 2026-11-09
 audience: ux-design
 industry: retail
 entry_altitude: arc
@@ -124,10 +124,10 @@ jobs:
     - 'SURVIVORSHIP CHECK: if engaging segment shows rage-click or dead-click on the
       interaction point — that is the finding; surface it before watching sessions'
     - get_sessions on the non-engaging segment — minimum 5 sessions
-    - session_open(session_id)
-    - session_view() — visual context for the interaction point and the surrounding
+    - review-open
+    - review-snapshot() — visual context for the interaction point and the surrounding
       UI state
-    - session_close() — MANDATORY; pair every open with a close
+    - review-close — MANDATORY; pair every open with a close
     - get_opportunities — scale validation; if empty or org not on Premium/Advanced,
       run opportunities fallback chain from industry overlay before reporting no results
     signal_order:
@@ -243,9 +243,9 @@ jobs:
     - 'compute_metric: rage-click rate, dead-click rate on the lagging micro-segment
       specifically'
     - get_sessions on the lagging micro-segment — minimum 5 sessions for pattern confirmation
-    - session_open(session_id)
-    - session_view()
-    - session_close() — MANDATORY
+    - review-open
+    - review-snapshot()
+    - review-close — MANDATORY
     signal_order:
     - conversion-gap
     - dead-click
@@ -347,9 +347,9 @@ jobs:
     - 'build_segment: sessions with dead-click + cursor-thrash co-occurrence on this
       surface — if the combined signal exists, this is the primary confusion cluster'
     - get_sessions on the confusion-cluster segment — minimum 5 sessions
-    - session_open(session_id)
-    - 'session_view() — visual context: where on the surface does confusion concentrate?'
-    - session_close() — MANDATORY
+    - review-open
+    - 'review-snapshot() — visual context: where on the surface does confusion concentrate?'
+    - review-close — MANDATORY
     signal_order:
     - cursor-thrash
     - dead-click
@@ -407,4 +407,4 @@ jobs:
   - the designer can point to the session-Nth failure mode, not only the session-1
     failure mode
   - a design change is justified by trajectory, not by a single usability clip
-  - session_close
+  - review-close

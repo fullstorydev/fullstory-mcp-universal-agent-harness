@@ -88,7 +88,7 @@ The Fullstory MCP exposes three categories of tools, and the difference shapes h
 
 - **Authoring tools** translate a natural-language `query` or `refinement` into a saved, structured definition: `build_segment`, `build_metric`, `update_segment`, `update_metric`. As with any natural-language interface to a structured system, it's worth a quick read of the resulting definition to confirm the translation captures your intent — much like reviewing the SQL a text-to-SQL tool generated before running it on production data.
 - **Read & compute tools** (some, such as `get_opportunities`, `get_opportunity`, `get_managed_funnels` and `get_pages`, are StoryAI Premium only and absent on some orgs) return exactly what's stored or computed in Fullstory: `get_segment`, `get_metric`, `compute_metric`, `get_view_counts`, `get_sessions`, `get_session_events`, `get_pages`, `get_managed_funnels`, `get_opportunities`, `get_opportunity`, `get_opportunity_stats`, `get_sessions_for_opportunity`, `discover_org_context`, `discover_groups`.
-- **Visual session review tools** render what a user actually saw and let you compare moments in time: `session_open`, `session_view`, `session_diff`, `session_close`. These hold server-side state — open and close are paired (see *Visual session review* below).
+- **Visual session review tools** render what a user actually saw and let you compare moments in time: `review-open`, `review-snapshot`, `session_diff`, `review-close`. These hold server-side state — open and close are paired (see *Visual session review* below).
 
 The skill in one sentence: **the structured definition is the contract — inspect it, then compute against it.**
 
@@ -98,7 +98,7 @@ These are the invariants the workflow guidance below operationalizes:
 
 - **Treat the structured definition as the contract.** Natural-language queries and auto-generated names are summaries; the structure is what compute runs against, so it's the artifact you inspect, version, and reason about.
 - **Source IDs from tools, never reconstruct them.** LLMs are well known to fabricate plausible-looking IDs; anything in a URL, definition, or follow-up call should trace to a tool response.
-- **Pair stateful operations.** Every allocation has a release (`session_open` ↔ `session_close`); every authoring call has a corresponding read (the returned definition). Skipping either side breaks the chain.
+- **Pair stateful operations.** Every allocation has a release (`review-open` ↔ `review-close`); every authoring call has a corresponding read (the returned definition). Skipping either side breaks the chain.
 - **Match the path to the durability you need.** `metric_id` is the stable, audit-friendly handle for anything persistent or referenced downstream; `metric_definition` is for inline, one-off shaping.
 - **Prefer deterministic paths when they exist.** Every LLM-mediated step is non-deterministic by nature; every structured step is deterministic. Validator-targeted edits, `metric_definition` adjustments, and ID substitutions are deterministic — re-prompting goes back through the translator.
 - **Search structured data for fields by name, not by visual scan.** When verifying a property of a definition, response, or tool schema, locate the field via deterministic keyword search (grep, JSON path, the IDE's find). Visual scanning of nested JSON is a recurring failure mode for LLM agents — missed fields produce confidently wrong conclusions.
@@ -120,7 +120,7 @@ Tool selection follows from this:
 | A count / rate / trend for one event type, optionally narrowed by a cohort | **`build_metric`** + `compute_metric` | A numeric result (user, session, or event count) |
 | A user/session list defined by a multi-step behavioral sequence (within one session or across sessions) | **`build_segment`** + `get_sessions` | The list of users/sessions matching the sequence |
 | A count of users in a multi-step sequence | **`build_segment`** to define the cohort, then attach via `update_metric(metric_id, segment_id=...)` and `compute_metric` | A numeric count of the cohort |
-| To see what a specific user actually saw at a moment in time, or what changed on screen between two moments | **`session_open`** + `session_view` / `session_diff` (then `session_close`) | A rendered screenshot and component hierarchy, or a visual diff |
+| To see what a specific user actually saw at a moment in time, or what changed on screen between two moments | **`review-open`** + `review-snapshot` / `session_diff` (then `review-close`) | A rendered screenshot and component hierarchy, or a visual diff |
 
 Heuristic: reach for a **segment** when the behavior is a sequence ("did X, then did Y"); reach for a **metric** when the question is a count for a single event, optionally narrowed by a segment cohort; reach for **visual session review** when you need to see what the user saw, not just what fired. Page-and-property refinement is event-scoped and works in either metrics or segments.
 
@@ -181,17 +181,17 @@ When the analytics workflow surfaces a session worth inspecting — an outlier f
 
 These tools form a strict lifecycle. Order matters, and balancing open with close keeps your concurrent-session budget available for the next investigation.
 
-1. **`session_open(device_id, session_id)`** — opens a session for inspection. Returns a `client_id` (your handle for subsequent calls) and a summary of events with timestamps so you can identify interesting moments. Must be called first; `session_view` and `session_diff` operate against a valid `client_id`. Source the `device_id` / `session_id` from `get_sessions` or `get_sessions_for_metric` rather than from any user-pasted string.
-2. **`session_view(client_id, page_id, timestamp)`** — renders a screenshot and component hierarchy as the user saw it at `timestamp`. Use this to confirm what was on screen at a specific moment (form state, error banner, page layout, cart contents).
+1. **`review-open(device_id, session_id)`** — opens a session for inspection. Returns a `client_id` (your handle for subsequent calls) and a summary of events with timestamps so you can identify interesting moments. Must be called first; `review-snapshot` and `session_diff` operate against a valid `client_id`. Source the `device_id` / `session_id` from `get_sessions` or `get_sessions_for_metric` rather than from any user-pasted string.
+2. **`review-snapshot(client_id, timestamp, include=["image", "tree"])`** — renders the screen and the component hierarchy as the user saw it at `timestamp`, in one call. There is no `page_id` to pass: the foreground page is resolved from the timestamp, and the response opens with a `Rendered:` line naming the page it chose, so you can confirm it is the one you meant. Use this to confirm what was on screen at a specific moment (form state, error banner, page layout, cart contents).
 3. **`session_diff(client_id, page_id, to_ts)`** — compares two timestamps and returns a screenshot with highlighted changes plus a text summary of component modifications. Useful for pinpointing the moment something changed on screen.
-4. **`session_close(client_id)`** — **always call this when the investigation concludes, including on the error path.** Treat the `client_id` like a file handle: open and close are paired. Closing promptly returns the slot to your concurrent-session budget.
+4. **`review-close(client_id)`** — **always call this when the investigation concludes, including on the error path.** Treat the `client_id` like a file handle: open and close are paired. Closing promptly returns the slot to your concurrent-session budget.
 
 ### Practical notes
 
 - **Walk forward through the session in timestamp order.** Sequential access is the natural traversal pattern and the best-performing one — much like scrubbing forward through a video versus jumping at random.
-- **Source timestamps from `get_session_events`, not guesses.** When you need to inspect a specific event (e.g. the click of interest), pull its timestamp from `get_session_events` and pass it to `session_view`.
-- **Pair with the analytics workflow.** A common pattern: `build_metric` → `compute_metric` → `get_sessions_for_metric` → `session_open` on a representative `session_id` → `session_view` at the relevant timestamp → `session_close`. Carry IDs through verbatim from each step.
-- **Visual review vs. event data.** Use `get_session_events` when the question is *what fired, in what order, with what properties* — structured data, good for programmatic analysis. Use `session_view` / `session_diff` when the question is *what the user saw* — "did the error banner actually render?", "what did the cart look like when they abandoned?". The two compose: use the event stream to find the right timestamps, render screenshots only at those moments.
+- **Source timestamps from `get_session_events`, not guesses.** When you need to inspect a specific event (e.g. the click of interest), pull its timestamp from `get_session_events` and pass it to `review-snapshot`.
+- **Pair with the analytics workflow.** A common pattern: `build_metric` → `compute_metric` → `get_sessions_for_metric` → `review-open` on a representative `session_id` → `review-snapshot` at the relevant timestamp → `review-close`. Carry IDs through verbatim from each step.
+- **Visual review vs. event data.** Use `get_session_events` when the question is *what fired, in what order, with what properties* — structured data, good for programmatic analysis. Use `review-snapshot` / `session_diff` when the question is *what the user saw* — "did the error banner actually render?", "what did the cart look like when they abandoned?". The two compose: use the event stream to find the right timestamps, render screenshots only at those moments.
 
 ## Replay URLs — assemble from retrieved IDs
 
@@ -239,7 +239,7 @@ Before returning an answer that involves Fullstory data, confirm:
 - [ ] If I adjusted a definition or refined an object, I re-read the resulting definition end-to-end.
 - [ ] Any validation feedback from `build_metric` / `compute_metric` was addressed at the precise node identified by the JSON-pointer path.
 - [ ] Every numeric result came from `compute_metric` or another read tool.
-- [ ] If I opened a session with `session_open`, I called `session_close` with the same `client_id` once the investigation finished (including on the error path).
+- [ ] If I opened a session with `review-open`, I called `review-close` with the same `client_id` once the investigation finished (including on the error path).
 - [ ] Every replay URL was either returned by a tool or assembled from IDs that appeared in tool responses.
 - [ ] `region` and `orgId` came from a URL returned earlier in the conversation, not from assumption or the user's location.
 - [ ] The `metric_url` from the build/update/compute step is surfaced so the user can drill in further in the Fullstory UI.
@@ -252,7 +252,7 @@ Activate whenever any of these are true:
 
 - You're about to call `build_segment`, `build_metric`, `update_segment`, or `update_metric`.
 - You're about to call `compute_metric` with a `metric_definition` (the direct compute path).
-- You're about to call `session_open`, `session_view`, `session_diff`, or `session_close` (the visual session review lifecycle).
+- You're about to call `review-open`, `review-snapshot`, `session_diff`, or `review-close` (the visual session review lifecycle).
 - You're about to include a Fullstory replay URL in a response.
 - You're about to present counts, breakdowns, trends, or comparisons from Fullstory.
 - The Fullstory MCP workflow is on a reliability- or determinism-sensitive path (production agentic systems, auditable analytics, customer-facing AI surfaces).
@@ -263,4 +263,4 @@ This skill composes with `fullstory:general-analysis` and `fullstory:comparisons
 
 ## Activation Conditions
 
-**`fullstory-mcp-expert-guide`** activates whenever Claude is about to call any Fullstory MCP authoring or compute tool (`build_segment`, `build_metric`, `compute_metric`, `session_open`, etc.). Enforces the Build → Confirm → Compute discipline: treat the structured definition as the contract, source all IDs from tool responses, pair stateful operations, prefer deterministic paths. This is the foundational reliability layer that makes analyses auditable and reproducible.
+**`fullstory-mcp-expert-guide`** activates whenever Claude is about to call any Fullstory MCP authoring or compute tool (`build_segment`, `build_metric`, `compute_metric`, `review-open`, etc.). Enforces the Build → Confirm → Compute discipline: treat the structured definition as the contract, source all IDs from tool responses, pair stateful operations, prefer deterministic paths. This is the foundational reliability layer that makes analyses auditable and reproducible.

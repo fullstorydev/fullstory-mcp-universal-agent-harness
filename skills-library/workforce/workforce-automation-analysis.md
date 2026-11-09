@@ -58,7 +58,7 @@ the foundation skill before continuing.
 | `compute_metric` | Available | Identical call |
 | `update_metric` | Available | Identical call |
 | `get_sessions` | Available | Identical call |
-| `analyze_session` | Not available (Wayfinder sub-agent) | `session_open` + `get_session_events` + `session_close` |
+| `analyze_session` | Not available (Wayfinder sub-agent) | `review-open` + `get_session_events` + `review-close` |
 | `discover_groups` | Available | Called in foundation skill; results consumed as context — do not call again |
 | `submit_report` | Not available (Wayfinder output) | `index.html` deliverable via `_starter.html` template |
 
@@ -178,7 +178,7 @@ Do not call `discover_groups` again.]
 ## Phase 2: Session Deep Dives
 
 Replaces: `analyze_session` Wayfinder sub-agent
-Uses: `session_open` + `get_session_events` + `session_close` (field kit session review protocol)
+Uses: `review-open` + `get_session_events` + `review-close` (field kit session review protocol)
 
 ### Step 2.1 — Session Selection
 
@@ -200,9 +200,9 @@ From the 20 sessions returned, select 3 that exhibit the strongest combination o
 For each of the 3 selected sessions, run the standard field kit session review:
 
 ```
-session_open(session_url)
+review-open(session_url)
 get_session_events(session_id, device_id)
-session_close(session_url)
+review-close(session_url)
 ```
 
 Manually extract from each session:

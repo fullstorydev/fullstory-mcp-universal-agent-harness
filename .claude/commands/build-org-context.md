@@ -301,7 +301,7 @@ Pull sessions from 2–3 of the most impactful StoryAI signals (prioritize: aban
 - **Minimum:** duration ≥ 60 seconds AND events ≥ 50. Shorter/smaller sessions don't provide enough narrative.
 - **Use** `get_sessions_for_opportunity` with the `default_metric_id` and `group_id` from discover_groups output — these are proactive metric type strings (e.g., `"RageClickByElement"`), not saved metric IDs.
 
-For each session: call `session_open`, use `get_session_events` or `review_zoom` to read the narrative, identify whether the frustration signal actually disrupted what the user was doing, then call `session_close`. Write a 2–4 sentence session story capturing: who the user is, what they were trying to do, what went wrong, and what it means.
+For each session: call `review-open`, use `get_session_events` or `review_zoom` to read the narrative, identify whether the frustration signal actually disrupted what the user was doing, then call `review-close`. Write a 2–4 sentence session story capturing: who the user is, what they were trying to do, what went wrong, and what it means.
 
 ### Step 11 — Write org-context-root.md v1
 
@@ -452,7 +452,7 @@ Tell the analyst what was built, where the files are, and the top 3 findings fro
 
 ## Hard Rules for This Skill
 
-1. **Log every MCP call.** Every `build_metric`, `update_metric`, `compute_metric`, `get_funnel`, `discover_groups`, `discover_org_context`, `get_sessions_for_opportunity`, `session_open`, `session_close` call gets logged to job-log.jsonl before moving to the next step. The log is the replay recipe.
+1. **Log every MCP call.** Every `build_metric`, `update_metric`, `compute_metric`, `get_funnel`, `discover_groups`, `discover_org_context`, `get_sessions_for_opportunity`, `review-open`, `review-close` call gets logged to job-log.jsonl before moving to the next step. The log is the replay recipe.
 
 2. **Confirm metric definitions before computing.** Never call `compute_metric` on a metric you didn't read the definition of. Two failure modes to check every time: (a) grouping by URL path instead of DIMENSION_PAGE_DEF_ID — always refine for sites with unique-URL item pages; (b) missing event filter on duration metrics — add `visitedUrl.any` or the metric returns zeros.
 

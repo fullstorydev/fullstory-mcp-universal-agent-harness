@@ -125,7 +125,7 @@ Briefly restate what feedback you're about to collect, e.g., *"Looks like you wa
 
 Before asking the user anything, scan the recent conversation and pre-fill what you can:
 
-- **Tools called** — which MCP tools fired (`build_metric`, `compute_metric`, `session_open`, etc.)
+- **Tools called** — which MCP tools fired (`build_metric`, `compute_metric`, `review-open`, etc.)
 - **Reproducibility IDs** — `metric_id`, `segment_id`, `session_id`, `client_id`, `orgId`, `region` (extracted from any `metric_url` / `segment_url` / `session_url` in the conversation)
 - **Symptom** — what the agent returned or did that the user is flagging
 - **Transcript snippet** — the 2–5 turns that capture the moment of failure
@@ -176,7 +176,7 @@ Use the routing instructions in *Where to send it* below. If those aren't filled
 {checklist of MCP tools that fired in the workflow, e.g.:}
 - `build_metric`
 - `compute_metric`
-- `session_open` → `session_view` → `session_close`
+- `review-open` → `review-snapshot` → `review-close`
 
 ## Reproducibility IDs
 - `metric_id`: {value or "n/a"}
